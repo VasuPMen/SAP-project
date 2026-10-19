@@ -1,0 +1,38 @@
+{
+  "name": "sprint",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "@cap-js/hana": "^3",
+    "@sap/cds": "^10",
+    "@sap/xssec": "^4"
+  },
+  "devDependencies": {
+    "@cap-js/sqlite": "^3",
+    "@sap/cds-dk": "^10"
+  },
+  "scripts": {
+    "start": "cds-serve"
+  },
+  "private": true,
+  "cds": {
+    "requires": {
+      "db": {
+        "kind": "hana",
+        "pool": {
+          "max": 25,
+          "min": 0,
+          "idleTimeoutMillis": 30000,
+          "evictionRunIntervalMillis": 15000,
+          "acquireTimeoutMillis": 30000,
+          "testOnBorrow": true
+        }
+      },
+      "auth": "dummy",
+      "queue": false,
+      "[production]": {
+        "auth": "xsuaa"
+      }
+    }
+  }
+}

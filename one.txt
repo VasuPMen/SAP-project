@@ -1,0 +1,14 @@
+You can log in with any of the test users defined in package.json:
+
+Username: admin
+Password: admin (or leave blank)
+Tip: The admin user has all 7 roles (Admin, Manager, BillingClerk, Technician, Dispatcher, YardWorker), giving you full access to view, create, edit, and test every endpoint without being prompted again during this browser session.
+
+Other Test User Personas (to test role restrictions):
+Username	Password	Assigned Role	Access Scope
+alice	alice	YardWorker	Can perform return inspections & photos (pricing data hidden)
+bob	bob	Dispatcher	Can check out equipment & manage rentals
+charlie	charlie	Technician	Can manage repair jobs & workshop maintenance
+diana	diana	BillingClerk	Can review, approve, and adjust repair bills
+erik	erik	Manager	Full approvals, analytics, and rate card configuration
+fiona	fiona	Auditor	Read-only access across all records

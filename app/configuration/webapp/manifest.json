@@ -1,0 +1,95 @@
+{
+  "_version": "1.49.0",
+  "sap.app": {
+    "id": "retcl.configuration",
+    "type": "application",
+    "title": "Pricing & Rate Card Configuration",
+    "description": "Damage catalogue, repair pricing rules and approval threshold configuration",
+    "dataSources": {
+      "mainService": {
+        "uri": "/billing/",
+        "type": "OData",
+        "settings": {
+          "annotations": [],
+          "odataVersion": "4.0"
+        }
+      }
+    }
+  },
+  "sap.ui": {
+    "technology": "UI5",
+    "deviceTypes": {
+      "desktop": true,
+      "tablet": true,
+      "phone": true
+    }
+  },
+  "sap.ui5": {
+    "flexEnabled": true,
+    "dependencies": {
+      "minUI5Version": "1.120.0",
+      "libs": {
+        "sap.m": {},
+        "sap.ui.core": {},
+        "sap.fe.templates": {}
+      }
+    },
+    "models": {
+      "": {
+        "dataSource": "mainService",
+        "preload": true,
+        "settings": {
+          "synchronizationMode": "None",
+          "operationMode": "Server",
+          "autoExpandSelect": true,
+          "earlyRequests": true
+        }
+      }
+    },
+    "routing": {
+      "routes": [
+        {
+          "pattern": ":?query:",
+          "name": "PricingRulesList",
+          "target": "PricingRulesList"
+        },
+        {
+          "pattern": "PricingRules({key}):?query:",
+          "name": "PricingRulesObjectPage",
+          "target": "PricingRulesObjectPage"
+        }
+      ],
+      "targets": {
+        "PricingRulesList": {
+          "type": "Component",
+          "id": "PricingRulesList",
+          "name": "sap.fe.templates.ListReport",
+          "options": {
+            "settings": {
+              "entitySet": "PricingRules",
+              "liveMode": true,
+              "navigation": {
+                "PricingRules": {
+                  "detail": {
+                    "route": "PricingRulesObjectPage"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "PricingRulesObjectPage": {
+          "type": "Component",
+          "id": "PricingRulesObjectPage",
+          "name": "sap.fe.templates.ObjectPage",
+          "options": {
+            "settings": {
+              "entitySet": "PricingRules",
+              "editableHeaderContent": false
+            }
+          }
+        }
+      }
+    }
+  }
+}

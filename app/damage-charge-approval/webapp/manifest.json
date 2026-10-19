@@ -1,0 +1,94 @@
+{
+  "_version": "1.49.0",
+  "sap.app": {
+    "id": "retcl.damagechargeapproval",
+    "type": "application",
+    "title": "Damage Charge Approval",
+    "description": "Worklist for reviewing, approving and adjusting customer repair billing",
+    "dataSources": {
+      "mainService": {
+        "uri": "/billing/",
+        "type": "OData",
+        "settings": {
+          "annotations": [],
+          "odataVersion": "4.0"
+        }
+      }
+    }
+  },
+  "sap.ui": {
+    "technology": "UI5",
+    "deviceTypes": {
+      "desktop": true,
+      "tablet": true,
+      "phone": true
+    }
+  },
+  "sap.ui5": {
+    "flexEnabled": true,
+    "dependencies": {
+      "minUI5Version": "1.120.0",
+      "libs": {
+        "sap.m": {},
+        "sap.ui.core": {},
+        "sap.fe.templates": {}
+      }
+    },
+    "models": {
+      "": {
+        "dataSource": "mainService",
+        "preload": true,
+        "settings": {
+          "synchronizationMode": "None",
+          "operationMode": "Server",
+          "autoExpandSelect": true,
+          "earlyRequests": true
+        }
+      }
+    },
+    "routing": {
+      "routes": [
+        {
+          "pattern": ":?query:",
+          "name": "RepairBillsList",
+          "target": "RepairBillsList"
+        },
+        {
+          "pattern": "RepairBills({key}):?query:",
+          "name": "RepairBillsObjectPage",
+          "target": "RepairBillsObjectPage"
+        }
+      ],
+      "targets": {
+        "RepairBillsList": {
+          "type": "Component",
+          "id": "RepairBillsList",
+          "name": "sap.fe.templates.ListReport",
+          "options": {
+            "settings": {
+              "entitySet": "RepairBills",
+              "liveMode": true,
+              "navigation": {
+                "RepairBills": {
+                  "detail": {
+                    "route": "RepairBillsObjectPage"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "RepairBillsObjectPage": {
+          "type": "Component",
+          "id": "RepairBillsObjectPage",
+          "name": "sap.fe.templates.ObjectPage",
+          "options": {
+            "settings": {
+              "entitySet": "RepairBills"
+            }
+          }
+        }
+      }
+    }
+  }
+}

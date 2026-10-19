@@ -1,0 +1,101 @@
+{
+  "_version": "1.49.0",
+  "sap.app": {
+    "id": "retcl.rentals",
+    "type": "application",
+    "title": "Rental Contracts & Allocations",
+    "description": "Manage equipment rental contracts, customer allocations, reservation dates, and check-out status",
+    "dataSources": {
+      "mainService": {
+        "uri": "/rental/",
+        "type": "OData",
+        "settings": {
+          "annotations": [],
+          "odataVersion": "4.0"
+        }
+      }
+    }
+  },
+  "sap.ui": {
+    "technology": "UI5",
+    "deviceTypes": {
+      "desktop": true,
+      "tablet": true,
+      "phone": true
+    }
+  },
+  "sap.ui5": {
+    "resources": {
+      "css": [
+        {
+          "uri": "style.css"
+        }
+      ]
+    },
+    "flexEnabled": true,
+    "dependencies": {
+      "minUI5Version": "1.120.0",
+      "libs": {
+        "sap.m": {},
+        "sap.ui.core": {},
+        "sap.fe.templates": {}
+      }
+    },
+    "models": {
+      "": {
+        "dataSource": "mainService",
+        "preload": true,
+        "settings": {
+          "synchronizationMode": "None",
+          "operationMode": "Server",
+          "autoExpandSelect": true,
+          "earlyRequests": true
+        }
+      }
+    },
+    "routing": {
+      "routes": [
+        {
+          "pattern": ":?query:",
+          "name": "RentalsList",
+          "target": "RentalsList"
+        },
+        {
+          "pattern": "Rentals({key}):?query:",
+          "name": "RentalsObjectPage",
+          "target": "RentalsObjectPage"
+        }
+      ],
+      "targets": {
+        "RentalsList": {
+          "type": "Component",
+          "id": "RentalsList",
+          "name": "sap.fe.templates.ListReport",
+          "options": {
+            "settings": {
+              "entitySet": "Rentals",
+              "liveMode": true,
+              "navigation": {
+                "Rentals": {
+                  "detail": {
+                    "route": "RentalsObjectPage"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "RentalsObjectPage": {
+          "type": "Component",
+          "id": "RentalsObjectPage",
+          "name": "sap.fe.templates.ObjectPage",
+          "options": {
+            "settings": {
+              "entitySet": "Rentals"
+            }
+          }
+        }
+      }
+    }
+  }
+}

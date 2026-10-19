@@ -1,0 +1,94 @@
+{
+  "xsappname": "sprint",
+  "tenant-mode": "dedicated",
+  "description": "Security profile for Rental Equipment Tracking & Condition Logging (RETCL)",
+  "scopes": [
+    {
+      "name": "$XSAPPNAME.YardWorker",
+      "description": "Yard Worker - Scan QR/barcode, return inspections, damage photos"
+    },
+    {
+      "name": "$XSAPPNAME.Dispatcher",
+      "description": "Dispatcher - Rental check-out, equipment transfers, override reason"
+    },
+    {
+      "name": "$XSAPPNAME.Technician",
+      "description": "Technician - Workshop repair orders, release from quarantine"
+    },
+    {
+      "name": "$XSAPPNAME.BillingClerk",
+      "description": "Billing Clerk - Review repair bills, adjust charges, dispute charges"
+    },
+    {
+      "name": "$XSAPPNAME.Manager",
+      "description": "Fleet / Operations Manager - All approvals, pricing rules, executive dashboards"
+    },
+    {
+      "name": "$XSAPPNAME.Admin",
+      "description": "Administrator - System configuration and user management"
+    },
+    {
+      "name": "$XSAPPNAME.Auditor",
+      "description": "Auditor - Read-only access to immutable condition logs and S/4 outbox"
+    }
+  ],
+  "attributes": [
+    {
+      "name": "Plant",
+      "description": "Plant / Yard location filter",
+      "valueType": "string"
+    }
+  ],
+  "role-templates": [
+    {
+      "name": "YardWorkerRole",
+      "description": "Role for Yard Workers performing inspections",
+      "scope-references": [
+        "$XSAPPNAME.YardWorker"
+      ]
+    },
+    {
+      "name": "DispatcherRole",
+      "description": "Role for Dispatchers managing contracts & check-outs",
+      "scope-references": [
+        "$XSAPPNAME.Dispatcher"
+      ]
+    },
+    {
+      "name": "TechnicianRole",
+      "description": "Role for Workshop Technicians maintaining equipment",
+      "scope-references": [
+        "$XSAPPNAME.Technician"
+      ]
+    },
+    {
+      "name": "BillingClerkRole",
+      "description": "Role for Billing Clerks handling customer repair invoices",
+      "scope-references": [
+        "$XSAPPNAME.BillingClerk"
+      ]
+    },
+    {
+      "name": "ManagerRole",
+      "description": "Role for Fleet Operations Managers",
+      "scope-references": [
+        "$XSAPPNAME.Manager"
+      ]
+    },
+    {
+      "name": "AdminRole",
+      "description": "Administrator Role",
+      "scope-references": [
+        "$XSAPPNAME.Admin"
+      ]
+    },
+    {
+      "name": "AuditorRole",
+      "description": "Read-only Compliance and Auditor Role",
+      "scope-references": [
+        "$XSAPPNAME.Auditor"
+      ]
+    }
+  ],
+  "authorities-inheritance": false
+}

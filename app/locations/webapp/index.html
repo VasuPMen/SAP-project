@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Depot & Yard Locations</title>
+    <script
+        id="sap-ui-bootstrap"
+        src="https://ui5.sap.com/resources/sap-ui-core.js"
+        data-sap-ui-theme="sap_horizon"
+        data-sap-ui-resourceroots='{
+            "retcl.locations": "./"
+        }'
+        data-sap-ui-onInit="module:sap/ui/core/ComponentSupport"
+        data-sap-ui-compatVersion="edge"
+        data-sap-ui-async="true"
+        data-sap-ui-frameOptions="trusted"></script>
+    </script>
+    <script src="/fiori-auth.js"></script>
+    <script>
+        initSubAppGuard('locations', 'Depot & Yard Locations');
+    </script>
+    <style>
+        html, body {
+            height: 100% !important;
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: hidden !important;
+            display: flex !important;
+            flex-direction: column !important;
+        }
+        [data-sap-ui-component], .sapUiComponentContainer, .sapUiUIArea {
+            height: calc(100vh - 42px) !important;
+            width: 100% !important;
+            flex: 1 1 auto !important;
+            position: relative !important;
+        }
+        /* Ensure footer toolbar with Create / Save buttons is docked and visible */
+        .sapUxAPObjectPageFooter, .sapMPageFooter, .sapFDynamicPageFooter {
+            z-index: 100 !important;
+        }
+    </style>
+</head>
+<body class="sapUiBody sapUiSizeCompact">
+    <div data-sap-ui-component
+        data-name="retcl.locations"
+        data-id="container"
+        data-settings='{"id" : "retcl.locations"}'
+        style="height: calc(100vh - 42px); width: 100%;">
+    </div>
+</body>
+</html>

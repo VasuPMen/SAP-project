@@ -1,0 +1,117 @@
+using { RentalEquipmentTrackingApp as my } from '../../db/schema';
+
+@path: '/rental'
+@requires: ['Dispatcher', 'YardWorker', 'Manager', 'Admin', 'Auditor']
+service RentalService {
+
+    @odata.draft.enabled
+    @restrict: [
+        { grant: ['READ'], to: ['Dispatcher', 'YardWorker', 'Manager', 'Admin', 'Auditor'] },
+        { grant: ['*'], to: ['Dispatcher', 'Manager', 'Admin'] }
+    ]
+    entity Customers as projection on my.Customers;
+
+    @odata.draft.enabled
+    @restrict: [
+        { grant: ['READ'], to: ['Dispatcher', 'YardWorker', 'Manager', 'Admin', 'Auditor'] },
+        { grant: ['*'], to: ['Dispatcher', 'Manager', 'Admin'] }
+    ]
+    entity Locations as projection on my.Locations {
+        *,
+        @readonly equipment
+    } actions {
+        @Common.SideEffects: {
+            TargetEntities: [ equipment ]
+        }
+        action assignEquipment(
+            @mandatory
+            @title: 'Select Equipment'
+            @Common.Label: 'Select Equipment'
+            @(Common.ValueList: {
+                CollectionPath: 'Equipment',
+                Parameters: [
+                    { $Type: 'Common.ValueListParameterInOut', LocalDataProperty: equipmentId, ValueListProperty: 'ID' },
+                    { $Type: 'Common.ValueListParameterDisplayOnly', ValueListProperty: 'equipmentNo' },
+                    { $Type: 'Common.ValueListParameterDisplayOnly', ValueListProperty: 'equipmentName' },
+                    { $Type: 'Common.ValueListParameterDisplayOnly', ValueListProperty: 'serialNumber' },
+                    { $Type: 'Common.ValueListParameterDisplayOnly', ValueListProperty: 'currentStatus' }
+                ]
+            })
+            equipmentId: UUID,
+
+            @title: 'Assignment Reason / Notes'
+            @Common.Label: 'Assignment Reason / Notes'
+            reason: String
+        ) returns Locations;
+    };
+
+    @odata.draft.enabled
+    @cds.redirection.target
+    @restrict: [
+        { grant: ['READ'], to: ['Dispatcher', 'YardWorker', 'Manager', 'Admin', 'Auditor'] },
+        { grant: ['*'], to: ['Dispatcher', 'Manager', 'Admin'] }
+    ]
+    entity Equipment as projection on my.Equipment;
+
+    @readonly
+    @restrict: [
+        { grant: ['READ'], to: ['Dispatcher', 'YardWorker', 'Manager', 'Admin', 'Auditor'] }
+    ]
+    entity AvailableEquipment as projection on my.Equipment {
+        ID,
+        equipmentNo,
+        serialNumber,
+        category,
+        equipmentName,
+        equipmentType,
+        manufacturer,
+        model,
+        rentalRatePerDay,
+        currentStatus,
+        currentGrade,
+        location
+    } where currentStatus = 'Available';
+
+    @odata.draft.enabled
+    @restrict: [
+        { grant: ['READ'], to: ['Dispatcher', 'Manager', 'Admin', 'Auditor'] },
+        { grant: ['*'], to: ['Dispatcher', 'Manager', 'Admin'] }
+    ]
+    entity Rentals as projection on my.Rentals;
+
+    @restrict: [
+        { grant: ['READ'], to: ['Dispatcher', 'Manager', 'Admin', 'Auditor'] },
+        { grant: ['*'], to: ['Dispatcher', 'Manager', 'Admin'] }
+    ]
+    entity RentalItems as projection on my.RentalItems;
+
+    @readonly
+    @restrict: [
+        { grant: ['READ'], to: ['Dispatcher', 'Manager', 'Admin', 'Auditor'] }
+    ]
+    entity RentalStatusHistory as projection on my.RentalStatusHistory;
+
+    @readonly
+    @restrict: [
+        { grant: ['READ'], to: ['Dispatcher', 'YardWorker', 'Manager', 'Admin', 'Auditor'] }
+    ]
+    entity EquipmentTransfers as projection on my.EquipmentTransfers;
+
+    @readonly
+    @restrict: [
+        { grant: ['READ'], to: ['Dispatcher', 'YardWorker', 'Manager', 'Admin', 'Auditor'] }
+    ]
+    entity LocationEvents as projection on my.LocationEvents;
+
+    @readonly
+    @restrict: [
+        { grant: ['READ'], to: ['Dispatcher', 'YardWorker', 'Manager', 'Admin', 'Auditor'] }
+    ]
+    entity AssetStatusHistory as projection on my.AssetStatusHistory;
+
+    // Actions restricted by role
+    action checkOutRental(rentalId: UUID) returns Rentals;
+    action checkInRental(rentalId: UUID, actualReturnDate: Date) returns Rentals;
+    action cancelRental(rentalId: UUID, reason: String) returns Rentals;
+    action transferEquipment(equipmentId: UUID, toLocationId: UUID, reason: String) returns Equipment;
+}

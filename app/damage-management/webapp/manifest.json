@@ -1,0 +1,94 @@
+{
+  "_version": "1.49.0",
+  "sap.app": {
+    "id": "retcl.damagemanagement",
+    "type": "application",
+    "title": "Damage Records & Management",
+    "description": "Track equipment damage incidents, severity levels, repair estimates, and customer liability",
+    "dataSources": {
+      "mainService": {
+        "uri": "/inspection/",
+        "type": "OData",
+        "settings": {
+          "annotations": [],
+          "odataVersion": "4.0"
+        }
+      }
+    }
+  },
+  "sap.ui": {
+    "technology": "UI5",
+    "deviceTypes": {
+      "desktop": true,
+      "tablet": true,
+      "phone": true
+    }
+  },
+  "sap.ui5": {
+    "flexEnabled": true,
+    "dependencies": {
+      "minUI5Version": "1.120.0",
+      "libs": {
+        "sap.m": {},
+        "sap.ui.core": {},
+        "sap.fe.templates": {}
+      }
+    },
+    "models": {
+      "": {
+        "dataSource": "mainService",
+        "preload": true,
+        "settings": {
+          "synchronizationMode": "None",
+          "operationMode": "Server",
+          "autoExpandSelect": true,
+          "earlyRequests": true
+        }
+      }
+    },
+    "routing": {
+      "routes": [
+        {
+          "pattern": ":?query:",
+          "name": "DamageRecordsList",
+          "target": "DamageRecordsList"
+        },
+        {
+          "pattern": "DamageRecords({key}):?query:",
+          "name": "DamageRecordsObjectPage",
+          "target": "DamageRecordsObjectPage"
+        }
+      ],
+      "targets": {
+        "DamageRecordsList": {
+          "type": "Component",
+          "id": "DamageRecordsList",
+          "name": "sap.fe.templates.ListReport",
+          "options": {
+            "settings": {
+              "entitySet": "DamageRecords",
+              "liveMode": true,
+              "navigation": {
+                "DamageRecords": {
+                  "detail": {
+                    "route": "DamageRecordsObjectPage"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "DamageRecordsObjectPage": {
+          "type": "Component",
+          "id": "DamageRecordsObjectPage",
+          "name": "sap.fe.templates.ObjectPage",
+          "options": {
+            "settings": {
+              "entitySet": "DamageRecords"
+            }
+          }
+        }
+      }
+    }
+  }
+}
