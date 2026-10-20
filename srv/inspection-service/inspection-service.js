@@ -49,10 +49,10 @@ export default class InspectionService extends cds.ApplicationService {
             }
         });
 
-        // Provide fixed-values dropdown entries for InspectionTypes and Inspectors
+        // Provide fixed-values dropdown in entries for InspectionTypes and Inspectors
         this.on('READ', 'InspectionTypes', () => [
-            { code: 'CheckIn', name: 'Check-In (Return from Rent)' },
-            { code: 'CheckOut', name: 'Check-Out (Dispatch)' }
+            { code: 'CheckOut', name: 'Check-Out (Dispatch)' },
+            { code: 'CheckIn', name: 'Check-In (Return from Rent)' }
         ]);
 
         this.on('READ', 'Inspectors', () => [
@@ -64,17 +64,76 @@ export default class InspectionService extends cds.ApplicationService {
             { code: 'Yard Worker', name: 'Yard Worker (Yard Staff)' }
         ]);
 
+        // Return equipment items linked to rental contracts for cascading value help
+        this.on('READ', 'ContractEquipment', async (req) => {
+            try {
+                const items = await cds.db.run(SELECT.from('RentalEquipmentTrackingApp.RentalItems')) || [];
+                const equipments = await cds.db.run(SELECT.from('RentalEquipmentTrackingApp.Equipment')) || [];
+                const eqMap = new Map(equipments.map(e => [e.ID, e]));
+
+                let result = items.map(it => {
+                    const eq = eqMap.get(it.equipment_ID) || {};
+                    return {
+                        ID: it.ID,
+                        rental_ID: it.rental_ID,
+                        equipment_ID: it.equipment_ID,
+                        equipmentNo: eq.equipmentNo || '',
+                        equipmentName: eq.equipmentName || '',
+                        serialNumber: eq.serialNumber || '',
+                        currentStatus: eq.currentStatus || '',
+                        currentGrade: eq.currentGrade || 'A'
+                    };
+                });
+
+                // Apply rental_ID filter if passed by cascading value help
+                if (req.query?.SELECT?.where) {
+                    const whereArr = req.query.SELECT.where;
+                    for (let i = 0; i < whereArr.length; i++) {
+                        const token = whereArr[i];
+                        if (token === 'rental_ID' || token?.ref?.[0] === 'rental_ID') {
+                            const val = whereArr[i + 2]?.val || whereArr[i + 2];
+                            if (val) {
+                                result = result.filter(r => r.rental_ID === val);
+                            }
+                        }
+                    }
+                }
+
+                return result;
+            } catch (err) {
+                console.error('[InspectionService] Error reading ContractEquipment:', err.message);
+                return [];
+            }
+        });
+
+        // Helper: determine the required next inspection type (CheckOut vs CheckIn) for an asset & contract
+        const getExpectedNextInspectionType = async (equipment_ID, rental_ID) => {
+            if (!equipment_ID) return 'CheckOut';
+            let whereClause = { equipment_ID };
+            if (rental_ID) {
+                whereClause = { equipment_ID, rental_ID };
+            }
+            const lastLog = await cds.db.run(
+                SELECT.one.from(ConditionLogs)
+                    .where(whereClause)
+                    .orderBy('createdAt desc', 'inspectionDate desc')
+            );
+            if (!lastLog || lastLog.inspectionType === 'CheckIn' || lastLog.inspectionType === 'Return') {
+                return 'CheckOut';
+            }
+            return 'CheckIn';
+        };
+
         // Value help for equipment on rent
         this.on('READ', 'RentedEquipment', async (req) => {
             const items = await cds.db.run(
-                SELECT.from(Equipment).where({ currentStatus: { in: ['RentedOut', 'ReturnedPendingInspection'] } })
+                SELECT.from(Equipment)
             );
             return items;
         });
 
         // Pre-populate sensible defaults on new inspection log drafts
         this.before(['CREATE', 'NEW'], 'ConditionLogs.drafts', async (req) => {
-            if (!req.data.inspectionType) req.data.inspectionType = 'CheckIn';
             if (!req.data.conditionGrade) req.data.conditionGrade = 'A';
             if (!req.data.inspector) req.data.inspector = 'Ramesh Patel';
             if (!req.data.inspectionDate) req.data.inspectionDate = new Date().toISOString();
@@ -88,18 +147,101 @@ export default class InspectionService extends cds.ApplicationService {
                 );
                 if (item?.rental_ID) req.data.rental_ID = item.rental_ID;
             }
+
+            if (!req.data.inspectionType) {
+                req.data.inspectionType = await getExpectedNextInspectionType(req.data.equipment_ID, req.data.rental_ID);
+            }
         });
 
-        // When equipment is changed on draft, auto-link its active rental contract
+        // When Rental Contract or Equipment is changed on draft, cascade selection and suggest inspection type
         this.before(['UPDATE', 'PATCH'], 'ConditionLogs.drafts', async (req) => {
-            if (req.data.equipment_ID) {
-                const item = await cds.db.run(
-                    SELECT.one.from('RentalEquipmentTrackingApp.RentalItems')
-                        .where({ equipment_ID: req.data.equipment_ID })
-                        .orderBy('createdAt desc')
-                );
-                if (item?.rental_ID) {
-                    req.data.rental_ID = item.rental_ID;
+            const draftId = req.data.ID || req.params?.[0]?.ID || req.params?.[0];
+            let cur = {};
+            if (draftId) {
+                cur = await cds.db.run(SELECT.one.from('InspectionService.ConditionLogs.drafts').where({ ID: draftId })) || {};
+            }
+
+            // 1. If Rental Contract is selected or changed: filter/cascade equipment
+            if (req.data.rental_ID !== undefined) {
+                if (req.data.rental_ID) {
+                    const rentalItems = await cds.db.run(
+                        SELECT.from('RentalEquipmentTrackingApp.RentalItems').where({ rental_ID: req.data.rental_ID })
+                    ) || [];
+                    const assignedEquipIds = rentalItems.map(item => item.equipment_ID).filter(Boolean);
+
+                    const currentEquipId = req.data.equipment_ID !== undefined ? req.data.equipment_ID : cur.equipment_ID;
+
+                    if (currentEquipId && !assignedEquipIds.includes(currentEquipId)) {
+                        req.data.equipment_ID = null;
+                    } else if (!currentEquipId && assignedEquipIds.length === 1) {
+                        req.data.equipment_ID = assignedEquipIds[0];
+                    }
+                } else {
+                    req.data.equipment_ID = null;
+                }
+            }
+
+            // 2. Suggest correct next inspection type (CheckOut vs CheckIn) based on contract history
+            const eqId = req.data.equipment_ID !== undefined ? req.data.equipment_ID : cur.equipment_ID;
+            const rentalId = req.data.rental_ID !== undefined ? req.data.rental_ID : cur.rental_ID;
+            if (eqId) {
+                const nextType = await getExpectedNextInspectionType(eqId, rentalId);
+                req.data.inspectionType = nextType;
+            }
+        });
+
+        // Strict lifecycle sequence validation: CheckOut -> CheckIn -> CheckOut -> CheckIn per contract
+        this.before('SAVE', 'ConditionLogs', async (req) => {
+            const { equipment_ID, rental_ID, inspectionType, ID } = req.data;
+            if (!equipment_ID) return;
+
+            // Fetch the latest existing inspection log for this equipment (scoped by rental if provided)
+            let query = SELECT.from(ConditionLogs)
+                .where({ equipment_ID });
+
+            if (rental_ID) {
+                query = SELECT.from(ConditionLogs).where({ equipment_ID, rental_ID });
+            }
+
+            if (ID) {
+                query.and({ ID: { '!=': ID } });
+            }
+
+            query.orderBy('createdAt desc', 'inspectionDate desc');
+            const previousLogs = await cds.db.run(query);
+            const lastLog = previousLogs?.[0];
+
+            if (inspectionType === 'CheckOut') {
+                if (lastLog && (lastLog.inspectionType === 'CheckOut' || lastLog.inspectionType === 'Dispatch')) {
+                    req.error(
+                        400,
+                        'This asset is already Checked-Out under this contract. You cannot perform Check-Out again; only Check-In is allowed next.',
+                        'inspectionType'
+                    );
+                }
+            } else if (inspectionType === 'CheckIn') {
+                if (!lastLog || (lastLog.inspectionType !== 'CheckOut' && lastLog.inspectionType !== 'Dispatch')) {
+                    req.error(
+                        400,
+                        'This asset has not been Checked-Out under this contract yet. You must complete Check-Out before Check-In is allowed.',
+                        'inspectionType'
+                    );
+                }
+            }
+
+            // Defensive hook: prevent unique constraint violation on DamagePhotos during ConditionLogs draft activation
+            if (ID) {
+                try {
+                    const draftPhotos = await cds.db.run(
+                        SELECT.from('InspectionService.DamagePhotos_drafts').where({ conditionLog_ID: ID })
+                    ) || [];
+                    for (const p of draftPhotos) {
+                        await cds.db.run(
+                            DELETE.from('RentalEquipmentTrackingApp.DamagePhotos').where({ ID: p.ID })
+                        );
+                    }
+                } catch (e) {
+                    console.warn('[InspectionService] Pre-activation photo cleanup notice:', e.message);
                 }
             }
         });

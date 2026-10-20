@@ -62,9 +62,10 @@ cds.on('bootstrap', (app) => {
                 folder: 'sap_sprint_evidence'
             });
 
-            // 2. Persist to DamagePhotos entity
+            // 2. Determine if parent entity is an active Draft or an Active entity
             const db = await cds.connect.to('db');
             const photoId = cds.utils.uuid();
+            const formatHanaTimestamp = (d) => (d ? new Date(d) : new Date()).toISOString().slice(0, 19).replace('T', ' ');
 
             const photoRecord = {
                 ID: photoId,
@@ -83,15 +84,14 @@ cds.on('bootstrap', (app) => {
                 uploadedBy: uploadedBy || (req.user && req.user.id !== 'anonymous' ? req.user.id : 'Yard Staff')
             };
 
-            await db.run(INSERT.into('RentalEquipmentTrackingApp.DamagePhotos').entries(photoRecord));
+            let isDraft = false;
 
-            // 3. Synchronize with Draft tables if parent entity is currently an active Draft
-            const formatHanaTimestamp = (d) => (d ? new Date(d) : new Date()).toISOString().slice(0, 19).replace('T', ' ');
             try {
                 if (repairBill_ID) {
                     const billDraft = await db.run(SELECT.one.from('BillingService.RepairBills_drafts').where({ ID: repairBill_ID }));
                     const draftUUID = billDraft ? (billDraft.DraftAdministrativeData_DraftUUID || billDraft.DRAFTADMINISTRATIVEDATA_DRAFTUUID) : null;
                     if (billDraft && draftUUID) {
+                        isDraft = true;
                         const draftEntry = {
                             ID: photoId,
                             repairBill_ID: repairBill_ID,
@@ -115,37 +115,6 @@ cds.on('bootstrap', (app) => {
                         await db.run(INSERT.into('BillingService.DamagePhotos_drafts').entries(draftEntry))
                             .catch(e => console.warn('[Draft Sync Warning RepairBills]', e.message));
 
-                        // Retroactively sync any active photos for this repair bill into the draft
-                        const activePhotos = await db.run(
-                            SELECT.from('RentalEquipmentTrackingApp.DamagePhotos')
-                                .where({ repairBill_ID: repairBill_ID })
-                        ) || [];
-
-                        for (const ap of activePhotos) {
-                            if (ap.ID !== photoId) {
-                                await db.run(INSERT.into('BillingService.DamagePhotos_drafts').entries({
-                                    ID: ap.ID,
-                                    repairBill_ID: repairBill_ID,
-                                    conditionLog_ID: ap.conditionLog_ID || null,
-                                    damage_ID: ap.damage_ID || null,
-                                    fileName: ap.fileName,
-                                    photoType: ap.photoType || 'Return',
-                                    mediaType: ap.mediaType || 'image/jpeg',
-                                    mediaUrl: ap.mediaUrl,
-                                    publicId: ap.publicId,
-                                    sha256: ap.sha256,
-                                    latitude: ap.latitude,
-                                    longitude: ap.longitude,
-                                    uploadedAt: formatHanaTimestamp(ap.uploadedAt),
-                                    uploadedBy: ap.uploadedBy || 'Yard Staff',
-                                    IsActiveEntity: false,
-                                    HasActiveEntity: false,
-                                    HasDraftEntity: false,
-                                    DraftAdministrativeData_DraftUUID: draftUUID
-                                })).catch(() => {});
-                            }
-                        }
-
                         console.log(`[API /api/upload-evidence] ✅ Successfully synced photo ${photoId} to BillingService.DamagePhotos_drafts`);
                     }
                 }
@@ -153,6 +122,7 @@ cds.on('bootstrap', (app) => {
                     const logDraft = await db.run(SELECT.one.from('InspectionService.ConditionLogs_drafts').where({ ID: conditionLog_ID }));
                     const logUUID = logDraft ? (logDraft.DraftAdministrativeData_DraftUUID || logDraft.DRAFTADMINISTRATIVEDATA_DRAFTUUID) : null;
                     if (logDraft && logUUID) {
+                        isDraft = true;
                         await db.run(INSERT.into('InspectionService.DamagePhotos_drafts').entries({
                             ID: photoId,
                             conditionLog_ID: conditionLog_ID,
@@ -173,12 +143,15 @@ cds.on('bootstrap', (app) => {
                             HasDraftEntity: false,
                             DraftAdministrativeData_DraftUUID: logUUID
                         })).catch(e => console.warn('[Draft Sync Warning ConditionLogs]', e.message));
+
+                        console.log(`[API /api/upload-evidence] ✅ Successfully synced photo ${photoId} to InspectionService.DamagePhotos_drafts`);
                     }
                 }
                 if (damage_ID) {
                     const damageDraft = await db.run(SELECT.one.from('InspectionService.DamageRecords_drafts').where({ ID: damage_ID }));
                     const damageUUID = damageDraft ? (damageDraft.DraftAdministrativeData_DraftUUID || damageDraft.DRAFTADMINISTRATIVEDATA_DRAFTUUID) : null;
                     if (damageDraft && damageUUID) {
+                        isDraft = true;
                         await db.run(INSERT.into('InspectionService.DamagePhotos_drafts').entries({
                             ID: photoId,
                             damage_ID: damage_ID,
@@ -199,10 +172,20 @@ cds.on('bootstrap', (app) => {
                             HasDraftEntity: false,
                             DraftAdministrativeData_DraftUUID: damageUUID
                         })).catch(e => console.warn('[Draft Sync Warning DamageRecords]', e.message));
+
+                        console.log(`[API /api/upload-evidence] ✅ Successfully synced photo ${photoId} to InspectionService.DamagePhotos_drafts`);
                     }
+                }
+
+                // If parent is not a draft (i.e. already active), persist directly to active entity
+                if (!isDraft) {
+                    await db.run(INSERT.into('RentalEquipmentTrackingApp.DamagePhotos').entries(photoRecord));
                 }
             } catch (draftErr) {
                 console.warn('[API /api/upload-evidence] Draft synchronization notice:', draftErr.message);
+                if (!isDraft) {
+                    await db.run(INSERT.into('RentalEquipmentTrackingApp.DamagePhotos').entries(photoRecord)).catch(() => {});
+                }
             }
 
             console.log(`[API /api/upload-evidence] ✅ Successfully stored photo ${photoId} in Cloudinary! SHA-256: ${uploadResult.sha256.substring(0, 16)}...`);
@@ -230,6 +213,43 @@ cds.on('bootstrap', (app) => {
             cloudName: process.env.CLOUDINARY_CLOUD_NAME || (process.env.CLOUDINARY_URL ? 'Configured via CLOUDINARY_URL' : null)
         });
     });
+});
+
+cds.on('served', async () => {
+    try {
+        const db = await cds.connect.to('db');
+        // Clean up any premature active photos whose parent RepairBill is not yet active (still in draft)
+        const photosWithBill = await db.run(
+            SELECT.from('RentalEquipmentTrackingApp.DamagePhotos').where`repairBill_ID is not null`
+        ) || [];
+        for (const p of photosWithBill) {
+            const activeBill = await db.run(
+                SELECT.one.from('RentalEquipmentTrackingApp.RepairBills').where({ ID: p.repairBill_ID })
+            );
+            if (!activeBill) {
+                await db.run(
+                    DELETE.from('RentalEquipmentTrackingApp.DamagePhotos').where({ ID: p.ID })
+                );
+                console.log(`[Startup Cleanup] Cleaned up premature active photo ${p.ID} for draft repair bill ${p.repairBill_ID}`);
+            }
+        }
+        // Ensure equipment with active Repair Bills are marked Damaged
+        const activeBills = await db.run(
+            SELECT.from('RentalEquipmentTrackingApp.RepairBills').where`billingStatus in ('Draft', 'PendingApproval', 'Approved', 'Adjusted', 'Disputed')`
+        ) || [];
+        for (const b of activeBills) {
+            if (b.equipment_ID) {
+                await db.run(
+                    UPDATE('RentalEquipmentTrackingApp.Equipment').set({
+                        currentStatus: 'Damaged'
+                    }).where({ ID: b.equipment_ID })
+                );
+                console.log(`[Startup Sync] Marked Equipment ${b.equipment_ID} as Damaged for active Repair Bill ${b.invoiceNo || b.ID}`);
+            }
+        }
+    } catch (e) {
+        console.warn('[Startup Cleanup Notice]', e.message);
+    }
 });
 
 export default cds.server;

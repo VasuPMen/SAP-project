@@ -24,22 +24,20 @@ annotate RentalService.Locations with @(
         }
     ],
     UI.HeaderInfo: {
-        TypeName: 'Depot Location',
-        TypeNamePlural: 'Yard & Depot Locations',
-        Title: { Value: locationName },
-        Description: { Value: plant }
+        TypeName: 'Location',
+        TypeNamePlural: 'Locations',
+        Title: { Value: locationName }
     },
     UI.SelectionFields: [
         locationName,
         locationType,
-        plant,
         city
     ],
     UI.LineItem: [
-        { Value: locationName, Label: 'Depot / Location Name' },
+        { Value: locationName, Label: 'Location Name' },
+        { Value: plant, Label: 'Plant Code' },
         { Value: locationType, Label: 'Location Type' },
-        { Value: plant, Label: 'SAP Plant Code' },
-        { Value: address, Label: 'Street Address' },
+        { Value: address, Label: 'Full Address' },
         { Value: city, Label: 'City' },
         { Value: latitude, Label: 'Latitude' },
         { Value: longitude, Label: 'Longitude' }
@@ -47,7 +45,7 @@ annotate RentalService.Locations with @(
     UI.Facets: [
         {
             $Type: 'UI.ReferenceFacet',
-            Label: 'Depot Details',
+            Label: 'Location Details',
             Target: '@UI.FieldGroup#LocationInfo'
         },
         {
@@ -60,8 +58,8 @@ annotate RentalService.Locations with @(
     UI.FieldGroup #LocationInfo: {
         Data: [
             { Value: locationName, Label: 'Location Name' },
+            { Value: plant, Label: 'Plant Code' },
             { Value: locationType, Label: 'Location Type' },
-            { Value: plant, Label: 'Operating Plant' },
             { Value: address, Label: 'Full Address' },
             { Value: city, Label: 'City' },
             { Value: latitude, Label: 'GPS Latitude' },
@@ -71,12 +69,19 @@ annotate RentalService.Locations with @(
 );
 
 annotate RentalService.Locations with {
-    locationName @mandatory @title: 'Depot / Location Name' @Common.Label: 'Depot / Location Name';
-    locationType @title: 'Location Type'                   @Common.Label: 'Location Type';
-    plant        @mandatory @title: 'SAP Plant Code'        @Common.Label: 'SAP Plant Code';
-    address      @title: 'Street Address'                  @Common.Label: 'Street Address';
-    city         @title: 'City'                            @Common.Label: 'City';
-    latitude     @title: 'GPS Latitude'                    @Common.Label: 'GPS Latitude';
-    longitude    @title: 'GPS Longitude'                   @Common.Label: 'GPS Longitude';
+    locationName @mandatory @title: 'Location Name' @Common.Label: 'Location Name';
+    plant        @readonly  @title: 'Plant Code'    @Common.Label: 'Plant Code';
+    locationType @mandatory @title: 'Location Type' @Common.Label: 'Location Type'
+                 @Common.ValueListWithFixedValues: true
+                 @Common.ValueList: {
+                     CollectionPath: 'LocationTypes',
+                     Parameters: [
+                         { $Type: 'Common.ValueListParameterInOut', LocalDataProperty: locationType, ValueListProperty: 'name' }
+                     ]
+                 };
+    address      @mandatory @title: 'Full Address'  @Common.Label: 'Full Address';
+    city         @mandatory @title: 'City'          @Common.Label: 'City';
+    latitude     @mandatory @title: 'GPS Latitude'  @Common.Label: 'GPS Latitude';
+    longitude    @mandatory @title: 'GPS Longitude' @Common.Label: 'GPS Longitude';
     equipment    @readonly;
 };

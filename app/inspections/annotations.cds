@@ -4,12 +4,22 @@ using { InspectionService } from '../../srv/inspection-service/inspection-servic
    9. INSPECTION SERVICE - CONDITION LOGS & INSPECTIONS (FR-005, FR-006)
    ========================================================================== */
 
+annotate InspectionService.ContractEquipment with @(
+    UI.LineItem: [
+        { Value: equipmentName, Label: 'Equipment Name' },
+        { Value: equipmentNo, Label: 'Asset ID' },
+        { Value: serialNumber, Label: 'Serial Number' },
+        { Value: currentStatus, Label: 'Status' },
+        { Value: currentGrade, Label: 'Grade' }
+    ]
+);
+
 annotate InspectionService.ConditionLogs with @(
     UI.HeaderInfo: {
         TypeName: 'Inspection Log',
         TypeNamePlural: 'Condition Logs & Inspections',
-        Title: { Value: equipment_ID },
-        Description: { Value: inspectionType }
+        Title: { Value: inspectionType },
+        Description: { Value: inspectionDate }
     },
     UI.SelectionFields: [
         inspectionType,
@@ -50,14 +60,18 @@ annotate InspectionService.ConditionLogs with @(
             Target: 'photos/@UI.LineItem'
         }
     ],
+    Common.SideEffects #RentalChange: {
+        SourceProperties: [ rental_ID ],
+        TargetProperties: [ equipment_ID, inspectionType ]
+    },
     Common.SideEffects #EquipmentChange: {
         SourceProperties: [ equipment_ID ],
-        TargetProperties: [ rental_ID ]
+        TargetProperties: [ inspectionType ]
     },
     UI.FieldGroup #InspectionFindings: {
         Data: [
-            { Value: equipment_ID, Label: 'Equipment Asset' },
             { Value: rental_ID, Label: 'Rental Contract' },
+            { Value: equipment_ID, Label: 'Equipment Asset' },
             { Value: inspectionType, Label: 'Inspection Type' },
             { Value: inspectionDate, Label: 'Date & Time' },
             { Value: conditionGrade, Label: 'Condition Grade' },
@@ -75,13 +89,14 @@ annotate InspectionService.ConditionLogs with {
     equipment        @title: 'Equipment Asset'       @Common.Label: 'Equipment Asset'
                      @Common.Text: equipment.equipmentName @Common.TextArrangement: #TextFirst
                      @Common.ValueList: {
-                         CollectionPath: 'RentedEquipment',
+                         CollectionPath: 'ContractEquipment',
                          Parameters: [
-                             { $Type: 'Common.ValueListParameterInOut', LocalDataProperty: equipment_ID, ValueListProperty: 'ID' },
+                             { $Type: 'Common.ValueListParameterInOut', LocalDataProperty: equipment_ID, ValueListProperty: 'equipment_ID' },
+                             { $Type: 'Common.ValueListParameterIn',    LocalDataProperty: rental_ID,    ValueListProperty: 'rental_ID' },
                              { $Type: 'Common.ValueListParameterDisplayOnly', ValueListProperty: 'equipmentName' },
+                             { $Type: 'Common.ValueListParameterDisplayOnly', ValueListProperty: 'equipmentNo' },
                              { $Type: 'Common.ValueListParameterDisplayOnly', ValueListProperty: 'serialNumber' },
-                             { $Type: 'Common.ValueListParameterDisplayOnly', ValueListProperty: 'currentStatus' },
-                             { $Type: 'Common.ValueListParameterDisplayOnly', ValueListProperty: 'currentGrade' }
+                             { $Type: 'Common.ValueListParameterDisplayOnly', ValueListProperty: 'currentStatus' }
                          ]
                      };
     rental           @title: 'Rental Contract'       @Common.Label: 'Rental Contract'

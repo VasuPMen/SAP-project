@@ -126,6 +126,15 @@ type ItemStatus : String(15) enum {
     Returned;
 };
 
+type LocationType : String(50) enum {
+    @title: 'Yard'
+    Yard = 'Yard';
+    @title: 'Depot'
+    Depot = 'Depot';
+    @title: 'Workshop'
+    Workshop = 'Workshop';
+};
+
 type MaintenanceType : String(30) enum {
     @title: 'Preventive Maintenance'
     Preventive;
@@ -190,35 +199,35 @@ entity Customers : cuid, managed {
 
 entity Locations : cuid, managed {
     locationName : String(100) @mandatory;
-    locationType : String(50); // e.g., Depot, Workshop, Jobsite
-    plant        : String(10); // SAP Plant code for authorization
-    address      : String(255);
-    city         : String(100);
-    latitude     : Decimal(9,6);
-    longitude    : Decimal(9,6);
+    locationType : LocationType @mandatory;
+    plant        : String(10); // Plant code auto-generated
+    address      : String(255) @mandatory;
+    city         : String(100) @mandatory;
+    latitude     : Decimal(9,6) @mandatory;
+    longitude    : Decimal(9,6) @mandatory;
     equipment    : Association to many Equipment
                        on equipment.location = $self;
 };
 
 entity Equipment : cuid, managed {
-    equipmentNo         : String(50) @title: 'Asset ID' @Common.Label: 'Asset ID';
-    serialNumber        : String(100) @mandatory @title: 'Serial Number' @Common.Label: 'Serial Number';
+    equipmentNo         : String(50) @readonly @title: 'Equipment No' @Common.Label: 'Equipment No';
+    serialNumber        : String(100) @readonly @title: 'Serial Number' @Common.Label: 'Serial Number';
     category            : String(50) @title: 'Category' @Common.Label: 'Category';
     equipmentName       : String(100) @mandatory @title: 'Equipment Name' @Common.Label: 'Equipment Name';
     equipmentType       : String(50) @title: 'Equipment Type' @Common.Label: 'Equipment Type';
     manufacturer        : String(100) @title: 'Manufacturer' @Common.Label: 'Manufacturer';
     model               : String(100) @title: 'Model' @Common.Label: 'Model';
-    plant               : String(10) @title: 'Operating Plant' @Common.Label: 'Operating Plant'; // SAP Plant for role & instance-based access
+    plant               : String(10) @UI.Hidden: true;
     location            : Association to Locations @mandatory @title: 'Depot Location' @Common.Label: 'Depot Location';
-    latitude            : Decimal(9,6) @title: 'GPS Latitude' @Common.Label: 'GPS Latitude';
-    longitude           : Decimal(9,6) @title: 'GPS Longitude' @Common.Label: 'GPS Longitude';
+    latitude            : Decimal(9,6) @UI.Hidden: true;
+    longitude           : Decimal(9,6) @UI.Hidden: true;
     purchaseDate        : Date @title: 'Purchase Date' @Common.Label: 'Purchase Date';
     rentalRatePerDay    : Money @title: 'Daily Rental Rate' @Common.Label: 'Daily Rental Rate';
     currentStatus       : EquipmentStatus default #Available @title: 'Operational Status' @Common.Label: 'Operational Status';
     currentGrade        : ConditionGrade default #A @title: 'Condition Grade' @Common.Label: 'Condition Grade';
     currentMeterReading : Decimal(10,2) @title: 'Meter Reading (Hours)' @Common.Label: 'Meter Reading (Hours)';
     custodian           : String(100) @title: 'Current Custodian' @Common.Label: 'Current Custodian';
-    barcode             : String(100) @title: 'Barcode / NFC Tag' @Common.Label: 'Barcode / NFC Tag';
+    barcode             : String(100) @UI.Hidden: true;
     nextServiceDate     : Date @title: 'Next Service Date' @Common.Label: 'Next Service Date';
     maintenance         : Association to many MaintenanceRecords
                               on maintenance.equipment = $self;
@@ -318,7 +327,7 @@ entity ConditionLogs : cuid, managed {
     locked           : Boolean default false @title: 'Report Locked (Immutable)' @Common.Label: 'Report Locked (Immutable)';
     damages          : Association to many DamageRecords
                            on damages.conditionLog = $self;
-    photos           : Association to many DamagePhotos
+    photos           : Composition of many DamagePhotos
                            on photos.conditionLog = $self;
 };
 

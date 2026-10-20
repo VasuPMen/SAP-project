@@ -109,6 +109,15 @@ service RentalService {
     ]
     entity AssetStatusHistory as projection on my.AssetStatusHistory;
 
+    @readonly
+    @restrict: [
+        { grant: ['READ'], to: ['Dispatcher', 'YardWorker', 'Manager', 'Admin', 'Auditor', 'Technician', 'BillingClerk'] }
+    ]
+    entity LocationTypes {
+        key code : String(50);
+        name     : String(100);
+    }
+
     // Actions restricted by role
     action checkOutRental(rentalId: UUID) returns Rentals;
     action checkInRental(rentalId: UUID, actualReturnDate: Date) returns Rentals;

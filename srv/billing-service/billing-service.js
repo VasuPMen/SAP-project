@@ -82,6 +82,25 @@ export default class BillingService extends cds.ApplicationService {
             if (!req.data.photoType) req.data.photoType = 'Return';
         });
 
+        // Defensive hook: prevent unique constraint violation on DamagePhotos during RepairBills draft activation
+        this.before(['draftActivate', 'SAVE'], 'RepairBills', async (req) => {
+            const billId = req.data?.ID || req.params?.[0]?.ID || req.params?.[0];
+            if (billId) {
+                try {
+                    const draftPhotos = await cds.db.run(
+                        SELECT.from('BillingService.DamagePhotos_drafts').where({ repairBill_ID: billId })
+                    ) || [];
+                    for (const p of draftPhotos) {
+                        await cds.db.run(
+                            DELETE.from('RentalEquipmentTrackingApp.DamagePhotos').where({ ID: p.ID })
+                        );
+                    }
+                } catch (e) {
+                    console.warn('[BillingService] Pre-activation photo cleanup notice:', e.message);
+                }
+            }
+        });
+
         // Defaults on new PricingRules draft
         this.before(['CREATE', 'NEW'], 'PricingRules.drafts', async (req) => {
             if (!req.data.severity) req.data.severity = 'Medium';
@@ -202,6 +221,35 @@ export default class BillingService extends cds.ApplicationService {
                 const tax = req.data.taxAmount !== undefined ? toNum(req.data.taxAmount, 0) : toNum(cur.taxAmount, 0);
                 req.data.taxAmount = Number(tax.toFixed(2));
                 req.data.totalAmount = Number((repair + tax).toFixed(2));
+            }
+        });
+
+        // Automatically set Equipment status to Damaged when an active Repair Bill is created
+        this.after('SAVE', 'RepairBills', async (bill) => {
+            if (bill.equipment_ID && bill.billingStatus !== 'Posted' && bill.billingStatus !== 'Rejected') {
+                try {
+                    const eq = await cds.db.run(
+                        SELECT.one.from('RentalEquipmentTrackingApp.Equipment').where({ ID: bill.equipment_ID })
+                    );
+                    if (eq && eq.currentStatus !== 'Damaged' && eq.currentStatus !== 'Quarantined') {
+                        await cds.db.run(
+                            UPDATE('RentalEquipmentTrackingApp.Equipment').set({
+                                currentStatus: 'Damaged'
+                            }).where({ ID: bill.equipment_ID })
+                        );
+                        await cds.db.run(
+                            INSERT.into('RentalEquipmentTrackingApp.AssetStatusHistory').entries({
+                                equipment_ID: bill.equipment_ID,
+                                oldStatus: eq.currentStatus,
+                                newStatus: 'Damaged',
+                                reason: `Repair Bill ${bill.invoiceNo || bill.ID} generated for damage charges`
+                            })
+                        );
+                        console.log(`[BillingService] ✅ Updated Equipment ${bill.equipment_ID} status to Damaged`);
+                    }
+                } catch (err) {
+                    console.warn('[BillingService] Equipment status update warning:', err.message);
+                }
             }
         });
 

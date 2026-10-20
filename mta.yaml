@@ -2,14 +2,17 @@ _schema-version: 3.3.0
 ID: sprint
 version: 1.0.0
 description: "A simple CAP project."
+
 parameters:
   enable-parallel-deployments: true
+
 build-parameters:
   before-all:
     - builder: custom
       commands:
         - npm ci
         - npx cds build --production
+
 modules:
   - name: sprint-srv
     type: nodejs
@@ -20,12 +23,12 @@ modules:
     build-parameters:
       builder: npm-ci
     provides:
-      - name: srv-api # required by consumers of CAP services (e.g. approuter)
+      - name: srv-api
         properties:
           srv-url: ${default-url}
     requires:
       - name: sprint-auth
-      - name: sprint-db
+      - name: RETS
 
   - name: sprint-db-deployer
     type: hdb
@@ -33,7 +36,7 @@ modules:
     parameters:
       buildpack: nodejs_buildpack
     requires:
-      - name: sprint-db
+      - name: RETS
 
 resources:
   - name: sprint-auth
@@ -49,7 +52,8 @@ resources:
           credential-types:
             - "binding-secret"
             - "x509"
-  - name: sprint-db
+
+  - name: RETS
     type: com.sap.xs.hdi-container
     parameters:
       service: hana

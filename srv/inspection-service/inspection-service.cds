@@ -44,7 +44,22 @@ service InspectionService {
         equipmentName,
         currentStatus,
         currentGrade
-    } where currentStatus in ('RentedOut', 'ReturnedPendingInspection');
+    };
+
+    @readonly
+    @restrict: [
+        { grant: ['READ'], to: ['YardWorker', 'Technician', 'Dispatcher', 'Manager', 'Admin', 'Auditor'] }
+    ]
+    entity ContractEquipment {
+        key ID           : UUID;
+        rental_ID        : UUID;
+        equipment_ID     : UUID;
+        equipmentNo      : String(50);
+        equipmentName    : String(100);
+        serialNumber     : String(100);
+        currentStatus    : String(50);
+        currentGrade     : String(5);
+    };
 
     @readonly
     @restrict: [

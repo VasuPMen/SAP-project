@@ -5,25 +5,12 @@ export default class RentalService extends cds.ApplicationService {
         const { Customers, Locations, Rentals, RentalItems, RentalStatusHistory, Equipment, EquipmentTransfers, AssetStatusHistory } = this.entities;
 
         this.before('READ', 'Equipment', async (req) => {
-            try {
-                await cds.db.run(
-                    UPDATE('RentalEquipmentTrackingApp.Equipment')
-                        .set({ currentStatus: 'Available' })
-                        .where({ equipmentNo: 'EQ-1001' })
-                );
-                await cds.db.run(
-                    UPDATE('RentalEquipmentTrackingApp.Equipment')
-                        .set({ currentStatus: 'Available' })
-                        .where({ equipmentNo: 'EQ-1006' })
-                );
-            } catch (e) {
-                // Ignore if DB not ready
-            }
             // Only clean up on list queries, not when editing a specific draft by key
             if (!req.params?.length && !req.query?.SELECT?.one) {
                 try {
+                    const oneHourAgo = new Date(Date.now() - 3600000).toISOString();
                     await cds.db.run(
-                        DELETE.from('RentalService.Equipment.drafts').where`equipmentName is null or equipmentName = '' or serialNumber is null or serialNumber = '' or location_ID is null`
+                        DELETE.from('RentalService.Equipment.drafts').where`equipmentName is null and location_ID is null and createdAt < ${oneHourAgo}`
                     );
                 } catch (e) {
                     // Ignore if draft table is not engaged
@@ -31,13 +18,58 @@ export default class RentalService extends cds.ApplicationService {
             }
         });
 
+        // Helper: Generate next sequential Equipment No (EQ-1001) and Serial Number (SN-1001)
+        async function getNextEquipmentNumbers() {
+            let maxEq = 1000;
+            let maxSn = 1000;
+            try {
+                const eqs = await cds.db.run(
+                    SELECT.from('RentalEquipmentTrackingApp.Equipment').columns('equipmentNo', 'serialNumber')
+                );
+                for (const item of eqs || []) {
+                    if (item.equipmentNo) {
+                        const m = String(item.equipmentNo).match(/EQ-(\d+)/i) || String(item.equipmentNo).match(/(\d+)/);
+                        if (m) {
+                            const val = parseInt(m[1], 10);
+                            if (!isNaN(val) && val > maxEq) maxEq = val;
+                        }
+                    }
+                    if (item.serialNumber) {
+                        const m = String(item.serialNumber).match(/SN-(\d+)/i) || String(item.serialNumber).match(/(\d+)/);
+                        if (m) {
+                            const val = parseInt(m[1], 10);
+                            if (!isNaN(val) && val > maxSn) maxSn = val;
+                        }
+                    }
+                }
+            } catch (e) {
+                // Ignore fallback
+            }
+            return {
+                equipmentNo: `EQ-${maxEq + 1}`,
+                serialNumber: `SN-${maxSn + 1}`
+            };
+        }
+
+        // Auto-generate Equipment No and Serial Number on draft creation
+        this.before('NEW', 'Equipment.drafts', async (req) => {
+            const nextNums = await getNextEquipmentNumbers();
+            if (!req.data.equipmentNo) req.data.equipmentNo = nextNums.equipmentNo;
+            if (!req.data.serialNumber) req.data.serialNumber = nextNums.serialNumber;
+            if (!req.data.plant) req.data.plant = 'PLANT-DEF';
+        });
+
         // Strict validation: Equipment is only accepted if all required details are provided
-        this.before('SAVE', 'Equipment', (req) => {
+        this.before(['CREATE', 'SAVE'], 'Equipment', async (req) => {
+            if (!req.data.equipmentNo || !req.data.serialNumber) {
+                const nextNums = await getNextEquipmentNumbers();
+                if (!req.data.equipmentNo) req.data.equipmentNo = nextNums.equipmentNo;
+                if (!req.data.serialNumber) req.data.serialNumber = nextNums.serialNumber;
+            }
+            if (!req.data.plant) req.data.plant = 'PLANT-DEF';
+
             if (!req.data.equipmentName || !String(req.data.equipmentName).trim()) {
                 req.error(400, 'Equipment Name is mandatory and must be provided', 'equipmentName');
-            }
-            if (!req.data.serialNumber || !String(req.data.serialNumber).trim()) {
-                req.error(400, 'Serial Number is mandatory and must be provided', 'serialNumber');
             }
             if (!req.data.location_ID) {
                 req.error(400, 'Depot Location is mandatory and must be selected', 'location_ID');
@@ -122,13 +154,64 @@ export default class RentalService extends cds.ApplicationService {
             }
         });
 
-        // Strict validation: Locations requires Location Name and Operating Plant Code
-        this.before('SAVE', 'Locations', (req) => {
-            if (!req.data.locationName || !String(req.data.locationName).trim()) {
-                req.error(400, 'Depot / Location Name is mandatory and must be provided', 'locationName');
+        // Provide fixed-values dropdown entries for LocationTypes
+        this.on('READ', 'LocationTypes', () => [
+            { code: 'Yard', name: 'Yard' },
+            { code: 'Depot', name: 'Depot' },
+            { code: 'Workshop', name: 'Workshop' }
+        ]);
+
+        // Helper: Generate next sequential plant code (e.g. PLANT-1010)
+        async function getNextPlantCode() {
+            let maxNum = 1000;
+            try {
+                const locs = await cds.db.run(
+                    SELECT.from('RentalEquipmentTrackingApp.Locations').columns('plant')
+                );
+                for (const loc of locs || []) {
+                    if (loc.plant) {
+                        const m = String(loc.plant).match(/PLANT-(\d+)/i) || String(loc.plant).match(/(\d+)/);
+                        if (m) {
+                            const val = parseInt(m[1], 10);
+                            if (!isNaN(val) && val > maxNum) maxNum = val;
+                        }
+                    }
+                }
+            } catch (e) {
+                // Ignore fallback
             }
-            if (!req.data.plant || !String(req.data.plant).trim()) {
-                req.error(400, 'SAP Plant Code is mandatory and must be provided', 'plant');
+            return `PLANT-${maxNum + 10}`;
+        }
+
+        // Auto-generate Plant Code on draft creation
+        this.before('NEW', 'Locations.drafts', async (req) => {
+            if (!req.data.plant) {
+                req.data.plant = await getNextPlantCode();
+            }
+        });
+
+        // Strict validation: All fields on Locations are compulsory
+        this.before(['CREATE', 'SAVE'], 'Locations', async (req) => {
+            if (!req.data.locationName || !String(req.data.locationName).trim()) {
+                req.error(400, 'Location Name is mandatory and must be provided', 'locationName');
+            }
+            if (!req.data.locationType || !String(req.data.locationType).trim()) {
+                req.error(400, 'Location Type is mandatory and must be selected', 'locationType');
+            }
+            if (!req.data.address || !String(req.data.address).trim()) {
+                req.error(400, 'Full Address is mandatory and must be provided', 'address');
+            }
+            if (!req.data.city || !String(req.data.city).trim()) {
+                req.error(400, 'City is mandatory and must be provided', 'city');
+            }
+            if (req.data.latitude === undefined || req.data.latitude === null || req.data.latitude === '') {
+                req.error(400, 'GPS Latitude is mandatory and must be provided', 'latitude');
+            }
+            if (req.data.longitude === undefined || req.data.longitude === null || req.data.longitude === '') {
+                req.error(400, 'GPS Longitude is mandatory and must be provided', 'longitude');
+            }
+            if (!req.data.plant) {
+                req.data.plant = await getNextPlantCode();
             }
         });
 
@@ -521,6 +604,9 @@ export default class RentalService extends cds.ApplicationService {
             const { rentalId, actualReturnDate } = req.data;
             const rental = await SELECT.one.from(Rentals).where({ ID: rentalId });
             if (!rental) return req.error(404, `Rental ${rentalId} not found`);
+            if (rental.rentalStatus !== 'Active') {
+                return req.error(400, `Only Active rentals can be checked in. Current status: ${rental.rentalStatus}`);
+            }
 
             const returnDate = actualReturnDate || new Date().toISOString().split('T')[0];
             const items = await SELECT.from(RentalItems).where({ rental_ID: rentalId });

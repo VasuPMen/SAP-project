@@ -8,8 +8,7 @@ annotate RentalService.Rentals with @(
     UI.HeaderInfo: {
         TypeName: 'Rental Contract',
         TypeNamePlural: 'Rental Contracts',
-        Title: { Value: contractNo },
-        Description: { Value: customer_ID }
+        Title: { Value: contractNo }
     },
     Common.SideEffects #ItemsChanged: {
         SourceEntities: [items],
@@ -39,30 +38,6 @@ annotate RentalService.Rentals with @(
         },
         { Value: totalRentalAmount, Label: 'Contract Value ($)' }
     ],
-    UI.HeaderFacets: [
-        {
-            $Type: 'UI.ReferenceFacet',
-            Target: '@UI.DataPoint#RentalStatus'
-        },
-        {
-            $Type: 'UI.ReferenceFacet',
-            Target: '@UI.DataPoint#TotalAmount'
-        }
-    ],
-    UI.DataPoint #RentalStatus: {
-        Value: rentalStatus,
-        Title: 'Contract Status',
-        Criticality: (
-            rentalStatus = 'Active' ? 3 :
-            rentalStatus = 'Returned' ? 2 :
-            rentalStatus = 'Booked' ? 2 :
-            rentalStatus = 'Overdue' ? 1 : 0
-        )
-    },
-    UI.DataPoint #TotalAmount: {
-        Value: totalRentalAmount,
-        Title: 'Total Contract Value ($)'
-    },
     UI.Facets: [
         {
             $Type: 'UI.CollectionFacet',
@@ -91,8 +66,7 @@ annotate RentalService.Rentals with @(
         Data: [
             { Value: contractNo, Label: 'Contract Number' },
             { Value: customer_ID, Label: 'Customer / Client' },
-            { Value: rentalStatus, Label: 'Rental Status' },
-            { Value: totalRentalAmount, Label: 'Total Rental Value ($)' }
+            { Value: totalRentalAmount, Label: 'Total Contract Value ($)' }
         ]
     },
     UI.FieldGroup #RentalSchedule: {
@@ -120,7 +94,7 @@ annotate RentalService.Rentals with {
     expectedReturnDate @title: 'Expected Return Date'  @Common.Label: 'Expected Return Date';
     actualReturnDate   @title: 'Actual Return Date'    @Common.Label: 'Actual Return Date' @UI.Hidden: true;
     rentalStatus       @title: 'Contract Status'       @Common.Label: 'Contract Status';
-    totalRentalAmount  @title: 'Contract Amount ($)'   @Common.Label: 'Contract Amount ($)';
+    totalRentalAmount  @title: 'Total Contract Value ($)' @Common.Label: 'Total Contract Value ($)';
     statusHistory      @UI.Hidden: true;
     conditionLogs      @UI.Hidden: true;
 };

@@ -8,8 +8,7 @@ annotate RentalService.Equipment with @(
     UI.HeaderInfo: {
         TypeName: 'Equipment Asset',
         TypeNamePlural: 'Equipment Assets',
-        Title: { Value: equipmentName },
-        Description: { Value: serialNumber }
+        Title: { Value: equipmentName }
     },
     UI.SelectionFields: [
         equipmentNo,
@@ -20,7 +19,8 @@ annotate RentalService.Equipment with @(
         location_ID
     ],
     UI.LineItem: [
-        { Value: equipmentNo, Label: 'Asset ID' },
+        { Value: equipmentNo, Label: 'Equipment No' },
+        { Value: serialNumber, Label: 'Serial Number' },
         { Value: equipmentName, Label: 'Equipment Name' },
         { Value: category, Label: 'Category' },
         { Value: manufacturer, Label: 'Manufacturer' },
@@ -97,7 +97,7 @@ annotate RentalService.Equipment with @(
                 },
                 {
                     $Type: 'UI.ReferenceFacet',
-                    Label: 'Yard & Telematics',
+                    Label: 'Yard & Depot Details',
                     Target: '@UI.FieldGroup#LocationTelematics'
                 }
             ]
@@ -105,59 +105,53 @@ annotate RentalService.Equipment with @(
     ],
     UI.FieldGroup #TechSpecs: {
         Data: [
-            { Value: equipmentNo, Label: 'Asset No' },
+            { Value: equipmentNo, Label: 'Equipment No' },
             { Value: serialNumber, Label: 'Serial Number' },
-            { Value: equipmentName, Label: 'Equipment Name' },
-            { Value: rentalRatePerDay, Label: 'Daily Rental Rate ($)' },
             { Value: category, Label: 'Category' },
             { Value: equipmentType, Label: 'Type' },
             { Value: manufacturer, Label: 'Manufacturer' },
             { Value: model, Label: 'Model' },
+            { Value: rentalRatePerDay, Label: 'Daily Rental Rate ($)' },
             { Value: purchaseDate, Label: 'Purchase Date' },
-            { Value: currentMeterReading, Label: 'Meter Reading (Hours)' },
-            { Value: barcode, Label: 'Barcode / NFC Tag' }
+            { Value: currentMeterReading, Label: 'Meter Reading (Hours)' }
         ]
     },
     UI.FieldGroup #LocationTelematics: {
         Data: [
-            { Value: plant, Label: 'Operating Plant' },
             { Value: location_ID, Label: 'Depot Location' },
             { Value: custodian, Label: 'Current Custodian' },
-            { Value: latitude, Label: 'GPS Latitude' },
-            { Value: longitude, Label: 'GPS Longitude' },
             { Value: nextServiceDate, Label: 'Next Scheduled Service' }
         ]
     }
 );
 
 annotate RentalService.Equipment with {
-    equipmentNo         @title: 'Asset ID'              @Common.Label: 'Asset ID';
-    serialNumber        @title: 'Serial Number'         @Common.Label: 'Serial Number';
-    equipmentName       @title: 'Equipment Name'        @Common.Label: 'Equipment Name';
-    category            @title: 'Category'              @Common.Label: 'Category';
-    equipmentType       @title: 'Equipment Type'        @Common.Label: 'Equipment Type';
-    manufacturer        @title: 'Manufacturer'          @Common.Label: 'Manufacturer';
-    model               @title: 'Model'                 @Common.Label: 'Model';
-    rentalRatePerDay    @title: 'Daily Rental Rate'     @Common.Label: 'Daily Rental Rate';
-    currentStatus       @title: 'Operational Status'    @Common.Label: 'Operational Status';
-    currentGrade        @title: 'Condition Grade'       @Common.Label: 'Condition Grade';
-    currentMeterReading @title: 'Meter Reading (Hours)' @Common.Label: 'Meter Reading (Hours)';
-    plant               @title: 'Operating Plant'       @Common.Label: 'Operating Plant';
-    location            @title: 'Depot Location'        @Common.Label: 'Depot Location' @Common.ValueList: {
+    equipmentNo         @readonly @title: 'Equipment No'        @Common.Label: 'Equipment No';
+    serialNumber        @readonly @title: 'Serial Number'       @Common.Label: 'Serial Number';
+    equipmentName       @mandatory @title: 'Equipment Name'     @Common.Label: 'Equipment Name';
+    category            @title: 'Category'                      @Common.Label: 'Category';
+    equipmentType       @title: 'Equipment Type'                @Common.Label: 'Equipment Type';
+    manufacturer        @title: 'Manufacturer'                  @Common.Label: 'Manufacturer';
+    model               @title: 'Model'                         @Common.Label: 'Model';
+    rentalRatePerDay    @title: 'Daily Rental Rate ($)'         @Common.Label: 'Daily Rental Rate ($)';
+    currentStatus       @title: 'Operational Status'            @Common.Label: 'Operational Status';
+    currentGrade        @title: 'Condition Grade'               @Common.Label: 'Condition Grade';
+    currentMeterReading @title: 'Meter Reading (Hours)'         @Common.Label: 'Meter Reading (Hours)';
+    location            @mandatory @title: 'Depot Location'     @Common.Label: 'Depot Location' @Common.ValueList: {
         CollectionPath: 'Locations',
         Parameters: [
             { $Type: 'Common.ValueListParameterInOut', LocalDataProperty: location_ID, ValueListProperty: 'ID' },
             { $Type: 'Common.ValueListParameterDisplayOnly', ValueListProperty: 'locationName' },
-            { $Type: 'Common.ValueListParameterDisplayOnly', ValueListProperty: 'plant' },
             { $Type: 'Common.ValueListParameterDisplayOnly', ValueListProperty: 'city' }
         ]
     };
-    custodian           @title: 'Current Custodian'     @Common.Label: 'Current Custodian';
-    purchaseDate        @title: 'Purchase Date'         @Common.Label: 'Purchase Date';
-    barcode             @title: 'Barcode / NFC Tag'     @Common.Label: 'Barcode / NFC Tag';
-    latitude            @title: 'GPS Latitude'          @Common.Label: 'GPS Latitude';
-    longitude           @title: 'GPS Longitude'         @Common.Label: 'GPS Longitude';
-    nextServiceDate     @title: 'Next Service Date'     @Common.Label: 'Next Service Date';
+    custodian           @title: 'Current Custodian'             @Common.Label: 'Current Custodian';
+    purchaseDate        @title: 'Purchase Date'                 @Common.Label: 'Purchase Date';
+    nextServiceDate     @title: 'Next Service Date'             @Common.Label: 'Next Service Date';
+    plant               @UI.Hidden: true;
+    barcode             @UI.Hidden: true;
+    latitude            @UI.Hidden: true;
+    longitude           @UI.Hidden: true;
 };
 
 annotate RentalService.EquipmentTransfers with @(
