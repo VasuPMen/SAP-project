@@ -1,19 +1,117 @@
+# ==============================================================================
+# SAP CAP (Cloud Application Programming Model) & BTP
+# ==============================================================================
 node_modules/
+gen/
+.gen/
 target/
 _out/
-gen/
+dist/
 
+# CAP Configuration & Local Databases
 .cdsrc-private.json
+.cds-services.json
 default-*.json
 *.sqlite
+*.sqlite3
+*.db
+sqlite.db*
 
-# MTA
+# Generated Types (@cap-js/cds-typer)
+@cds-models/
+
+# ==============================================================================
+# SAP MTA (Multi-Target Application) & Cloud Foundry
+# ==============================================================================
 mta_archives/
 *_mta_build_tmp
 *.mtar
+.build/
 
-# Other
+# ==============================================================================
+# Environment & Secrets (NEVER COMMIT SENSITIVE KEYS)
+# ==============================================================================
+.env
+.env*.local
+.env.development
+.env.production
+.env.test
+!.env.example
+credentials.json
+*.pem
+*.key
+*.cert
+
+# ==============================================================================
+# SAP Fiori / UI5
+# ==============================================================================
+webapp/test/changes_preview.js
+webapp/localService/mockdata/
+resources/
+
+# ==============================================================================
+# Logs & Process Artifacts
+# ==============================================================================
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.npm/
+
+# ==============================================================================
+# Archives & Bundles
+# ==============================================================================
+*.zip
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+
+# ==============================================================================
+# Scratch, Temp & Testing
+# ==============================================================================
+scratch/
+tmp/
+temp/
+coverage/
+.nyc_output/
+
+# ==============================================================================
+# Operating System Files
+# ==============================================================================
+# macOS
 .DS_Store
+.AppleDouble
+.LSOverride
+._*
 
-# @cap-js/cds-typer
-@cds-models
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+
+# Linux
+*~
+
+# ==============================================================================
+# IDEs & Editors
+# ==============================================================================
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.sublime-project
+*.sublime-workspace
+
+# VS Code (preserve team configuration, ignore user state)
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
