@@ -19,10 +19,25 @@ service MaintenanceService {
     entity RepairJobs as projection on my.RepairJobs;
 
     @readonly
+    @cds.redirection.target
     @restrict: [
         { grant: ['READ'], to: ['Technician', 'Dispatcher', 'Manager', 'Admin', 'Auditor'] }
     ]
     entity Equipment as projection on my.Equipment;
+
+    @readonly
+    @restrict: [
+        { grant: ['READ'], to: ['Technician', 'Dispatcher', 'Manager', 'Admin', 'Auditor'] }
+    ]
+    entity DamagedEquipment as projection on my.Equipment {
+        key ID,
+        equipmentNo,
+        serialNumber,
+        category,
+        equipmentName,
+        currentStatus,
+        currentGrade
+    } where currentStatus in ('Damaged', 'InRepair', 'Quarantined');
 
     @readonly
     @restrict: [

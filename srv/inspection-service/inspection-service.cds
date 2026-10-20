@@ -18,6 +18,7 @@ service InspectionService {
     ]
     entity DamageRecords as projection on my.DamageRecords;
 
+
     @restrict: [
         { grant: ['READ'], to: ['YardWorker', 'Technician', 'Dispatcher', 'Manager', 'Admin', 'Auditor'] },
         { grant: ['*'], to: ['YardWorker', 'Technician', 'Manager', 'Admin'] }

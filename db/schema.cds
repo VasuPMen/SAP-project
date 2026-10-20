@@ -324,17 +324,17 @@ entity ConditionLogs : cuid, managed {
 
 entity DamageRecords : cuid, managed {
     conditionLog   : Association to ConditionLogs @title: 'Inspection Reference' @Common.Label: 'Inspection Reference';
-    area           : EquipmentArea default #Exterior @title: 'Equipment Area' @Common.Label: 'Equipment Area';
-    damageType     : DamageClassification default #ScratchDent @mandatory @title: 'Damage Type' @Common.Label: 'Damage Type';
+    area           : EquipmentArea @title: 'Equipment Area' @Common.Label: 'Equipment Area';
+    damageType     : DamageClassification @mandatory @title: 'Damage Type' @Common.Label: 'Damage Type';
     description    : String(500) @title: 'Damage Description' @Common.Label: 'Damage Description';
-    severity       : Severity default #Low @mandatory @title: 'Severity' @Common.Label: 'Severity';
-    origin         : String(20) default 'NEW' @title: 'Origin (New/Pre-existing)' @Common.Label: 'Origin (New/Pre-existing)';
-    billable       : Boolean default true @title: 'Billable' @Common.Label: 'Billable';
+    severity       : Severity @mandatory @title: 'Severity' @Common.Label: 'Severity';
+    origin         : String(20) @title: 'Origin (New/Pre-existing)' @Common.Label: 'Origin (New/Pre-existing)';
+    billable       : Boolean @title: 'Billable' @Common.Label: 'Billable';
     repairEstimate : Money @title: 'Estimated Repair ($)' @Common.Label: 'Estimated Repair ($)';
     customerLiable : Boolean default false @title: 'Customer Liable' @Common.Label: 'Customer Liable';
     liableParty    : Association to Customers;
     preExisting    : Boolean default false;
-    damageStatus   : DamageStatus default #Reported @title: 'Damage Status' @Common.Label: 'Damage Status';
+    damageStatus   : DamageStatus @title: 'Damage Status' @Common.Label: 'Damage Status';
     photos         : Composition of many DamagePhotos
                         on photos.damage = $self;
     repairBills    : Association to many RepairBills
@@ -342,6 +342,7 @@ entity DamageRecords : cuid, managed {
 };
 
 entity DamagePhotos : cuid {
+    repairBill   : Association to RepairBills;
     damage       : Association to DamageRecords;
     conditionLog : Association to ConditionLogs;
     fileName     : String(255) @title: 'Photo Filename' @Common.Label: 'Photo Filename';
@@ -375,7 +376,7 @@ entity MaintenanceRecords : cuid, managed {
 entity RepairJobs : cuid, managed {
     equipment        : Association to Equipment @mandatory @title: 'Equipment Asset' @Common.Label: 'Equipment Asset';
     damage           : Association to DamageRecords @title: 'Damage Reference' @Common.Label: 'Damage Reference';
-    technician       : String(100) default 'Mike D''souza' @title: 'Lead Technician' @Common.Label: 'Lead Technician';
+    technician       : String(100) @title: 'Lead Technician' @Common.Label: 'Lead Technician';
     labourHours      : Decimal(5,2) @title: 'Labour Hours' @Common.Label: 'Labour Hours';
     actualCost       : Money @title: 'Material & Labor Cost ($)' @Common.Label: 'Material & Labor Cost ($)';
     repairDetails    : String(500) @title: 'Technician Work Log' @Common.Label: 'Technician Work Log';
@@ -390,9 +391,17 @@ entity RepairJobs : cuid, managed {
    ========================================================================== */
 
 entity RepairBills : cuid, managed {
-    rental           : Association to Rentals @mandatory @title: 'Rental Contract' @Common.Label: 'Rental Contract';
-    customer         : Association to Customers @mandatory @title: 'Customer / Client' @Common.Label: 'Customer / Client';
-    damage           : Association to DamageRecords @mandatory @title: 'Damage Record Reference' @Common.Label: 'Damage Record Reference';
+    rental            : Association to Rentals @mandatory @title: 'Rental Contract' @Common.Label: 'Rental Contract';
+    customer          : Association to Customers @mandatory @title: 'Customer / Client' @Common.Label: 'Customer / Client';
+    equipment         : Association to Equipment @title: 'Damaged Equipment' @Common.Label: 'Damaged Equipment';
+    damageDescription : String(500) @title: 'Damage Description' @Common.Label: 'Damage Description';
+    severity          : Severity @title: 'Severity' @Common.Label: 'Severity';
+    damageType        : String(50) @title: 'Damage Classification' @Common.Label: 'Damage Classification';
+    area              : String(100) @title: 'Area / Component' @Common.Label: 'Area / Component';
+    origin            : String(50) @title: 'Origin' @Common.Label: 'Origin';
+    inspectionRef     : String(100) @title: 'Inspection Reference' @Common.Label: 'Inspection Reference';
+    damage            : Association to DamageRecords @title: 'Damage Record Reference' @Common.Label: 'Damage Record Reference';
+    photos            : Composition of many DamagePhotos on photos.repairBill = $self;
     billDate         : Date @title: 'Bill Date' @Common.Label: 'Bill Date';
     partsCost        : Money @title: 'Parts Cost ($)' @Common.Label: 'Parts Cost ($)';
     labourCost       : Money @title: 'Labour Cost ($)' @Common.Label: 'Labour Cost ($)';

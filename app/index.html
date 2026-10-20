@@ -6,6 +6,42 @@
     <title>SAP Fiori Launchpad - Rental Equipment Tracking</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=72:wght@300;400;600;700&display=swap">
     <script src="/fiori-auth.js"></script>
+    <script>
+        (function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const currentAppId = urlParams.get('app');
+            const APP_REGISTRY = {
+                'customer-management': { title: 'Customer Management', ns: 'retcl.customermanagement', path: '/customer-management/webapp' },
+                'damage-charge-approval': { title: 'Damage Charge Approval', ns: 'retcl.damagechargeapproval', path: '/damage-charge-approval/webapp' },
+                'fleet-overview': { title: 'Fleet Overview & Asset Detail', ns: 'retcl.fleetoverview', path: '/fleet-overview/webapp' },
+                'inspections': { title: 'Condition Logging & Inspections', ns: 'retcl.inspections', path: '/inspections/webapp' },
+                'locations': { title: 'Depot & Yard Locations', ns: 'retcl.locations', path: '/locations/webapp' },
+                'maintenance-planner': { title: 'Maintenance Planner & Schedules', ns: 'retcl.maintenanceplanner', path: '/maintenance-planner/webapp' },
+                'rentals': { title: 'Rental Contracts & Allocations', ns: 'retcl.rentals', path: '/rentals/webapp' },
+                'repair-jobs': { title: 'Workshop Repair Jobs', ns: 'retcl.repairjobs', path: '/repair-jobs/webapp' }
+            };
+            const appCfg = currentAppId ? APP_REGISTRY[currentAppId] : null;
+            window.__FIORI_APP_CONFIG = appCfg;
+            window.__FIORI_CURRENT_APP_ID = currentAppId;
+
+            if (appCfg) {
+                document.title = appCfg.title;
+                const resRoots = JSON.stringify({ [appCfg.ns]: appCfg.path });
+                document.write(
+                    '<script ' +
+                    'id="sap-ui-bootstrap" ' +
+                    'src="https://ui5.sap.com/resources/sap-ui-core.js" ' +
+                    'data-sap-ui-theme="sap_horizon" ' +
+                    'data-sap-ui-resourceroots=\'' + resRoots + '\' ' +
+                    'data-sap-ui-onInit="module:sap/ui/core/ComponentSupport" ' +
+                    'data-sap-ui-compatVersion="edge" ' +
+                    'data-sap-ui-async="true" ' +
+                    'data-sap-ui-frameOptions="trusted">' +
+                    '<\/script>'
+                );
+            }
+        })();
+    </script>
     <style>
         :root {
             --sapShellColor: #1d2d3e;
@@ -38,6 +74,35 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+        }
+
+        /* Fiori Elements Sub-App Mode (when launched with ?app=...) */
+        body.fiori-subapp-mode {
+            height: 100% !important;
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: hidden !important;
+            display: flex !important;
+            flex-direction: column !important;
+            background-color: var(--sapBackgroundColor);
+        }
+        body.fiori-subapp-mode #login-view,
+        body.fiori-subapp-mode #launchpad-view {
+            display: none !important;
+        }
+        body.fiori-subapp-mode [data-sap-ui-component],
+        body.fiori-subapp-mode .sapUiComponentContainer,
+        body.fiori-subapp-mode .sapUiUIArea {
+            height: calc(100vh - 42px) !important;
+            width: 100% !important;
+            flex: 1 1 auto !important;
+            position: relative !important;
+        }
+        body.fiori-subapp-mode .sapUxAPObjectPageFooter,
+        body.fiori-subapp-mode .sapMPageFooter,
+        body.fiori-subapp-mode .sapFDynamicPageFooter {
+            z-index: 100 !important;
         }
 
         /* 1. SAP FIORI LOGIN SCREEN */
@@ -401,6 +466,7 @@
             flex-direction: column;
             justify-content: space-between;
             transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
         }
 
         .kpi-card:hover {
@@ -618,6 +684,20 @@
     </style>
 </head>
 <body>
+    <script>
+        if (window.__FIORI_APP_CONFIG) {
+            document.body.classList.add('fiori-subapp-mode', 'sapUiBody', 'sapUiSizeCompact');
+            initSubAppGuard(window.__FIORI_CURRENT_APP_ID, window.__FIORI_APP_CONFIG.title);
+            document.write(
+                '<div data-sap-ui-component ' +
+                'data-name="' + window.__FIORI_APP_CONFIG.ns + '" ' +
+                'data-id="container" ' +
+                'data-settings=\'{"id" : "' + window.__FIORI_APP_CONFIG.ns + '"}\' ' +
+                'style="height: calc(100vh - 42px); width: 100%;">' +
+                '</div>'
+            );
+        }
+    </script>
 
     <!-- 1. LOGIN SCREEN -->
     <div id="login-view">
@@ -765,25 +845,25 @@
 
             <!-- Executive KPI Banner -->
             <section class="kpi-banner">
-                <div class="kpi-card success" id="kpi-available-card" data-roles="Admin,Dispatcher,YardWorker,Technician,Manager">
+                <div class="kpi-card success" id="kpi-available-card" onclick="window.location.href='/fleet-overview/webapp/index.html'" title="Click to view Fleet Overview" data-roles="Admin,Dispatcher,YardWorker,Technician,Manager">
                     <span class="kpi-label">Available Fleet</span>
                     <div class="kpi-value" id="kpi-available">2 Assets</div>
-                    <span class="kpi-sub">Ready for Dispatch &bull; Yard A</span>
+                    <span class="kpi-sub" id="kpi-available-sub">Ready for Dispatch &bull; Yard A</span>
                 </div>
-                <div class="kpi-card" id="kpi-rented-card" data-roles="Admin,Dispatcher,BillingClerk,Manager">
+                <div class="kpi-card" id="kpi-rented-card" onclick="window.location.href='/rentals/webapp/index.html'" title="Click to view Rental Contracts" data-roles="Admin,Dispatcher,BillingClerk,Manager">
                     <span class="kpi-label">Rented Out Fleet</span>
-                    <div class="kpi-value" id="kpi-rented">1 Asset</div>
-                    <span class="kpi-sub">Active On-Site &bull; XYZ Construction</span>
+                    <div class="kpi-value" id="kpi-rented">4 Assets</div>
+                    <span class="kpi-sub" id="kpi-rented-sub">Active On-Site &bull; XYZ Construction</span>
                 </div>
-                <div class="kpi-card warning" id="kpi-pending-card" data-roles="Admin,BillingClerk,Manager,Auditor">
+                <div class="kpi-card warning" id="kpi-pending-card" onclick="window.location.href='/damage-charge-approval/webapp/index.html'" title="Click to view Damage Approvals" data-roles="Admin,BillingClerk,Manager,Auditor">
                     <span class="kpi-label">Pending Approval</span>
                     <div class="kpi-value" id="kpi-pending">&#8377;35,400</div>
-                    <span class="kpi-sub">Invoice #9000123456 &bull; Damage Bill</span>
+                    <span class="kpi-sub" id="kpi-pending-sub">Invoice #9000123456 &bull; Damage Bill</span>
                 </div>
-                <div class="kpi-card error" id="kpi-damaged-card" data-roles="Admin,YardWorker,Technician,Manager,Auditor">
+                <div class="kpi-card error" id="kpi-damaged-card" onclick="window.location.href='/repair-jobs/webapp/index.html'" title="Click to view Workshop Repairs" data-roles="Admin,YardWorker,Technician,Manager,Auditor">
                     <span class="kpi-label">Quarantined / Damaged</span>
-                    <div class="kpi-value" id="kpi-damaged">1 Asset</div>
-                    <span class="kpi-sub">EQ-1001 &bull; Workshop Repair</span>
+                    <div class="kpi-value" id="kpi-damaged">5 Assets</div>
+                    <span class="kpi-sub" id="kpi-damaged-sub">In Workshop &bull; Repair / Quarantine</span>
                 </div>
             </section>
 
@@ -798,7 +878,7 @@
                 <div class="tiles-grid">
 
                     <!-- Tile: Customer Management -->
-                    <a href="/customer-management/webapp/index.html" class="fiori-tile" id="tile-customer-management" data-app="customer-management" data-roles="Admin,Dispatcher,Manager">
+                    <a href="/index.html?app=customer-management" class="fiori-tile" id="tile-customer-management" data-app="customer-management" data-roles="Admin,Dispatcher,Manager">
                         <div class="tile-top">
                             <span class="tile-icon">🏢</span>
                             <span class="tile-badge">Master Data / Draft</span>
@@ -812,7 +892,7 @@
                     </a>
 
                     <!-- Tile 1: Fleet Overview & Asset Detail -->
-                    <a href="/fleet-overview/webapp/index.html" class="fiori-tile" id="tile-fleet-overview" data-app="fleet-overview" data-roles="Admin,Dispatcher,YardWorker,Technician,Manager">
+                    <a href="/index.html?app=fleet-overview" class="fiori-tile" id="tile-fleet-overview" data-app="fleet-overview" data-roles="Admin,Dispatcher,YardWorker,Technician,Manager">
                         <div class="tile-top">
                             <span class="tile-icon">🚜</span>
                             <span class="tile-badge">ALP / List Report</span>
@@ -826,7 +906,7 @@
                     </a>
 
                     <!-- Tile: Rental Contracts & Allocations -->
-                    <a href="/rentals/webapp/index.html" class="fiori-tile" id="tile-rentals" data-app="rentals" data-roles="Admin,Dispatcher,Manager,BillingClerk,Auditor">
+                    <a href="/index.html?app=rentals" class="fiori-tile" id="tile-rentals" data-app="rentals" data-roles="Admin,Dispatcher,Manager,BillingClerk,Auditor">
                         <div class="tile-top">
                             <span class="tile-icon">📑</span>
                             <span class="tile-badge">Contracts / Items</span>
@@ -840,7 +920,7 @@
                     </a>
 
                     <!-- Tile: Depot & Yard Locations -->
-                    <a href="/locations/webapp/index.html" class="fiori-tile" id="tile-locations" data-app="locations" data-roles="Admin,Dispatcher,YardWorker,Technician,Manager,Auditor">
+                    <a href="/index.html?app=locations" class="fiori-tile" id="tile-locations" data-app="locations" data-roles="Admin,Dispatcher,YardWorker,Technician,Manager,Auditor">
                         <div class="tile-top">
                             <span class="tile-icon">📍</span>
                             <span class="tile-badge">Depot / Yard</span>
@@ -867,7 +947,7 @@
                 <div class="tiles-grid">
 
                     <!-- Tile: Condition Logs & Inspections -->
-                    <a href="/inspections/webapp/index.html" class="fiori-tile" id="tile-inspections" data-app="inspections" data-roles="Admin,Dispatcher,YardWorker,Manager,Auditor">
+                    <a href="/index.html?app=inspections" class="fiori-tile" id="tile-inspections" data-app="inspections" data-roles="Admin,Dispatcher,YardWorker,Manager,Auditor">
                         <div class="tile-top">
                             <span class="tile-icon">📋</span>
                             <span class="tile-badge">Departure / Return</span>
@@ -876,22 +956,6 @@
                         <p class="tile-desc">Capture check-out and return condition logs, record meter readings, assign condition grades (A-D), and lock audit reports.</p>
                         <div class="tile-footer">
                             <span class="tile-role-pill">YardWorker &bull; Dispatch &bull; Mgr</span>
-                            <span>Open Fiori App &rarr;</span>
-                        </div>
-                    </a>
-
-
-
-                    <!-- Tile: Damage Records & Management -->
-                    <a href="/damage-management/webapp/index.html" class="fiori-tile" id="tile-damage-management" data-app="damage-management" data-roles="Admin,Dispatcher,YardWorker,Technician,BillingClerk,Manager,Auditor">
-                        <div class="tile-top">
-                            <span class="tile-icon">⚠️</span>
-                            <span class="tile-badge">Damages / Evidence</span>
-                        </div>
-                        <h3 class="tile-title">Damage Records & Management</h3>
-                        <p class="tile-desc">Classify component damages (Body Dent, Hydraulic Hose), assess severity, verify billable origin, and attach photos.</p>
-                        <div class="tile-footer">
-                            <span class="tile-role-pill">Yard &bull; Tech &bull; Billing &bull; Mgr</span>
                             <span>Open Fiori App &rarr;</span>
                         </div>
                     </a>
@@ -910,13 +974,13 @@
                 <div class="tiles-grid">
 
                     <!-- Tile 3: Damage Charge Approval -->
-                    <a href="/damage-charge-approval/webapp/index.html" class="fiori-tile" id="tile-damage-charge" data-app="damage-charge-approval" data-roles="Admin,BillingClerk,Manager,Auditor">
+                    <a href="/index.html?app=damage-charge-approval" class="fiori-tile" id="tile-damage-charge" data-app="damage-charge-approval" data-roles="Admin,BillingClerk,Manager,Auditor,YardWorker,Technician">
                         <div class="tile-top">
                             <span class="tile-icon">💳</span>
                             <span class="tile-badge">Worklist & Actions</span>
                         </div>
                         <h3 class="tile-title">Damage Charge Approval</h3>
-                        <p class="tile-desc">Review automated repair bills, approve charges within threshold, adjust cost lines, or dispute customer liability.</p>
+                        <p class="tile-desc">Review automated repair bills with damage particulars, inspect photo evidence, and approve or adjust customer repair charges.</p>
                         <div class="tile-footer">
                             <span class="tile-role-pill">BillingClerk &bull; Mgr &bull; Audit</span>
                             <span>Open Fiori App &rarr;</span>
@@ -937,7 +1001,7 @@
                 <div class="tiles-grid">
 
                     <!-- Tile 5: Workshop Repair Jobs -->
-                    <a href="/repair-jobs/webapp/index.html" class="fiori-tile" id="tile-repair-jobs" data-app="repair-jobs" data-roles="Admin,Technician,Manager">
+                    <a href="/index.html?app=repair-jobs" class="fiori-tile" id="tile-repair-jobs" data-app="repair-jobs" data-roles="Admin,Technician,Manager">
                         <div class="tile-top">
                             <span class="tile-icon">🔧</span>
                             <span class="tile-badge">Technician Worklist</span>
@@ -951,7 +1015,7 @@
                     </a>
 
                     <!-- Tile 6: Maintenance Planner -->
-                    <a href="/maintenance-planner/webapp/index.html" class="fiori-tile" id="tile-maintenance-planner" data-app="maintenance-planner" data-roles="Admin,Technician,Manager">
+                    <a href="/index.html?app=maintenance-planner" class="fiori-tile" id="tile-maintenance-planner" data-app="maintenance-planner" data-roles="Admin,Technician,Manager">
                         <div class="tile-top">
                             <span class="tile-icon">📅</span>
                             <span class="tile-badge">Calendar & List</span>
@@ -967,32 +1031,7 @@
                 </div>
             </section>
 
-            <!-- GROUP 4: GOVERNANCE & INTEGRATION -->
-            <section class="tile-group" id="group-governance">
-                <div class="group-header">
-                    <div class="group-header-title">
-                        <span>⚙️</span>
-                        <span>Configuration & Enterprise Integration</span>
-                    </div>
-                </div>
-                <div class="tiles-grid">
 
-                    <!-- Tile 7: Pricing & Rate Card Configuration -->
-                    <a href="/configuration/webapp/index.html" class="fiori-tile" id="tile-configuration" data-app="configuration" data-roles="Admin,BillingClerk,Manager">
-                        <div class="tile-top">
-                            <span class="tile-icon">⚙️</span>
-                            <span class="tile-badge">Pricing Engine</span>
-                        </div>
-                        <h3 class="tile-title">Pricing & Rate Configuration</h3>
-                        <p class="tile-desc">Maintain damage categories, labor rates, parts multipliers, tax rules, and auto-approval thresholds.</p>
-                        <div class="tile-footer">
-                            <span class="tile-role-pill">BillingClerk &bull; Mgr &bull; Admin</span>
-                            <span>Open Fiori App &rarr;</span>
-                        </div>
-                    </a>
-
-                </div>
-            </section>
 
         </main>
 
@@ -1070,6 +1109,9 @@
     <!-- 4. CORE JAVASCRIPT -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            if (window.__FIORI_APP_CONFIG) {
+                return; // Sub-app runner handles its own UI lifecycle
+            }
             const session = getFioriSession();
             if (session) {
                 renderLaunchpadForSession(session);
@@ -1199,28 +1241,46 @@
 
         async function loadLiveKPIData() {
             try {
-                const eqRes = await fetch('/rental/Equipment?$count=true');
+                const eqRes = await fetch('/rental/Equipment');
                 if (eqRes.ok) {
                     const eqData = await eqRes.json();
                     if (eqData && eqData.value) {
-                        const available = eqData.value.filter(e => e.operationalStatus === 'AVAILABLE').length;
-                        const rented = eqData.value.filter(e => e.operationalStatus === 'RENTED').length;
-                        const damaged = eqData.value.filter(e => e.operationalStatus === 'DAMAGED' || e.operationalStatus === 'MAINTENANCE').length;
+                        const available = eqData.value.filter(e => e.currentStatus === 'Available').length;
+                        const rented = eqData.value.filter(e => e.currentStatus === 'RentedOut').length;
+                        const damaged = eqData.value.filter(e => ['Damaged', 'Quarantined', 'InRepair', 'UnderMaintenance', 'ReturnedPendingInspection'].includes(e.currentStatus)).length;
                         
                         document.getElementById('kpi-available').textContent = available + (available === 1 ? ' Asset' : ' Assets');
                         document.getElementById('kpi-rented').textContent = rented + (rented === 1 ? ' Asset' : ' Assets');
-                        if (damaged > 0) {
-                            document.getElementById('kpi-damaged').textContent = damaged + (damaged === 1 ? ' Asset' : ' Assets');
-                        }
+                        document.getElementById('kpi-damaged').textContent = damaged + (damaged === 1 ? ' Asset' : ' Assets');
+
+                        const availSub = document.getElementById('kpi-available-sub');
+                        if (availSub) availSub.textContent = available > 0 ? `${available} Ready for Dispatch • Yard A` : '0 Ready for Dispatch • Depot';
+
+                        const rentSub = document.getElementById('kpi-rented-sub');
+                        if (rentSub) rentSub.textContent = rented > 0 ? `${rented} Active On-Site • XYZ Construction` : '0 Active On-Site';
+
+                        const damSub = document.getElementById('kpi-damaged-sub');
+                        if (damSub) damSub.textContent = damaged > 0 ? `${damaged} in Workshop / Quarantine` : 'All Fleet Operational';
                     }
                 }
 
-                const billRes = await fetch('/billing/RepairBills?$filter=billingStatus eq \'PendingApproval\'');
+                const billRes = await fetch('/billing/RepairBills');
                 if (billRes.ok) {
                     const billData = await billRes.json();
-                    if (billData && billData.value && billData.value.length > 0) {
-                        const totalPending = billData.value.reduce((acc, b) => acc + Number(b.totalAmount || 0), 0);
-                        document.getElementById('kpi-pending').textContent = '₹' + totalPending.toLocaleString('en-IN');
+                    if (billData && billData.value) {
+                        const pendingBills = billData.value.filter(b => b.billingStatus === 'PendingApproval' || b.billingStatus === 'Draft');
+                        const totalPending = pendingBills.reduce((acc, b) => acc + Number(b.totalAmount || 0), 0);
+                        
+                        document.getElementById('kpi-pending').textContent = '₹' + Math.round(totalPending).toLocaleString('en-IN');
+                        const pendingSub = document.getElementById('kpi-pending-sub');
+                        if (pendingSub) {
+                            if (pendingBills.length > 0) {
+                                const topBill = pendingBills.find(b => b.invoiceNo) || pendingBills[0];
+                                pendingSub.textContent = `Invoice #${topBill.invoiceNo || 'Draft'} • Damage Bill`;
+                            } else {
+                                pendingSub.textContent = 'All Bills Cleared';
+                            }
+                        }
                     }
                 }
             } catch (err) {

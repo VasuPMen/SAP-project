@@ -15,14 +15,26 @@ export default class InspectionService extends cds.ApplicationService {
             }
         });
 
-        // Clean up blank or abandoned damage records drafts
-        this.before('READ', 'DamageRecords', async (req) => {
-            if (!req.params?.length && !req.query?.SELECT?.one) {
-                try {
-                    await cds.db.run(
-                        DELETE.from('InspectionService.DamageRecords.drafts').where`conditionLog_ID is null and damageType is null`
-                    );
-                } catch (e) {}
+        // Ensure new damage records drafts start completely blank / unfulfilled for user input
+        this.before(['CREATE', 'NEW'], 'DamageRecords.drafts', (req) => {
+            req.data.damageType = null;
+            req.data.area = null;
+            req.data.severity = null;
+            req.data.origin = null;
+            req.data.billable = false;
+            req.data.damageStatus = null;
+        });
+
+        // Validation & sensible fallback on save
+        this.before('SAVE', 'DamageRecords', (req) => {
+            if (!req.data.damageType) {
+                req.error(400, 'Damage Type / Classification is mandatory and must be selected', 'damageType');
+            }
+            if (!req.data.severity) {
+                req.error(400, 'Severity is mandatory and must be selected', 'severity');
+            }
+            if (!req.data.damageStatus) {
+                req.data.damageStatus = 'Reported';
             }
         });
 

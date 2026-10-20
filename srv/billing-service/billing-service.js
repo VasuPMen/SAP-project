@@ -2,51 +2,71 @@ import cds from '@sap/cds';
 
 export default class BillingService extends cds.ApplicationService {
     async init() {
-        const { RepairBills, PricingRules, DamageRecords, Rentals, Customers } = this.entities;
+        const { RepairBills, PricingRules, DamageRecords, Rentals, Customers, DamagePhotos, ConditionLogs } = this.entities;
 
-        // Clean up blank or abandoned repair bills drafts
-        this.before('READ', 'RepairBills', async (req) => {
-            if (!req.params?.length && !req.query?.SELECT?.one) {
-                try {
-                    await cds.db.run(
-                        DELETE.from('BillingService.RepairBills.drafts').where`customer_ID is null and damage_ID is null`
-                    );
-                } catch (e) {}
-            }
-        });
-
-        // Clean up blank or abandoned pricing rules drafts
-        this.before('READ', 'PricingRules', async (req) => {
-            if (!req.params?.length && !req.query?.SELECT?.one) {
-                try {
-                    await cds.db.run(
-                        DELETE.from('BillingService.PricingRules.drafts').where`damageCategory is null or damageCategory = ''`
-                    );
-                } catch (e) {}
-            }
-        });
-
-        // Automatically calculate totals on RepairBills manual entry or edit
-        this.before(['CREATE', 'UPDATE'], 'RepairBills', (req) => {
+        // Automatically calculate totals on RepairBills manual entry or edit and validate customer-rental match
+        this.before(['CREATE', 'UPDATE'], 'RepairBills', async (req) => {
             const data = req.data;
             const parts = Number(data.partsCost || 0);
             const labour = Number(data.labourCost || 0);
             const painting = Number(data.paintingCost || 0);
             const repair = parts + labour + painting;
 
-            if (repair > 0) {
+            if (repair > 0 || data.taxAmount !== undefined) {
                 data.repairAmount = repair;
-                const tax = Number(data.taxAmount) || (repair * 0.18); // default 18% standard tax
+                const tax = Number(data.taxAmount || 0);
                 data.taxAmount = Number(tax.toFixed(2));
-                data.totalAmount = Number((repair + data.taxAmount).toFixed(2));
+                data.totalAmount = Number((repair + tax).toFixed(2));
+            }
+
+            // Ensure selected Rental Contract belongs to the selected Customer
+            if (data.rental_ID && data.customer_ID) {
+                const rental = await cds.db.run(
+                    SELECT.one.from('RentalEquipmentTrackingApp.Rentals').where({ ID: data.rental_ID })
+                );
+                if (rental && rental.customer_ID !== data.customer_ID) {
+                    req.error(400, 'Selected Rental Contract does not belong to the selected Customer.', 'rental_ID');
+                }
             }
         });
+
+        // Provide fixed-values dropdown entries for Severity
+        this.on('READ', 'Severities', () => [
+            { code: 'Low' },
+            { code: 'Medium' },
+            { code: 'High' },
+            { code: 'Critical' }
+        ]);
 
         // Auto-generate invoice number and pre-populate defaults on new RepairBills draft
         this.before(['CREATE', 'NEW'], 'RepairBills.drafts', async (req) => {
             if (!req.data.invoiceNo) {
-                const count = await cds.db.run(SELECT.from(RepairBills).columns('count(1) as total')) || [{ total: 0 }];
-                const nextNum = (count[0]?.total || 0) + 1001;
+                let maxNum = 1000;
+                try {
+                    const activeBills = await cds.db.run(SELECT.from(RepairBills).columns('invoiceNo')) || [];
+                    let draftBills = [];
+                    try {
+                        draftBills = await cds.db.run(SELECT.from('BillingService.RepairBills.drafts').columns('invoiceNo')) || [];
+                    } catch (e) {
+                        // draft table may be empty or error
+                    }
+                    const allBills = [...activeBills, ...draftBills];
+                    for (const b of allBills) {
+                        if (b?.invoiceNo) {
+                            // Only match legitimate standard invoice numbers like INV-2026-1003
+                            const match = String(b.invoiceNo).match(/^INV-(?:2026-)?(\d{4,6})$/);
+                            if (match) {
+                                const num = parseInt(match[1], 10);
+                                if (!isNaN(num) && num > maxNum) {
+                                    maxNum = num;
+                                }
+                            }
+                        }
+                    }
+                } catch (err) {
+                    console.error('Error fetching max invoice number:', err);
+                }
+                const nextNum = maxNum + 1;
                 req.data.invoiceNo = `INV-2026-${nextNum}`;
             }
             if (!req.data.billDate) {
@@ -55,6 +75,11 @@ export default class BillingService extends cds.ApplicationService {
             if (!req.data.billingStatus) {
                 req.data.billingStatus = 'Draft';
             }
+            // User requested: keep Damage Particulars blank for manual entry (no auto-fill)
+        });
+
+        this.before(['CREATE', 'NEW'], 'DamagePhotos.drafts', async (req) => {
+            if (!req.data.photoType) req.data.photoType = 'Return';
         });
 
         // Defaults on new PricingRules draft
@@ -68,14 +93,73 @@ export default class BillingService extends cds.ApplicationService {
             if (!req.data.autoApproveLimit) req.data.autoApproveLimit = 25000.00;
         });
 
-        // When damage record is selected, auto-link its customer and rental contract
+        // Cascading Customer -> Rental Contract -> Equipment validation & auto-fill
         this.before(['UPDATE', 'PATCH'], 'RepairBills.drafts', async (req) => {
+            const draftId = req.data.ID || req.params?.[0]?.ID || req.params?.[0];
+
+            // 1. If Customer is selected/changed
+            if (req.data.customer_ID !== undefined) {
+                let cur = {};
+                if (draftId) {
+                    cur = await cds.db.run(SELECT.one.from('BillingService.RepairBills.drafts').where({ ID: draftId })) || {};
+                }
+                const currentRentalId = req.data.rental_ID !== undefined ? req.data.rental_ID : cur.rental_ID;
+                if (currentRentalId) {
+                    const rental = await cds.db.run(
+                        SELECT.one.from('RentalEquipmentTrackingApp.Rentals').where({ ID: currentRentalId })
+                    );
+                    if (rental && rental.customer_ID !== req.data.customer_ID) {
+                        // The existing rental does not belong to the newly selected customer -> clear rental and equipment
+                        req.data.rental_ID = null;
+                        req.data.equipment_ID = null;
+                    }
+                }
+            }
+
+            // 2. If Rental Contract is selected/changed
+            if (req.data.rental_ID !== undefined) {
+                if (req.data.rental_ID) {
+                    const rental = await cds.db.run(
+                        SELECT.one.from('RentalEquipmentTrackingApp.Rentals').where({ ID: req.data.rental_ID })
+                    );
+                    if (rental) {
+                        if (!req.data.customer_ID) {
+                            req.data.customer_ID = rental.customer_ID;
+                        }
+                    }
+
+                    // Get equipment assigned to this rental contract
+                    const rentalItems = await cds.db.run(
+                        SELECT.from('RentalEquipmentTrackingApp.RentalItems').where({ rental_ID: req.data.rental_ID })
+                    ) || [];
+                    const assignedEquipIds = rentalItems.map(item => item.equipment_ID).filter(Boolean);
+
+                    let cur = {};
+                    if (draftId) {
+                        cur = await cds.db.run(SELECT.one.from('BillingService.RepairBills.drafts').where({ ID: draftId })) || {};
+                    }
+                    const currentEquipId = req.data.equipment_ID !== undefined ? req.data.equipment_ID : cur.equipment_ID;
+
+                    if (currentEquipId && !assignedEquipIds.includes(currentEquipId)) {
+                        // Currently selected equipment is not on this contract -> clear equipment
+                        req.data.equipment_ID = null;
+                    } else if (!currentEquipId && assignedEquipIds.length === 1) {
+                        // Exactly 1 equipment on this contract -> auto-select it!
+                        req.data.equipment_ID = assignedEquipIds[0];
+                    }
+                } else {
+                    // Contract cleared -> clear equipment
+                    req.data.equipment_ID = null;
+                }
+            }
+
             if (req.data.damage_ID) {
                 const damage = await cds.db.run(
                     SELECT.one.from('RentalEquipmentTrackingApp.DamageRecords').where({ ID: req.data.damage_ID })
                 );
                 if (damage) {
                     if (damage.liableParty_ID) req.data.customer_ID = damage.liableParty_ID;
+
                     if (damage.conditionLog_ID) {
                         const log = await cds.db.run(
                             SELECT.one.from('RentalEquipmentTrackingApp.ConditionLogs').where({ ID: damage.conditionLog_ID })
@@ -100,6 +184,24 @@ export default class BillingService extends cds.ApplicationService {
                         req.data.totalAmount = Number((est + req.data.taxAmount).toFixed(2));
                     }
                 }
+            }
+
+            // Recalculate totals if any cost component or tax is updated
+            if (req.data.partsCost !== undefined || req.data.labourCost !== undefined || req.data.paintingCost !== undefined || req.data.taxAmount !== undefined) {
+                const draftId = req.data.ID || req.params?.[0]?.ID || req.params?.[0];
+                let cur = {};
+                if (draftId) {
+                    cur = await cds.db.run(SELECT.one.from('BillingService.RepairBills.drafts').where({ ID: draftId })) || {};
+                }
+                const toNum = (val, fb = 0) => (val !== undefined && val !== null && !isNaN(Number(val))) ? Number(val) : fb;
+                const parts = req.data.partsCost !== undefined ? toNum(req.data.partsCost, 0) : toNum(cur.partsCost, 0);
+                const labour = req.data.labourCost !== undefined ? toNum(req.data.labourCost, 0) : toNum(cur.labourCost, 0);
+                const painting = req.data.paintingCost !== undefined ? toNum(req.data.paintingCost, 0) : toNum(cur.paintingCost, 0);
+                const repair = Number((parts + labour + painting).toFixed(2));
+                req.data.repairAmount = repair;
+                const tax = req.data.taxAmount !== undefined ? toNum(req.data.taxAmount, 0) : toNum(cur.taxAmount, 0);
+                req.data.taxAmount = Number(tax.toFixed(2));
+                req.data.totalAmount = Number((repair + tax).toFixed(2));
             }
         });
 
@@ -275,22 +377,6 @@ export default class BillingService extends cds.ApplicationService {
             });
 
             return await SELECT.one.from(RepairBills).where({ ID: billId });
-        });
-
-        // Action: Retry Outbox Integration Message
-        this.on('retryMessage', async (req) => {
-            const { messageId } = req.data;
-            const msg = await SELECT.one.from(IntegrationMessages).where({ ID: messageId });
-            if (!msg) return req.error(404, `Message ${messageId} not found`);
-
-            await UPDATE(IntegrationMessages).set({
-                status: 'Success',
-                errorMessage: null,
-                retryCount: (msg.retryCount || 0) + 1,
-                lastAttemptAt: new Date().toISOString()
-            }).where({ ID: messageId });
-
-            return await SELECT.one.from(IntegrationMessages).where({ ID: messageId });
         });
 
         await super.init();
