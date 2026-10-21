@@ -4,7 +4,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SAP Fiori Launchpad - Rental Equipment Tracking</title>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=72:wght@300;400;600;700&display=swap">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="/fiori-auth.js"></script>
     <script>
         (function() {
@@ -42,646 +44,7 @@
             }
         })();
     </script>
-    <style>
-        :root {
-            --sapShellColor: #1d2d3e;
-            --sapShellGradient: linear-gradient(135deg, #1d2d3e 0%, #0d1926 100%);
-            --sapBackgroundColor: #f5f6f7;
-            --sapCardBg: #ffffff;
-            --sapTextColor: #1d2d3e;
-            --sapSubTextColor: #556b82;
-            --sapPrimary: #0070f2;
-            --sapPrimaryHover: #0056b3;
-            --sapAccent: #0a6ed1;
-            --sapSuccess: #107e3e;
-            --sapWarning: #e9730c;
-            --sapError: #bb0000;
-            --sapBorderColor: #d9d9d9;
-            --sapShadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-            --sapRadius: 10px;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: '72', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        }
-
-        body {
-            background-color: var(--sapBackgroundColor);
-            color: var(--sapTextColor);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* Fiori Elements Sub-App Mode (when launched with ?app=...) */
-        body.fiori-subapp-mode {
-            height: 100% !important;
-            width: 100% !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            overflow: hidden !important;
-            display: flex !important;
-            flex-direction: column !important;
-            background-color: var(--sapBackgroundColor);
-        }
-        body.fiori-subapp-mode #login-view,
-        body.fiori-subapp-mode #launchpad-view {
-            display: none !important;
-        }
-        body.fiori-subapp-mode [data-sap-ui-component],
-        body.fiori-subapp-mode .sapUiComponentContainer,
-        body.fiori-subapp-mode .sapUiUIArea {
-            height: calc(100vh - 42px) !important;
-            width: 100% !important;
-            flex: 1 1 auto !important;
-            position: relative !important;
-        }
-        body.fiori-subapp-mode .sapUxAPObjectPageFooter,
-        body.fiori-subapp-mode .sapMPageFooter,
-        body.fiori-subapp-mode .sapFDynamicPageFooter {
-            z-index: 100 !important;
-        }
-
-        /* 1. SAP FIORI LOGIN SCREEN */
-        #login-view {
-            display: flex;
-            min-height: 100vh;
-            width: 100%;
-            background: radial-gradient(circle at 50% 30%, #1e3a5f 0%, #0b1726 100%);
-            align-items: center;
-            justify-content: center;
-            padding: 2rem 1.5rem;
-            position: relative;
-            overflow-y: auto;
-        }
-
-        .login-card {
-            background: rgba(255, 255, 255, 0.98);
-            backdrop-filter: blur(10px);
-            border-radius: 16px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
-            max-width: 550px;
-            width: 100%;
-            padding: 2.5rem 2.25rem;
-            position: relative;
-            border-top: 5px solid var(--sapPrimary);
-            animation: fadeIn 0.35s ease-out;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .login-header {
-            text-align: center;
-            margin-bottom: 1.75rem;
-        }
-
-        .login-logo {
-            height: 38px;
-            margin-bottom: 0.75rem;
-        }
-
-        .login-title {
-            font-size: 1.35rem;
-            font-weight: 700;
-            color: #11263c;
-            line-height: 1.3;
-            margin-bottom: 0.35rem;
-        }
-
-        .login-subtitle {
-            font-size: 0.88rem;
-            color: #64748b;
-            font-weight: 500;
-        }
-
-        .login-tag {
-            display: inline-block;
-            background: #eef4fc;
-            color: var(--sapPrimary);
-            font-size: 0.75rem;
-            font-weight: 700;
-            padding: 0.25rem 0.75rem;
-            border-radius: 20px;
-            margin-top: 0.65rem;
-            letter-spacing: 0.4px;
-        }
-
-        .form-group {
-            margin-bottom: 1.15rem;
-            text-align: left;
-        }
-
-        .form-label {
-            display: block;
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: #334155;
-            margin-bottom: 0.35rem;
-        }
-
-        .form-input {
-            width: 100%;
-            padding: 0.75rem 1rem;
-            font-size: 0.95rem;
-            border: 1.5px solid #cbd5e1;
-            border-radius: 8px;
-            outline: none;
-            transition: all 0.2s;
-            background: #f8fafc;
-            color: #0f172a;
-        }
-
-        .form-input:focus {
-            border-color: var(--sapPrimary);
-            background: #ffffff;
-            box-shadow: 0 0 0 3px rgba(0, 112, 242, 0.15);
-        }
-
-        .btn-primary {
-            width: 100%;
-            background: linear-gradient(135deg, #0070f2 0%, #0056b3 100%);
-            color: #ffffff;
-            border: none;
-            padding: 0.85rem;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 700;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0, 112, 242, 0.3);
-            transition: all 0.2s;
-            margin-top: 0.5rem;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 16px rgba(0, 112, 242, 0.4);
-        }
-
-        .login-error {
-            display: none;
-            background: #fef2f2;
-            color: #b91c1c;
-            border: 1px solid #fecaca;
-            padding: 0.65rem 1rem;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            margin-bottom: 1.25rem;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .personas-section {
-            margin-top: 1.75rem;
-            border-top: 1px solid #e2e8f0;
-            padding-top: 1.25rem;
-        }
-
-        .personas-title {
-            font-size: 0.78rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.6px;
-            color: #64748b;
-            margin-bottom: 0.75rem;
-            text-align: center;
-        }
-
-        .personas-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 0.55rem;
-        }
-
-        .persona-btn {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 0.55rem 0.65rem;
-            text-align: left;
-            cursor: pointer;
-            transition: all 0.15s ease-in-out;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .persona-btn:hover {
-            background: #eef4fc;
-            border-color: var(--sapPrimary);
-            transform: translateY(-2px);
-            box-shadow: 0 3px 8px rgba(0, 112, 242, 0.12);
-        }
-
-        .persona-avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 0.78rem;
-            color: #ffffff;
-            flex-shrink: 0;
-        }
-
-        .persona-info {
-            overflow: hidden;
-        }
-
-        .persona-name {
-            font-size: 0.8rem;
-            font-weight: 700;
-            color: #1e293b;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .persona-role {
-            font-size: 0.7rem;
-            color: #64748b;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        /* 2. SAP FIORI LAUNCHPAD MAIN */
-        #launchpad-view {
-            display: none;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-
-        .fiori-shell {
-            background: var(--sapShellGradient);
-            color: #ffffff;
-            padding: 0 1.5rem;
-            height: 3.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.25);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
-
-        .shell-brand {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .sap-logo {
-            height: 28px;
-        }
-
-        .shell-title {
-            font-size: 1.15rem;
-            font-weight: 600;
-            letter-spacing: 0.3px;
-        }
-
-        .shell-subtitle {
-            font-size: 0.85rem;
-            color: #9cb5cf;
-            padding-left: 0.75rem;
-            border-left: 1px solid rgba(255,255,255,0.2);
-        }
-
-        .shell-actions {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .user-capsule {
-            background: rgba(255, 255, 255, 0.12);
-            padding: 0.3rem 0.85rem 0.3rem 0.4rem;
-            border-radius: 24px;
-            font-size: 0.85rem;
-            display: flex;
-            align-items: center;
-            gap: 0.65rem;
-            border: 1px solid rgba(255,255,255,0.2);
-        }
-
-        .user-avatar-circle {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            background: var(--sapPrimary);
-            color: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 0.75rem;
-        }
-
-        .user-role-tag {
-            background: #2dd4bf;
-            color: #0d1926;
-            font-size: 0.7rem;
-            font-weight: 800;
-            padding: 0.15rem 0.5rem;
-            border-radius: 10px;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-        }
-
-        .btn-shell {
-            background: rgba(255, 255, 255, 0.12);
-            color: #ffffff;
-            border: 1px solid rgba(255, 255, 255, 0.25);
-            padding: 0.35rem 0.75rem;
-            border-radius: 6px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 0.35rem;
-        }
-
-        .btn-shell:hover {
-            background: rgba(255, 255, 255, 0.22);
-            border-color: #ffffff;
-        }
-
-        .scope-banner {
-            background: #eef4fc;
-            border-bottom: 1px solid #cfe0f5;
-            padding: 0.75rem 1.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            font-size: 0.88rem;
-            color: #1a365d;
-        }
-
-        .scope-left {
-            display: flex;
-            align-items: center;
-            gap: 0.6rem;
-        }
-
-        .scope-right {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        .launchpad-container {
-            max-width: 1380px;
-            margin: 0 auto;
-            padding: 2rem 1.5rem 4rem;
-            width: 100%;
-            flex: 1;
-        }
-
-        /* KPI Banner */
-        .kpi-banner {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 1.25rem;
-            margin-bottom: 2.5rem;
-        }
-
-        .kpi-card {
-            background: var(--sapCardBg);
-            padding: 1.25rem 1.5rem;
-            border-radius: var(--sapRadius);
-            box-shadow: var(--sapShadow);
-            border-top: 4px solid var(--sapPrimary);
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            transition: transform 0.2s, box-shadow 0.2s;
-            cursor: pointer;
-        }
-
-        .kpi-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-        }
-
-        .kpi-card.success { border-color: var(--sapSuccess); }
-        .kpi-card.warning { border-color: var(--sapWarning); }
-        .kpi-card.error { border-color: var(--sapError); }
-
-        .kpi-label {
-            font-size: 0.85rem;
-            color: var(--sapSubTextColor);
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .kpi-value {
-            font-size: 2rem;
-            font-weight: 700;
-            margin: 0.35rem 0;
-            color: var(--sapTextColor);
-        }
-
-        .kpi-sub {
-            font-size: 0.8rem;
-            color: var(--sapSubTextColor);
-        }
-
-        /* Tile Groups */
-        .tile-group {
-            margin-bottom: 2.5rem;
-            transition: all 0.2s;
-        }
-
-        .group-header {
-            font-size: 1.25rem;
-            font-weight: 700;
-            margin-bottom: 1.25rem;
-            color: #1a2d42;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-bottom: 2px solid #e1e7ed;
-            padding-bottom: 0.5rem;
-        }
-
-        .group-header-title {
-            display: flex;
-            align-items: center;
-            gap: 0.6rem;
-        }
-
-        .tiles-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .fiori-tile {
-            background: var(--sapCardBg);
-            border: 1px solid var(--sapBorderColor);
-            border-radius: var(--sapRadius);
-            padding: 1.5rem;
-            text-decoration: none;
-            color: inherit;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            min-height: 185px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
-            transition: all 0.2s ease-in-out;
-            position: relative;
-            overflow: hidden;
-            cursor: pointer;
-        }
-
-        .fiori-tile:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 10px 24px rgba(0, 112, 242, 0.15);
-            border-color: var(--sapPrimary);
-        }
-
-        .fiori-tile::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: var(--sapPrimary);
-            opacity: 0;
-            transition: opacity 0.2s;
-        }
-
-        .fiori-tile:hover::before {
-            opacity: 1;
-        }
-
-        .tile-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 0.75rem;
-        }
-
-        .tile-icon {
-            font-size: 1.75rem;
-            line-height: 1;
-        }
-
-        .tile-badge {
-            background: #eef4fc;
-            color: var(--sapPrimary);
-            font-size: 0.75rem;
-            font-weight: 600;
-            padding: 0.25rem 0.6rem;
-            border-radius: 12px;
-        }
-
-        .tile-title {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: var(--sapTextColor);
-            margin-bottom: 0.4rem;
-        }
-
-        .tile-desc {
-            font-size: 0.85rem;
-            color: var(--sapSubTextColor);
-            line-height: 1.4;
-            flex-grow: 1;
-        }
-
-        .tile-footer {
-            margin-top: 1rem;
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: var(--sapPrimary);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .tile-role-pill {
-            font-size: 0.7rem;
-            color: #64748b;
-            background: #f1f5f9;
-            padding: 0.2rem 0.45rem;
-            border-radius: 4px;
-        }
-
-        .fiori-footer {
-            background: #e5ebf1;
-            padding: 1rem 1.5rem;
-            font-size: 0.8rem;
-            color: var(--sapSubTextColor);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-top: 1px solid #d4dee7;
-        }
-
-        /* Modal */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(13, 25, 38, 0.65);
-            backdrop-filter: blur(4px);
-            z-index: 2000;
-            align-items: center;
-            justify-content: center;
-            padding: 1rem;
-        }
-
-        .modal-content {
-            background: #ffffff;
-            border-radius: 14px;
-            max-width: 560px;
-            width: 100%;
-            padding: 2rem;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-            position: relative;
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.25rem;
-            border-bottom: 1px solid #e2e8f0;
-            padding-bottom: 0.75rem;
-        }
-
-        .modal-title {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: #1e293b;
-        }
-
-        .modal-close {
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: #64748b;
-            line-height: 1;
-        }
-    </style>
+    <link rel="stylesheet" href="/index.css">
 </head>
 <body>
     <script>
@@ -722,12 +85,12 @@
             <form id="fiori-login-form" onsubmit="handleFormLogin(event)">
                 <div class="form-group">
                     <label class="form-label" for="login-username">SAP Universal ID / Username</label>
-                    <input type="text" id="login-username" class="form-input" placeholder="e.g. admin, dispatcher, inspector, finance, technician" value="dispatcher" required autocomplete="username">
+                    <input type="text" id="login-username" class="form-input" placeholder="e.g. admin, inspector, finance, technician" value="admin" required autocomplete="username">
                 </div>
 
                 <div class="form-group">
                     <label class="form-label" for="login-password">Password</label>
-                    <input type="password" id="login-password" class="form-input" placeholder="Enter password (e.g. disp123)" value="disp123" required autocomplete="current-password">
+                    <input type="password" id="login-password" class="form-input" placeholder="Enter password (e.g. admin123)" value="admin123" required autocomplete="current-password">
                 </div>
 
                 <button type="submit" id="btn-login-submit" class="btn-primary">
@@ -740,14 +103,6 @@
                 <div class="personas-title">&bull; Quick Sign-In as Business Persona &bull;</div>
                 <div class="personas-grid">
                     
-                    <button type="button" class="persona-btn" onclick="quickLogin('dispatcher')">
-                        <div class="persona-avatar" style="background:#00838f;">KR</div>
-                        <div class="persona-info">
-                            <div class="persona-name">Kavita Reddy</div>
-                            <div class="persona-role">📋 Dispatcher (Customer & Fleet)</div>
-                        </div>
-                    </button>
-
                     <button type="button" class="persona-btn" onclick="quickLogin('admin')">
                         <div class="persona-avatar" style="background:#0070f2;">VM</div>
                         <div class="persona-info">
@@ -760,7 +115,7 @@
                         <div class="persona-avatar" style="background:#107e3e;">RP</div>
                         <div class="persona-info">
                             <div class="persona-name">Ramesh Patel</div>
-                            <div class="persona-role">🚜 Yard Inspector (Check-In)</div>
+                            <div class="persona-role">🚜 Yard Inspector (Inspection & Damage Charge)</div>
                         </div>
                     </button>
 
@@ -768,7 +123,7 @@
                         <div class="persona-avatar" style="background:#8e44ad;">AS</div>
                         <div class="persona-info">
                             <div class="persona-name">Ananya Sharma</div>
-                            <div class="persona-role">💳 Billing Specialist (Charges)</div>
+                            <div class="persona-role">💳 Billing Clerk (Financial & Repair Billing)</div>
                         </div>
                     </button>
 
@@ -776,15 +131,7 @@
                         <div class="persona-avatar" style="background:#e67e22;">MD</div>
                         <div class="persona-info">
                             <div class="persona-name">Mike D'souza</div>
-                            <div class="persona-role">🔧 Lead Technician (Repairs)</div>
-                        </div>
-                    </button>
-
-                    <button type="button" class="persona-btn" onclick="quickLogin('manager')">
-                        <div class="persona-avatar" style="background:#2980b9;">SV</div>
-                        <div class="persona-info">
-                            <div class="persona-name">Sanjay Verma</div>
-                            <div class="persona-role">💼 Operations Director</div>
+                            <div class="persona-role">🔧 Technician (Workshop & Maintenance)</div>
                         </div>
                     </button>
 
@@ -825,206 +172,158 @@
             </div>
         </header>
 
-        <div class="scope-banner">
-            <div class="scope-left">
-                <span style="font-size:1.1rem;">🛡️</span>
-                <span>
-                    Signed in as <strong id="banner-user-name">Vikram Mehta</strong> &bull;
-                    Role: <strong id="banner-user-role" style="color:var(--sapPrimary);">Administrator</strong> &bull;
-                    Location: <strong id="banner-user-plant">PLANT-AHMD (Ahmedabad Main Yard)</strong>
-                </span>
-            </div>
-            <div class="scope-right">
-                <span id="banner-app-count" style="font-weight:700; background:#ffffff; border:1px solid #cbd5e1; padding:0.25rem 0.65rem; border-radius:12px; font-size:0.8rem;">
-                    10 of 10 Apps Authorized
-                </span>
-            </div>
-        </div>
+
 
         <main class="launchpad-container">
 
-            <!-- Executive KPI Banner -->
-            <section class="kpi-banner">
-                <div class="kpi-card success" id="kpi-available-card" onclick="window.location.href='/fleet-overview/webapp/index.html'" title="Click to view Fleet Overview" data-roles="Admin,Dispatcher,YardWorker,Technician,Manager">
-                    <span class="kpi-label">Available Fleet</span>
-                    <div class="kpi-value" id="kpi-available">2 Assets</div>
-                    <span class="kpi-sub" id="kpi-available-sub">Ready for Dispatch &bull; Yard A</span>
+            <!-- Executive Role-Tailored KPI Banner -->
+            <section class="kpi-banner" id="kpi-banner">
+                <div class="kpi-card" id="kpi-slot-1">
+                    <div class="kpi-top">
+                        <span class="kpi-label" id="kpi-label-1">Available Fleet</span>
+                        <div class="kpi-icon-badge" id="kpi-icon-1">🚜</div>
+                    </div>
+                    <div class="kpi-value" id="kpi-value-1">--</div>
                 </div>
-                <div class="kpi-card" id="kpi-rented-card" onclick="window.location.href='/rentals/webapp/index.html'" title="Click to view Rental Contracts" data-roles="Admin,Dispatcher,BillingClerk,Manager">
-                    <span class="kpi-label">Rented Out Fleet</span>
-                    <div class="kpi-value" id="kpi-rented">4 Assets</div>
-                    <span class="kpi-sub" id="kpi-rented-sub">Active On-Site &bull; XYZ Construction</span>
+
+                <div class="kpi-card" id="kpi-slot-2">
+                    <div class="kpi-top">
+                        <span class="kpi-label" id="kpi-label-2">Rented Out Fleet</span>
+                        <div class="kpi-icon-badge" id="kpi-icon-2">📑</div>
+                    </div>
+                    <div class="kpi-value" id="kpi-value-2">--</div>
                 </div>
-                <div class="kpi-card warning" id="kpi-pending-card" onclick="window.location.href='/damage-charge-approval/webapp/index.html'" title="Click to view Damage Approvals" data-roles="Admin,BillingClerk,Manager,Auditor">
-                    <span class="kpi-label">Pending Approval</span>
-                    <div class="kpi-value" id="kpi-pending">&#8377;35,400</div>
-                    <span class="kpi-sub" id="kpi-pending-sub">Invoice #9000123456 &bull; Damage Bill</span>
+
+                <div class="kpi-card" id="kpi-slot-3">
+                    <div class="kpi-top">
+                        <span class="kpi-label" id="kpi-label-3">Pending Damage Bill</span>
+                        <div class="kpi-icon-badge" id="kpi-icon-3">💳</div>
+                    </div>
+                    <div class="kpi-value" id="kpi-value-3">--</div>
                 </div>
-                <div class="kpi-card error" id="kpi-damaged-card" onclick="window.location.href='/repair-jobs/webapp/index.html'" title="Click to view Workshop Repairs" data-roles="Admin,YardWorker,Technician,Manager,Auditor">
-                    <span class="kpi-label">Quarantined / Damaged</span>
-                    <div class="kpi-value" id="kpi-damaged">5 Assets</div>
-                    <span class="kpi-sub" id="kpi-damaged-sub">In Workshop &bull; Repair / Quarantine</span>
+
+                <div class="kpi-card" id="kpi-slot-4">
+                    <div class="kpi-top">
+                        <span class="kpi-label" id="kpi-label-4">Quarantined / Damaged</span>
+                        <div class="kpi-icon-badge" id="kpi-icon-4">🔧</div>
+                    </div>
+                    <div class="kpi-value" id="kpi-value-4">--</div>
                 </div>
             </section>
 
-            <!-- GROUP 0: DISPATCH & CUSTOMER MANAGEMENT (STEP 1) -->
+            <!-- ALL APPLICATIONS DIRECTORY -->
             <section class="tile-group" id="group-customers">
-                <div class="group-header">
-                    <div class="group-header-title">
-                        <span>🏢</span>
-                        <span>Rental Dispatch & Customer Master Data</span>
-                    </div>
-                </div>
                 <div class="tiles-grid">
 
                     <!-- Tile: Customer Management -->
-                    <a href="/index.html?app=customer-management" class="fiori-tile" id="tile-customer-management" data-app="customer-management" data-roles="Admin,Dispatcher,Manager">
+                    <a href="/index.html?app=customer-management" class="fiori-tile" id="tile-customer-management" data-app="customer-management" data-roles="Admin">
                         <div class="tile-top">
-                            <span class="tile-icon">🏢</span>
-                            <span class="tile-badge">Master Data / Draft</span>
+                            <div class="tile-icon-box">🏢</div>
+                            <span class="tile-badge">Master Data</span>
                         </div>
                         <h3 class="tile-title">Customer Management</h3>
-                        <p class="tile-desc">Register new corporate rental customers (e.g. XYZ Construction Pvt. Ltd.), create contact persons, view addresses, and review active rental contracts.</p>
+                        <p class="tile-desc">Register new corporate rental customers, manage contact persons, view site addresses, and review active agreements.</p>
                         <div class="tile-footer">
-                            <span class="tile-role-pill">Dispatcher &bull; Admin &bull; Mgr</span>
-                            <span>Open Fiori App &rarr;</span>
+                            <span>Open Application</span>
+                            <span class="tile-action-arrow">&rarr;</span>
                         </div>
                     </a>
 
                     <!-- Tile 1: Fleet Overview & Asset Detail -->
-                    <a href="/index.html?app=fleet-overview" class="fiori-tile" id="tile-fleet-overview" data-app="fleet-overview" data-roles="Admin,Dispatcher,YardWorker,Technician,Manager">
+                    <a href="/index.html?app=fleet-overview" class="fiori-tile" id="tile-fleet-overview" data-app="fleet-overview" data-roles="Admin">
                         <div class="tile-top">
-                            <span class="tile-icon">🚜</span>
-                            <span class="tile-badge">ALP / List Report</span>
+                            <div class="tile-icon-box">🚜</div>
+                            <span class="tile-badge">Fleet Overview</span>
                         </div>
                         <h3 class="tile-title">Fleet Overview & Asset Detail</h3>
-                        <p class="tile-desc">Track equipment availability, operational status, condition grades (A-D), and location telemetry across depots.</p>
+                        <p class="tile-desc">Track equipment availability, operational telemetry, condition grades (A-D), and active allocations across depots.</p>
                         <div class="tile-footer">
-                            <span class="tile-role-pill">Dispatcher &bull; Yard &bull; Tech</span>
-                            <span>Open Fiori App &rarr;</span>
+                            <span>Open Application</span>
+                            <span class="tile-action-arrow">&rarr;</span>
                         </div>
                     </a>
 
                     <!-- Tile: Rental Contracts & Allocations -->
-                    <a href="/index.html?app=rentals" class="fiori-tile" id="tile-rentals" data-app="rentals" data-roles="Admin,Dispatcher,Manager,BillingClerk,Auditor">
+                    <a href="/index.html?app=rentals" class="fiori-tile" id="tile-rentals" data-app="rentals" data-roles="Admin">
                         <div class="tile-top">
-                            <span class="tile-icon">📑</span>
-                            <span class="tile-badge">Contracts / Items</span>
+                            <div class="tile-icon-box">📑</div>
+                            <span class="tile-badge">Contracts</span>
                         </div>
                         <h3 class="tile-title">Rental Contracts & Allocations</h3>
-                        <p class="tile-desc">Manage rental agreements (e.g. RENT-10001), reserve equipment assets, track rental periods, and trigger check-out.</p>
+                        <p class="tile-desc">Create rental contracts, reserve equipment assets, schedule delivery periods, and trigger check-out dispatch.</p>
                         <div class="tile-footer">
-                            <span class="tile-role-pill">Dispatcher &bull; Billing &bull; Mgr</span>
-                            <span>Open Fiori App &rarr;</span>
+                            <span>Open Application</span>
+                            <span class="tile-action-arrow">&rarr;</span>
                         </div>
                     </a>
 
                     <!-- Tile: Depot & Yard Locations -->
-                    <a href="/index.html?app=locations" class="fiori-tile" id="tile-locations" data-app="locations" data-roles="Admin,Dispatcher,YardWorker,Technician,Manager,Auditor">
+                    <a href="/index.html?app=locations" class="fiori-tile" id="tile-locations" data-app="locations" data-roles="Admin">
                         <div class="tile-top">
-                            <span class="tile-icon">📍</span>
+                            <div class="tile-icon-box">📍</div>
                             <span class="tile-badge">Depot / Yard</span>
                         </div>
                         <h3 class="tile-title">Depot & Yard Locations</h3>
-                        <p class="tile-desc">Maintain equipment depots (e.g. Ahmedabad Main Yard - PLANT-AHMD), workshops, job sites, and GPS coordinates.</p>
+                        <p class="tile-desc">Maintain depot facilities, regional yard locations, on-site workshops, and GPS geo-fenced coordinates.</p>
                         <div class="tile-footer">
-                            <span class="tile-role-pill">Yard &bull; Dispatch &bull; Tech</span>
-                            <span>Open Fiori App &rarr;</span>
+                            <span>Open Application</span>
+                            <span class="tile-action-arrow">&rarr;</span>
                         </div>
                     </a>
-
-                </div>
-            </section>
-
-            <!-- GROUP 1: INSPECTIONS & EVIDENCE -->
-            <section class="tile-group" id="group-inspections">
-                <div class="group-header">
-                    <div class="group-header-title">
-                        <span>🔍</span>
-                        <span>Inspections & Condition Logging</span>
-                    </div>
-                </div>
-                <div class="tiles-grid">
 
                     <!-- Tile: Condition Logs & Inspections -->
-                    <a href="/index.html?app=inspections" class="fiori-tile" id="tile-inspections" data-app="inspections" data-roles="Admin,Dispatcher,YardWorker,Manager,Auditor">
+                    <a href="/index.html?app=inspections" class="fiori-tile" id="tile-inspections" data-app="inspections" data-roles="Admin,YardWorker">
                         <div class="tile-top">
-                            <span class="tile-icon">📋</span>
-                            <span class="tile-badge">Departure / Return</span>
+                            <div class="tile-icon-box">📋</div>
+                            <span class="tile-badge">Audit & Return</span>
                         </div>
                         <h3 class="tile-title">Condition Logs & Inspections</h3>
-                        <p class="tile-desc">Capture check-out and return condition logs, record meter readings, assign condition grades (A-D), and lock audit reports.</p>
+                        <p class="tile-desc">Capture check-out and return condition logs, record meter readings, assign grades (A-D), and lock audit reports.</p>
                         <div class="tile-footer">
-                            <span class="tile-role-pill">YardWorker &bull; Dispatch &bull; Mgr</span>
-                            <span>Open Fiori App &rarr;</span>
+                            <span>Open Application</span>
+                            <span class="tile-action-arrow">&rarr;</span>
                         </div>
                     </a>
-
-                </div>
-            </section>
-
-            <!-- GROUP 2: BILLING & FINANCE -->
-            <section class="tile-group" id="group-billing">
-                <div class="group-header">
-                    <div class="group-header-title">
-                        <span>💳</span>
-                        <span>Financial & Damage Repair Billing</span>
-                    </div>
-                </div>
-                <div class="tiles-grid">
 
                     <!-- Tile 3: Damage Charge Approval -->
-                    <a href="/index.html?app=damage-charge-approval" class="fiori-tile" id="tile-damage-charge" data-app="damage-charge-approval" data-roles="Admin,BillingClerk,Manager,Auditor,YardWorker,Technician">
+                    <a href="/index.html?app=damage-charge-approval" class="fiori-tile" id="tile-damage-charge" data-app="damage-charge-approval" data-roles="Admin,YardWorker,BillingClerk">
                         <div class="tile-top">
-                            <span class="tile-icon">💳</span>
-                            <span class="tile-badge">Worklist & Actions</span>
+                            <div class="tile-icon-box">💳</div>
+                            <span class="tile-badge">Billing Worklist</span>
                         </div>
                         <h3 class="tile-title">Damage Charge Approval</h3>
-                        <p class="tile-desc">Review automated repair bills with damage particulars, inspect photo evidence, and approve or adjust customer repair charges.</p>
+                        <p class="tile-desc">Review automated repair bills with damage particulars, inspect photo evidence, and approve customer repair charges.</p>
                         <div class="tile-footer">
-                            <span class="tile-role-pill">BillingClerk &bull; Mgr &bull; Audit</span>
-                            <span>Open Fiori App &rarr;</span>
+                            <span>Open Application</span>
+                            <span class="tile-action-arrow">&rarr;</span>
                         </div>
                     </a>
 
-                </div>
-            </section>
-
-            <!-- GROUP 3: WORKSHOP & MAINTENANCE -->
-            <section class="tile-group" id="group-workshop">
-                <div class="group-header">
-                    <div class="group-header-title">
-                        <span>🔧</span>
-                        <span>Workshop & Maintenance Engineering</span>
-                    </div>
-                </div>
-                <div class="tiles-grid">
-
                     <!-- Tile 5: Workshop Repair Jobs -->
-                    <a href="/index.html?app=repair-jobs" class="fiori-tile" id="tile-repair-jobs" data-app="repair-jobs" data-roles="Admin,Technician,Manager">
+                    <a href="/index.html?app=repair-jobs" class="fiori-tile" id="tile-repair-jobs" data-app="repair-jobs" data-roles="Admin,Technician">
                         <div class="tile-top">
-                            <span class="tile-icon">🔧</span>
-                            <span class="tile-badge">Technician Worklist</span>
+                            <div class="tile-icon-box">🔧</div>
+                            <span class="tile-badge">Workshop</span>
                         </div>
                         <h3 class="tile-title">Workshop Repair Jobs</h3>
-                        <p class="tile-desc">Dispatch damage repair jobs, capture actual technician hours & parts cost, and attach before/after photos.</p>
+                        <p class="tile-desc">Dispatch damage repair jobs, capture technician hours & parts cost, and attach before/after photo evidence.</p>
                         <div class="tile-footer">
-                            <span class="tile-role-pill">Technician &bull; Mgr</span>
-                            <span>Open Fiori App &rarr;</span>
+                            <span>Open Application</span>
+                            <span class="tile-action-arrow">&rarr;</span>
                         </div>
                     </a>
 
                     <!-- Tile 6: Maintenance Planner -->
-                    <a href="/index.html?app=maintenance-planner" class="fiori-tile" id="tile-maintenance-planner" data-app="maintenance-planner" data-roles="Admin,Technician,Manager">
+                    <a href="/index.html?app=maintenance-planner" class="fiori-tile" id="tile-maintenance-planner" data-app="maintenance-planner" data-roles="Admin,Technician">
                         <div class="tile-top">
-                            <span class="tile-icon">📅</span>
-                            <span class="tile-badge">Calendar & List</span>
+                            <div class="tile-icon-box">📅</div>
+                            <span class="tile-badge">Preventive PM</span>
                         </div>
                         <h3 class="tile-title">Maintenance Planner</h3>
-                        <p class="tile-desc">Track scheduled 250h/500h preventive services, calibration routines, and service provider costs.</p>
+                        <p class="tile-desc">Track scheduled 250h/500h preventive services, calibration routines, service intervals, and provider costs.</p>
                         <div class="tile-footer">
-                            <span class="tile-role-pill">Technician &bull; Mgr</span>
-                            <span>Open Fiori App &rarr;</span>
+                            <span>Open Application</span>
+                            <span class="tile-action-arrow">&rarr;</span>
                         </div>
                     </a>
 
@@ -1046,59 +345,56 @@
     <div id="switch-modal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 class="modal-title">Switch Enterprise Role Persona</h3>
-                <button class="modal-close" onclick="closeSwitchModal()">&times;</button>
+                <div>
+                    <h3 class="modal-title">Switch Enterprise Role</h3>
+                    <p class="modal-subtitle">Select an authorized business persona to preview dedicated views and KPIs</p>
+                </div>
+                <button class="modal-close" onclick="closeSwitchModal()" title="Close">&times;</button>
             </div>
-            <p style="font-size:0.88rem; color:#64748b; margin-bottom:1.25rem;">
-                Select a business persona below to instantly switch roles and inspect the launchpad apps authorized for that profile:
-            </p>
-            <div class="personas-grid">
+            
+            <div class="modal-personas-grid">
                 
-                <button type="button" class="persona-btn" onclick="quickLogin('dispatcher'); closeSwitchModal();">
-                    <div class="persona-avatar" style="background:#00838f;">KR</div>
-                    <div class="persona-info">
-                        <div class="persona-name">Kavita Reddy</div>
-                        <div class="persona-role">📋 Dispatcher (Customer & Fleet)</div>
+                <button type="button" class="modal-persona-card" onclick="quickLogin('admin'); closeSwitchModal();">
+                    <div class="modal-persona-avatar" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);">VM</div>
+                    <div class="modal-persona-details">
+                        <div class="modal-persona-top">
+                            <span class="modal-persona-name">Vikram Mehta</span>
+                            <span class="modal-role-pill admin">Executive</span>
+                        </div>
+                        <div class="modal-persona-desc">Fleet Director &bull; All Apps &amp; KPI Overview</div>
                     </div>
                 </button>
 
-                <button type="button" class="persona-btn" onclick="quickLogin('admin'); closeSwitchModal();">
-                    <div class="persona-avatar" style="background:#0070f2;">VM</div>
-                    <div class="persona-info">
-                        <div class="persona-name">Vikram Mehta</div>
-                        <div class="persona-role">👔 Administrator (All Apps)</div>
+                <button type="button" class="modal-persona-card" onclick="quickLogin('inspector'); closeSwitchModal();">
+                    <div class="modal-persona-avatar" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">RP</div>
+                    <div class="modal-persona-details">
+                        <div class="modal-persona-top">
+                            <span class="modal-persona-name">Ramesh Patel</span>
+                            <span class="modal-role-pill yard">Yard Ops</span>
+                        </div>
+                        <div class="modal-persona-desc">Yard Inspector &bull; Check-In &amp; Condition Logging</div>
                     </div>
                 </button>
 
-                <button type="button" class="persona-btn" onclick="quickLogin('inspector'); closeSwitchModal();">
-                    <div class="persona-avatar" style="background:#107e3e;">RP</div>
-                    <div class="persona-info">
-                        <div class="persona-name">Ramesh Patel</div>
-                        <div class="persona-role">🚜 Yard Inspector (Check-In)</div>
+                <button type="button" class="modal-persona-card" onclick="quickLogin('finance'); closeSwitchModal();">
+                    <div class="modal-persona-avatar" style="background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);">AS</div>
+                    <div class="modal-persona-details">
+                        <div class="modal-persona-top">
+                            <span class="modal-persona-name">Ananya Sharma</span>
+                            <span class="modal-role-pill finance">Finance</span>
+                        </div>
+                        <div class="modal-persona-desc">Billing Clerk &bull; Damage Invoicing &amp; Approvals</div>
                     </div>
                 </button>
 
-                <button type="button" class="persona-btn" onclick="quickLogin('finance'); closeSwitchModal();">
-                    <div class="persona-avatar" style="background:#8e44ad;">AS</div>
-                    <div class="persona-info">
-                        <div class="persona-name">Ananya Sharma</div>
-                        <div class="persona-role">💳 Billing Specialist (Charges)</div>
-                    </div>
-                </button>
-
-                <button type="button" class="persona-btn" onclick="quickLogin('technician'); closeSwitchModal();">
-                    <div class="persona-avatar" style="background:#e67e22;">MD</div>
-                    <div class="persona-info">
-                        <div class="persona-name">Mike D'souza</div>
-                        <div class="persona-role">🔧 Lead Technician (Repairs)</div>
-                    </div>
-                </button>
-
-                <button type="button" class="persona-btn" onclick="quickLogin('manager'); closeSwitchModal();">
-                    <div class="persona-avatar" style="background:#2980b9;">SV</div>
-                    <div class="persona-info">
-                        <div class="persona-name">Sanjay Verma</div>
-                        <div class="persona-role">💼 Operations Director</div>
+                <button type="button" class="modal-persona-card" onclick="quickLogin('technician'); closeSwitchModal();">
+                    <div class="modal-persona-avatar" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">MD</div>
+                    <div class="modal-persona-details">
+                        <div class="modal-persona-top">
+                            <span class="modal-persona-name">Mike D'souza</span>
+                            <span class="modal-role-pill tech">Workshop</span>
+                        </div>
+                        <div class="modal-persona-desc">Technician &bull; Repair Orders &amp; Maintenance</div>
                     </div>
                 </button>
 
@@ -1107,187 +403,7 @@
     </div>
 
     <!-- 4. CORE JAVASCRIPT -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            if (window.__FIORI_APP_CONFIG) {
-                return; // Sub-app runner handles its own UI lifecycle
-            }
-            const session = getFioriSession();
-            if (session) {
-                renderLaunchpadForSession(session);
-            } else {
-                showLoginView();
-            }
-            loadLiveKPIData();
-        });
-
-        function showLoginView() {
-            document.getElementById('login-view').style.display = 'flex';
-            document.getElementById('launchpad-view').style.display = 'none';
-        }
-
-        function renderLaunchpadForSession(session) {
-            document.getElementById('login-view').style.display = 'none';
-            document.getElementById('launchpad-view').style.display = 'flex';
-
-            const roleCfg = window.FIORI_ROLES_CONFIG[session.role] || window.FIORI_ROLES_CONFIG['Admin'];
-
-            // Header info
-            document.getElementById('shell-user-avatar').textContent = session.avatar || 'AD';
-            document.getElementById('shell-user-avatar').style.backgroundColor = roleCfg.color || '#0070f2';
-            document.getElementById('shell-user-name').textContent = session.name;
-            document.getElementById('shell-user-role').textContent = session.role;
-
-            // Banner info
-            document.getElementById('banner-user-name').textContent = session.name;
-            document.getElementById('banner-user-role').textContent = roleCfg.title + ' (' + session.role + ')';
-            document.getElementById('banner-user-plant').textContent = session.plant;
-
-            // Filter tiles
-            let visibleAppCount = 0;
-            const tiles = document.querySelectorAll('.fiori-tile');
-            tiles.forEach(tile => {
-                const allowedRoles = (tile.getAttribute('data-roles') || '').split(',').map(s => s.trim());
-                if (session.role === 'Admin' || allowedRoles.includes(session.role)) {
-                    tile.style.display = 'flex';
-                    visibleAppCount++;
-                } else {
-                    tile.style.display = 'none';
-                }
-            });
-
-            // Filter groups
-            const groups = document.querySelectorAll('.tile-group');
-            groups.forEach(group => {
-                const visibleInGroup = group.querySelectorAll('.fiori-tile[style*="display: flex"]').length;
-                if (visibleInGroup === 0) {
-                    group.style.display = 'none';
-                } else {
-                    group.style.display = 'block';
-                }
-            });
-
-            // Filter KPIs
-            const kpiCards = document.querySelectorAll('.kpi-card');
-            kpiCards.forEach(card => {
-                const allowedRoles = (card.getAttribute('data-roles') || '').split(',').map(s => s.trim());
-                if (session.role === 'Admin' || allowedRoles.includes(session.role)) {
-                    card.style.display = 'flex';
-                } else {
-                    card.style.display = 'none';
-                }
-            });
-
-            document.getElementById('banner-app-count').textContent = visibleAppCount + ' of ' + tiles.length + ' Apps Authorized';
-        }
-
-        function handleFormLogin(e) {
-            e.preventDefault();
-            const usernameInput = document.getElementById('login-username').value.trim().toLowerCase();
-            const passwordInput = document.getElementById('login-password').value.trim();
-
-            const userEntry = window.FIORI_USERS[usernameInput];
-            if (!userEntry) {
-                showLoginError('User "' + usernameInput + '" not found. Try: dispatcher, admin, inspector, finance, technician, manager.');
-                return;
-            }
-
-            if (userEntry.pass !== passwordInput && passwordInput !== 'password123' && passwordInput !== 'admin123') {
-                showLoginError('Incorrect password for ' + usernameInput + '. (Demo password: ' + userEntry.pass + ')');
-                return;
-            }
-
-            hideLoginError();
-            const session = setFioriSession(usernameInput);
-            renderLaunchpadForSession(session);
-        }
-
-        function quickLogin(username) {
-            hideLoginError();
-            const session = setFioriSession(username);
-            renderLaunchpadForSession(session);
-        }
-
-        function handleLogout() {
-            clearFioriSession();
-            showLoginView();
-        }
-
-        function showLoginError(msg) {
-            const errBox = document.getElementById('login-error-box');
-            const errMsg = document.getElementById('login-error-msg');
-            errMsg.textContent = msg;
-            errBox.style.display = 'flex';
-        }
-
-        function hideLoginError() {
-            document.getElementById('login-error-box').style.display = 'none';
-        }
-
-        function openSwitchModal() {
-            document.getElementById('switch-modal').style.display = 'flex';
-        }
-
-        function closeSwitchModal() {
-            document.getElementById('switch-modal').style.display = 'none';
-        }
-
-        window.onclick = function(event) {
-            const modal = document.getElementById('switch-modal');
-            if (event.target === modal) {
-                closeSwitchModal();
-            }
-        };
-
-        async function loadLiveKPIData() {
-            try {
-                const eqRes = await fetch('/rental/Equipment');
-                if (eqRes.ok) {
-                    const eqData = await eqRes.json();
-                    if (eqData && eqData.value) {
-                        const available = eqData.value.filter(e => e.currentStatus === 'Available').length;
-                        const rented = eqData.value.filter(e => e.currentStatus === 'RentedOut').length;
-                        const damaged = eqData.value.filter(e => ['Damaged', 'Quarantined', 'InRepair', 'UnderMaintenance', 'ReturnedPendingInspection'].includes(e.currentStatus)).length;
-                        
-                        document.getElementById('kpi-available').textContent = available + (available === 1 ? ' Asset' : ' Assets');
-                        document.getElementById('kpi-rented').textContent = rented + (rented === 1 ? ' Asset' : ' Assets');
-                        document.getElementById('kpi-damaged').textContent = damaged + (damaged === 1 ? ' Asset' : ' Assets');
-
-                        const availSub = document.getElementById('kpi-available-sub');
-                        if (availSub) availSub.textContent = available > 0 ? `${available} Ready for Dispatch • Yard A` : '0 Ready for Dispatch • Depot';
-
-                        const rentSub = document.getElementById('kpi-rented-sub');
-                        if (rentSub) rentSub.textContent = rented > 0 ? `${rented} Active On-Site • XYZ Construction` : '0 Active On-Site';
-
-                        const damSub = document.getElementById('kpi-damaged-sub');
-                        if (damSub) damSub.textContent = damaged > 0 ? `${damaged} in Workshop / Quarantine` : 'All Fleet Operational';
-                    }
-                }
-
-                const billRes = await fetch('/billing/RepairBills');
-                if (billRes.ok) {
-                    const billData = await billRes.json();
-                    if (billData && billData.value) {
-                        const pendingBills = billData.value.filter(b => b.billingStatus === 'PendingApproval' || b.billingStatus === 'Draft');
-                        const totalPending = pendingBills.reduce((acc, b) => acc + Number(b.totalAmount || 0), 0);
-                        
-                        document.getElementById('kpi-pending').textContent = '₹' + Math.round(totalPending).toLocaleString('en-IN');
-                        const pendingSub = document.getElementById('kpi-pending-sub');
-                        if (pendingSub) {
-                            if (pendingBills.length > 0) {
-                                const topBill = pendingBills.find(b => b.invoiceNo) || pendingBills[0];
-                                pendingSub.textContent = `Invoice #${topBill.invoiceNo || 'Draft'} • Damage Bill`;
-                            } else {
-                                pendingSub.textContent = 'All Bills Cleared';
-                            }
-                        }
-                    }
-                }
-            } catch (err) {
-                console.log('KPI load info:', err.message);
-            }
-        }
-    </script>
+    <script src="/index.js" defer></script>
 
 </body>
 </html>

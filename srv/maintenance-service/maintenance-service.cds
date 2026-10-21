@@ -1,33 +1,39 @@
 using { RentalEquipmentTrackingApp as my } from '../../db/schema';
 
 @path: '/maintenance'
-@requires: ['Technician', 'Dispatcher', 'Manager', 'Admin', 'Auditor']
+@requires: ['Technician', 'Admin']
 service MaintenanceService {
 
     @odata.draft.enabled
     @restrict: [
-        { grant: ['READ'], to: ['Technician', 'Dispatcher', 'Manager', 'Admin', 'Auditor'] },
-        { grant: ['*'], to: ['Technician', 'Manager', 'Admin'] }
+        { grant: ['READ'], to: ['Technician', 'Admin'] },
+        { grant: ['*'], to: ['Technician', 'Admin'] }
     ]
     entity MaintenanceRecords as projection on my.MaintenanceRecords;
 
     @odata.draft.enabled
     @restrict: [
-        { grant: ['READ'], to: ['Technician', 'Dispatcher', 'Manager', 'Admin', 'Auditor'] },
-        { grant: ['*'], to: ['Technician', 'Manager', 'Admin'] }
+        { grant: ['READ'], to: ['Technician', 'Admin'] },
+        { grant: ['*'], to: ['Technician', 'Admin'] }
     ]
     entity RepairJobs as projection on my.RepairJobs;
+
+    @restrict: [
+        { grant: ['READ'], to: ['Technician', 'Admin'] },
+        { grant: ['*'], to: ['Technician', 'Admin'] }
+    ]
+    entity DamagePhotos as projection on my.DamagePhotos;
 
     @readonly
     @cds.redirection.target
     @restrict: [
-        { grant: ['READ'], to: ['Technician', 'Dispatcher', 'Manager', 'Admin', 'Auditor'] }
+        { grant: ['READ'], to: ['Technician', 'Admin'] }
     ]
     entity Equipment as projection on my.Equipment;
 
     @readonly
     @restrict: [
-        { grant: ['READ'], to: ['Technician', 'Dispatcher', 'Manager', 'Admin', 'Auditor'] }
+        { grant: ['READ'], to: ['Technician', 'Admin'] }
     ]
     entity DamagedEquipment as projection on my.Equipment {
         key ID,
@@ -41,7 +47,7 @@ service MaintenanceService {
 
     @readonly
     @restrict: [
-        { grant: ['READ'], to: ['Technician', 'Dispatcher', 'Manager', 'Admin', 'Auditor'] }
+        { grant: ['READ'], to: ['Technician', 'Admin'] }
     ]
     entity DamageRecords as projection on my.DamageRecords;
 

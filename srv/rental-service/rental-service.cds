@@ -1,20 +1,18 @@
 using { RentalEquipmentTrackingApp as my } from '../../db/schema';
 
 @path: '/rental'
-@requires: ['Dispatcher', 'YardWorker', 'Manager', 'Admin', 'Auditor']
+@requires: ['Admin']
 service RentalService {
 
     @odata.draft.enabled
     @restrict: [
-        { grant: ['READ'], to: ['YardWorker', 'Auditor'] },
-        { grant: ['*'], to: ['Dispatcher', 'Manager', 'Admin'] }
+        { grant: ['*'], to: ['Admin'] }
     ]
     entity Customers as projection on my.Customers;
 
     @odata.draft.enabled
     @restrict: [
-        { grant: ['READ'], to: ['Dispatcher', 'YardWorker', 'Manager', 'Admin', 'Auditor'] },
-        { grant: ['*'], to: ['Dispatcher', 'Manager', 'Admin'] }
+        { grant: ['*'], to: ['Admin'] }
     ]
     entity Locations as projection on my.Locations {
         *,
@@ -48,14 +46,13 @@ service RentalService {
     @odata.draft.enabled
     @cds.redirection.target
     @restrict: [
-        { grant: ['READ'], to: ['Dispatcher', 'YardWorker', 'Manager', 'Admin', 'Auditor'] },
-        { grant: ['*'], to: ['Dispatcher', 'Manager', 'Admin'] }
+        { grant: ['*'], to: ['Admin'] }
     ]
     entity Equipment as projection on my.Equipment;
 
     @readonly
     @restrict: [
-        { grant: ['READ'], to: ['Dispatcher', 'YardWorker', 'Manager', 'Admin', 'Auditor'] }
+        { grant: ['READ'], to: ['Admin'] }
     ]
     entity AvailableEquipment as projection on my.Equipment {
         ID,
@@ -74,44 +71,42 @@ service RentalService {
 
     @odata.draft.enabled
     @restrict: [
-        { grant: ['READ'], to: ['Dispatcher', 'Manager', 'Admin', 'Auditor'] },
-        { grant: ['*'], to: ['Dispatcher', 'Manager', 'Admin'] }
+        { grant: ['*'], to: ['Admin'] }
     ]
     entity Rentals as projection on my.Rentals;
 
     @restrict: [
-        { grant: ['READ'], to: ['Dispatcher', 'Manager', 'Admin', 'Auditor'] },
-        { grant: ['*'], to: ['Dispatcher', 'Manager', 'Admin'] }
+        { grant: ['*'], to: ['Admin'] }
     ]
     entity RentalItems as projection on my.RentalItems;
 
     @readonly
     @restrict: [
-        { grant: ['READ'], to: ['Dispatcher', 'Manager', 'Admin', 'Auditor'] }
+        { grant: ['READ'], to: ['Admin'] }
     ]
     entity RentalStatusHistory as projection on my.RentalStatusHistory;
 
     @readonly
     @restrict: [
-        { grant: ['READ'], to: ['Dispatcher', 'YardWorker', 'Manager', 'Admin', 'Auditor'] }
+        { grant: ['READ'], to: ['Admin'] }
     ]
     entity EquipmentTransfers as projection on my.EquipmentTransfers;
 
     @readonly
     @restrict: [
-        { grant: ['READ'], to: ['Dispatcher', 'YardWorker', 'Manager', 'Admin', 'Auditor'] }
+        { grant: ['READ'], to: ['Admin'] }
     ]
     entity LocationEvents as projection on my.LocationEvents;
 
     @readonly
     @restrict: [
-        { grant: ['READ'], to: ['Dispatcher', 'YardWorker', 'Manager', 'Admin', 'Auditor'] }
+        { grant: ['READ'], to: ['Admin'] }
     ]
     entity AssetStatusHistory as projection on my.AssetStatusHistory;
 
     @readonly
     @restrict: [
-        { grant: ['READ'], to: ['Dispatcher', 'YardWorker', 'Manager', 'Admin', 'Auditor', 'Technician', 'BillingClerk'] }
+        { grant: ['READ'], to: ['Admin'] }
     ]
     entity LocationTypes {
         key code : String(50);

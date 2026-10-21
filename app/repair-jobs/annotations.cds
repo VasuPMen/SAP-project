@@ -8,38 +8,35 @@ annotate MaintenanceService.RepairJobs with @(
     UI.HeaderInfo: {
         TypeName: 'Workshop Repair Job',
         TypeNamePlural: 'Workshop Repair Jobs',
-        Title: { Value: equipment_ID },
+        Title: { Value: damage_ID },
         Description: { Value: status }
     },
     UI.SelectionFields: [
+        damage_ID,
         status,
-        technician,
-        equipment_ID
+        technician
     ],
     UI.LineItem: [
+        { Value: damage.damageType, Label: 'Damage Classification' },
+        { Value: damage.area, Label: 'Damaged Area' },
+        { Value: damage.severity, Label: 'Severity' },
         { Value: equipment.equipmentName, Label: 'Asset' },
-        { Value: equipment.serialNumber, Label: 'Serial' },
-        { Value: technician, Label: 'Assigned Technician' },
-        { Value: labourHours, Label: 'Actual Hours' },
-        { Value: actualCost, Label: 'Actual Repair Cost ($)' },
-        {
-            Value: status,
-            Label: 'Status',
-            Criticality: (
-                status = 'Completed' ? 3 :
-                status = 'InProgress' ? 2 : 1
-            )
-        },
-        { Value: repairDetails, Label: 'Work Performed Details' },
-        { Value: beforePhotoUrl, Label: 'Before Photo' },
-        { Value: afterPhotoUrl, Label: 'After Photo' },
-        { Value: closedAt, Label: 'Completed At' }
+        { Value: status, Label: 'Job Status', Criticality: (status = 'Completed' ? 3 : (status = 'InProgress' ? 2 : 1)) },
+        { Value: technician, Label: 'Lead Technician' },
+        { Value: labourHours, Label: 'Labour Hours' },
+        { Value: repairDetails, Label: 'Technician Work Log' },
+        { Value: closedAt, Label: 'Completion Timestamp' }
     ],
     UI.Facets: [
         {
             $Type: 'UI.ReferenceFacet',
             Label: 'Repair Job Specifications',
             Target: '@UI.FieldGroup#RepairDetails'
+        },
+        {
+            $Type: 'UI.ReferenceFacet',
+            Label: 'Photographic Evidence & Hashes',
+            Target: 'photos/@UI.LineItem'
         }
     ],
     Common.SideEffects #DamageSelected: {
@@ -48,55 +45,66 @@ annotate MaintenanceService.RepairJobs with @(
     },
     UI.FieldGroup #RepairDetails: {
         Data: [
-            { Value: equipment_ID, Label: 'Equipment Asset' },
-            { Value: damage_ID, Label: 'Damage Reference' },
+            { Value: damage_ID, Label: 'Damage Incident' },
+            { Value: status, Label: 'Job Status' },
             { Value: technician, Label: 'Lead Technician' },
             { Value: labourHours, Label: 'Labour Hours' },
-            { Value: actualCost, Label: 'Material & Labor Cost ($)' },
-            { Value: status, Label: 'Job Status' },
             { Value: repairDetails, Label: 'Technician Work Log' },
-            { Value: beforePhotoUrl, Label: 'Pre-Repair Photo URL' },
-            { Value: afterPhotoUrl, Label: 'Post-Repair Evidence URL' },
             { Value: closedAt, Label: 'Completion Timestamp' }
         ]
     }
 );
 
 annotate MaintenanceService.RepairJobs with {
-    equipment      @title: 'Equipment Asset'          @Common.Label: 'Equipment Asset'
-                   @Common.Text: equipment.equipmentName @Common.TextArrangement: #TextFirst
-                   @Common.ValueList: {
-                       CollectionPath: 'DamagedEquipment',
-                       Parameters: [
-                           { $Type: 'Common.ValueListParameterInOut', LocalDataProperty: equipment_ID, ValueListProperty: 'ID' },
-                           { $Type: 'Common.ValueListParameterDisplayOnly', ValueListProperty: 'equipmentName' },
-                           { $Type: 'Common.ValueListParameterDisplayOnly', ValueListProperty: 'serialNumber' },
-                           { $Type: 'Common.ValueListParameterDisplayOnly', ValueListProperty: 'currentStatus' }
-                       ]
-                   };
-    damage         @title: 'Damage Reference'         @Common.Label: 'Damage Reference'
+    damage         @title: 'Damage Incident'          @Common.Label: 'Damage Incident'
+                   @Common.Text: damage.description   @Common.TextArrangement: #TextOnly
+                   @mandatory
                    @Common.ValueList: {
                        CollectionPath: 'DamageRecords',
                        Parameters: [
                            { $Type: 'Common.ValueListParameterInOut', LocalDataProperty: damage_ID, ValueListProperty: 'ID' },
+                           { $Type: 'Common.ValueListParameterDisplayOnly', ValueListProperty: 'description' },
                            { $Type: 'Common.ValueListParameterDisplayOnly', ValueListProperty: 'damageType' },
                            { $Type: 'Common.ValueListParameterDisplayOnly', ValueListProperty: 'area' },
                            { $Type: 'Common.ValueListParameterDisplayOnly', ValueListProperty: 'severity' }
                        ]
                    };
-    technician     @title: 'Lead Technician'          @Common.Label: 'Lead Technician';
-    labourHours    @title: 'Labour Hours'             @Common.Label: 'Labour Hours';
-    actualCost     @title: 'Material & Labor Cost ($)' @Common.Label: 'Material & Labor Cost ($)';
-    status         @title: 'Job Status'               @Common.Label: 'Job Status';
-    repairDetails  @title: 'Technician Work Log'      @Common.Label: 'Technician Work Log';
-    beforePhotoUrl @title: 'Pre-Repair Photo URL'     @Common.Label: 'Pre-Repair Photo URL';
-    afterPhotoUrl  @title: 'Post-Repair Evidence URL' @Common.Label: 'Post-Repair Evidence URL';
-    closedAt       @title: 'Completion Timestamp'     @Common.Label: 'Completion Timestamp';
+    status         @title: 'Job Status'               @Common.Label: 'Job Status'           @mandatory;
+    technician     @title: 'Lead Technician'          @Common.Label: 'Lead Technician'      @mandatory;
+    labourHours    @title: 'Labour Hours'             @Common.Label: 'Labour Hours'         @mandatory;
+    repairDetails  @title: 'Technician Work Log'      @Common.Label: 'Technician Work Log'  @mandatory;
+    closedAt       @title: 'Completion Timestamp'     @Common.Label: 'Completion Timestamp' @mandatory;
+    equipment      @title: 'Equipment Asset'          @Common.Label: 'Equipment Asset'
+                   @Common.Text: equipment.equipmentName @Common.TextArrangement: #TextFirst;
 };
 
-annotate MaintenanceService.DamagedEquipment with {
-    equipmentName @title: 'Equipment Name'     @Common.Label: 'Equipment Name';
-    serialNumber  @title: 'Serial Number'      @Common.Label: 'Serial Number';
-    currentStatus @title: 'Operational Status' @Common.Label: 'Operational Status';
-    currentGrade  @title: 'Condition Grade'    @Common.Label: 'Condition Grade';
+annotate MaintenanceService.DamagePhotos with @(
+    Capabilities: {
+        InsertRestrictions: { Insertable: true },
+        DeleteRestrictions: { Deletable: true },
+        UpdateRestrictions: { Updatable: true }
+    },
+    UI.LineItem: [
+        { Value: mediaUrl, Label: 'Photo Preview' },
+        { Value: fileName, Label: 'Photo Filename' },
+        { Value: photoType, Label: 'Evidence Type' },
+        { Value: sha256, Label: 'SHA-256 Tamper Hash' },
+        { Value: uploadedAt, Label: 'Captured On' },
+        { Value: uploadedBy, Label: 'Captured By' }
+    ]
+);
+
+annotate MaintenanceService.DamagePhotos with {
+    fileName  @title: 'Photo Filename' @Common.Label: 'Photo Filename';
+    photoType @title: 'Evidence Type'  @Common.Label: 'Evidence Type' @Common.ValueListWithFixedValues: true;
+    mediaUrl  @title: 'Photo Preview / URL' @Common.Label: 'Photo Preview / URL' @UI.IsImageURL: true;
+    sha256    @title: 'SHA-256 Hash'   @Common.Label: 'SHA-256 Hash';
+};
+
+annotate MaintenanceService.DamageRecords with {
+    description  @title: 'Invoice / Doc Ref'     @Common.Label: 'Invoice / Doc Ref';
+    damageType   @title: 'Damage Classification' @Common.Label: 'Damage Classification';
+    area         @title: 'Equipment Area'        @Common.Label: 'Equipment Area';
+    severity     @title: 'Severity'              @Common.Label: 'Severity';
+    damageStatus @title: 'Damage Status'         @Common.Label: 'Damage Status';
 };

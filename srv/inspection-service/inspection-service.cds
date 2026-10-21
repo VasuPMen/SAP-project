@@ -1,40 +1,40 @@
 using { RentalEquipmentTrackingApp as my } from '../../db/schema';
 
 @path: '/inspection'
-@requires: ['YardWorker', 'Technician', 'Dispatcher', 'Manager', 'Admin', 'Auditor']
+@requires: ['YardWorker', 'Admin']
 service InspectionService {
 
     @odata.draft.enabled
     @restrict: [
-        { grant: ['READ'], to: ['YardWorker', 'Technician', 'Dispatcher', 'Manager', 'Admin', 'Auditor'] },
-        { grant: ['*'], to: ['YardWorker', 'Manager', 'Admin'] }
+        { grant: ['READ'], to: ['YardWorker', 'Admin'] },
+        { grant: ['*'], to: ['YardWorker', 'Admin'] }
     ]
     entity ConditionLogs as projection on my.ConditionLogs;
 
     // @odata.draft.enabled
     @restrict: [
-        { grant: ['READ'], to: ['YardWorker', 'Technician', 'Dispatcher', 'Manager', 'Admin', 'Auditor'] },
-        { grant: ['*'], to: ['YardWorker', 'Technician', 'Manager', 'Admin'] }
+        { grant: ['READ'], to: ['YardWorker', 'Admin'] },
+        { grant: ['*'], to: ['YardWorker', 'Admin'] }
     ]
     entity DamageRecords as projection on my.DamageRecords;
 
 
     @restrict: [
-        { grant: ['READ'], to: ['YardWorker', 'Technician', 'Dispatcher', 'Manager', 'Admin', 'Auditor'] },
-        { grant: ['*'], to: ['YardWorker', 'Technician', 'Manager', 'Admin'] }
+        { grant: ['READ'], to: ['YardWorker', 'Admin'] },
+        { grant: ['*'], to: ['YardWorker', 'Admin'] }
     ]
     entity DamagePhotos as projection on my.DamagePhotos;
 
     @readonly
     @cds.redirection.target
     @restrict: [
-        { grant: ['READ'], to: ['YardWorker', 'Technician', 'Dispatcher', 'Manager', 'Admin', 'Auditor'] }
+        { grant: ['READ'], to: ['YardWorker', 'Admin'] }
     ]
     entity Equipment as projection on my.Equipment;
 
     @readonly
     @restrict: [
-        { grant: ['READ'], to: ['YardWorker', 'Technician', 'Dispatcher', 'Manager', 'Admin', 'Auditor'] }
+        { grant: ['READ'], to: ['YardWorker', 'Admin'] }
     ]
     entity RentedEquipment as projection on my.Equipment {
         key ID,
@@ -48,7 +48,7 @@ service InspectionService {
 
     @readonly
     @restrict: [
-        { grant: ['READ'], to: ['YardWorker', 'Technician', 'Dispatcher', 'Manager', 'Admin', 'Auditor'] }
+        { grant: ['READ'], to: ['YardWorker', 'Admin'] }
     ]
     entity ContractEquipment {
         key ID           : UUID;
@@ -63,7 +63,7 @@ service InspectionService {
 
     @readonly
     @restrict: [
-        { grant: ['READ'], to: ['YardWorker', 'Technician', 'Dispatcher', 'Manager', 'Admin', 'Auditor'] }
+        { grant: ['READ'], to: ['YardWorker', 'Admin'] }
     ]
     entity Rentals as projection on my.Rentals;
 

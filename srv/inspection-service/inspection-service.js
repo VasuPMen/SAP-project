@@ -6,13 +6,7 @@ export default class InspectionService extends cds.ApplicationService {
 
         // Clean up blank or abandoned inspection drafts
         this.before('READ', 'ConditionLogs', async (req) => {
-            if (!req.params?.length && !req.query?.SELECT?.one) {
-                try {
-                    await cds.db.run(
-                        DELETE.from('InspectionService.ConditionLogs.drafts').where`equipment_ID is null`
-                    );
-                } catch (e) {}
-            }
+            // Do not delete drafts on active entity list reads to avoid killing in-flight drafts
         });
 
         // Ensure new damage records drafts start completely blank / unfulfilled for user input

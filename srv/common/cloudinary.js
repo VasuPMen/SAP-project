@@ -1,33 +1,7 @@
 import { v2 as cloudinary } from 'cloudinary';
 import crypto from 'node:crypto';
 
-import fs from 'node:fs';
-import path from 'node:path';
-
-// Load .env file automatically if present
-try {
-    const envPath = path.resolve(process.cwd(), '.env');
-    if (fs.existsSync(envPath)) {
-        const content = fs.readFileSync(envPath, 'utf8');
-        content.split('\n').forEach(line => {
-            const trimmed = line.trim();
-            if (trimmed && !trimmed.startsWith('#')) {
-                const eqIdx = trimmed.indexOf('=');
-                if (eqIdx > 0) {
-                    const key = trimmed.substring(0, eqIdx).trim();
-                    const val = trimmed.substring(eqIdx + 1).trim().replace(/^['"]|['"]$/g, '');
-                    if (!process.env[key]) {
-                        process.env[key] = val;
-                    }
-                }
-            }
-        });
-    }
-} catch (e) {
-    // Ignore .env read error
-}
-
-// Extract and parse Cloudinary credentials
+// Configure Cloudinary credentials from environment
 let cloudName = process.env.CLOUDINARY_CLOUD_NAME;
 let apiKey = process.env.CLOUDINARY_API_KEY;
 let apiSecret = process.env.CLOUDINARY_API_SECRET;
@@ -43,18 +17,13 @@ if (process.env.CLOUDINARY_URL) {
     }
 }
 
-const isConfigured = Boolean(cloudName && apiKey && apiSecret);
-
-if (isConfigured) {
+if (cloudName && apiKey && apiSecret) {
     cloudinary.config({
         cloud_name: cloudName,
         api_key: apiKey,
         api_secret: apiSecret,
         secure: true
     });
-    console.log(`[Cloudinary] Initialized with Cloudinary account: ${cloudName}`);
-} else {
-    console.log('[Cloudinary] Notice: Incomplete Cloudinary credentials. Fallback handler will store verifiable evidence hashes.');
 }
 
 

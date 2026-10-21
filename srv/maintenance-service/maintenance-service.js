@@ -5,14 +5,9 @@ export default class MaintenanceService extends cds.ApplicationService {
         const { MaintenanceRecords, RepairJobs, Equipment, DamageRecords, AssetStatusHistory } = this.entities;
 
         // Clean up blank or abandoned repair jobs drafts
+        // Clean up blank or abandoned repair jobs drafts only if explicitly expired or never interacted with
         this.before('READ', 'RepairJobs', async (req) => {
-            if (!req.params?.length && !req.query?.SELECT?.one) {
-                try {
-                    await cds.db.run(
-                        DELETE.from('MaintenanceService.RepairJobs.drafts').where`equipment_ID is null`
-                    );
-                } catch (e) {}
-            }
+            // Do not delete drafts on active entity list reads
         });
 
         // Clean up blank or abandoned maintenance records drafts
@@ -87,7 +82,7 @@ export default class MaintenanceService extends cds.ApplicationService {
                     SELECT.one.from('RentalEquipmentTrackingApp.DamageRecords').where({ ID: req.data.damage_ID })
                 );
                 if (damage) {
-                    if (damage.conditionLog_ID && !req.data.equipment_ID) {
+                    if (damage.conditionLog_ID) {
                         const log = await cds.db.run(
                             SELECT.one.from('RentalEquipmentTrackingApp.ConditionLogs').where({ ID: damage.conditionLog_ID })
                         );
@@ -98,11 +93,24 @@ export default class MaintenanceService extends cds.ApplicationService {
                     }
                 }
             }
+            if (req.data.status === 'Completed' && !req.data.closedAt) {
+                req.data.closedAt = new Date().toISOString();
+            }
         });
 
         // After RepairJobs is saved (from UI or API): update equipment status to InRepair and damageStatus
         this.after('SAVE', 'RepairJobs', async (data, req) => {
-            const equipmentId = data.equipment_ID;
+            let equipmentId = data.equipment_ID;
+            if (!equipmentId && data.damage_ID) {
+                const damage = await cds.db.run(SELECT.one.from('RentalEquipmentTrackingApp.DamageRecords').where({ ID: data.damage_ID }));
+                if (damage?.conditionLog_ID) {
+                    const log = await cds.db.run(SELECT.one.from('RentalEquipmentTrackingApp.ConditionLogs').where({ ID: damage.conditionLog_ID }));
+                    equipmentId = log?.equipment_ID;
+                    if (equipmentId) {
+                        await cds.db.run(UPDATE('RentalEquipmentTrackingApp.RepairJobs').set({ equipment_ID: equipmentId }).where({ ID: data.ID }));
+                    }
+                }
+            }
             const status = data.status || 'Open';
 
             if (equipmentId) {

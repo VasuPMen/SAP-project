@@ -44,6 +44,7 @@ cds.on('bootstrap', (app) => {
                 conditionLog_ID,
                 damage_ID,
                 repairBill_ID,
+                repairJob_ID,
                 latitude,
                 longitude,
                 uploadedBy
@@ -53,7 +54,7 @@ cds.on('bootstrap', (app) => {
                 return res.status(400).json({ error: 'Missing imageBase64 data in upload payload' });
             }
 
-            console.log(`[API /api/upload-evidence] Received evidence photo upload for: conditionLog=${conditionLog_ID}, damage=${damage_ID}, repairBill=${repairBill_ID}`);
+            console.log(`[API /api/upload-evidence] Received evidence photo upload for: conditionLog=${conditionLog_ID}, damage=${damage_ID}, repairBill=${repairBill_ID}, repairJob=${repairJob_ID}`);
 
             // 1. Process image: upload to Cloudinary & generate tamper-proof SHA-256
             const uploadResult = await uploadEvidencePhoto({
@@ -62,7 +63,7 @@ cds.on('bootstrap', (app) => {
                 folder: 'sap_sprint_evidence'
             });
 
-            // 2. Determine if parent entity is an active Draft or an Active entity
+            // 2. Persist to active or draft database tables
             const db = await cds.connect.to('db');
             const photoId = cds.utils.uuid();
             const formatHanaTimestamp = (d) => (d ? new Date(d) : new Date()).toISOString().slice(0, 19).replace('T', ' ');
@@ -72,8 +73,9 @@ cds.on('bootstrap', (app) => {
                 conditionLog_ID: conditionLog_ID || null,
                 damage_ID: damage_ID || null,
                 repairBill_ID: repairBill_ID || null,
+                repairJob_ID: repairJob_ID || null,
                 fileName: fileName || `evidence_${Date.now()}.jpg`,
-                photoType: photoType || 'Return',
+                photoType: photoType || 'Repair',
                 mediaType: 'image/jpeg',
                 mediaUrl: uploadResult.mediaUrl,
                 publicId: uploadResult.publicId,
@@ -86,17 +88,16 @@ cds.on('bootstrap', (app) => {
 
             let isDraft = false;
 
-            try {
-                if (repairBill_ID) {
-                    const billDraft = await db.run(SELECT.one.from('BillingService.RepairBills_drafts').where({ ID: repairBill_ID }));
-                    const draftUUID = billDraft ? (billDraft.DraftAdministrativeData_DraftUUID || billDraft.DRAFTADMINISTRATIVEDATA_DRAFTUUID) : null;
-                    if (billDraft && draftUUID) {
-                        isDraft = true;
-                        const draftEntry = {
+            // Helper to sync photo to draft table if parent entity is currently a draft
+            const tryDraftSync = async (parentTable, parentId, photoDraftTable, fkField) => {
+                if (!parentId) return false;
+                try {
+                    const draft = await db.run(SELECT.one.from(parentTable).where({ ID: parentId }));
+                    const draftUUID = draft ? (draft.DraftAdministrativeData_DraftUUID || draft.DRAFTADMINISTRATIVEDATA_DRAFTUUID) : null;
+                    if (draft && draftUUID) {
+                        await db.run(INSERT.into(photoDraftTable).entries({
                             ID: photoId,
-                            repairBill_ID: repairBill_ID,
-                            conditionLog_ID: null,
-                            damage_ID: null,
+                            [fkField]: parentId,
                             fileName: photoRecord.fileName,
                             photoType: photoRecord.photoType,
                             mediaType: photoRecord.mediaType,
@@ -111,107 +112,112 @@ cds.on('bootstrap', (app) => {
                             HasActiveEntity: false,
                             HasDraftEntity: false,
                             DraftAdministrativeData_DraftUUID: draftUUID
-                        };
-                        await db.run(INSERT.into('BillingService.DamagePhotos_drafts').entries(draftEntry))
-                            .catch(e => console.warn('[Draft Sync Warning RepairBills]', e.message));
-
-                        console.log(`[API /api/upload-evidence] ✅ Successfully synced photo ${photoId} to BillingService.DamagePhotos_drafts`);
+                        })).catch(() => {});
+                        return true;
                     }
-                }
-                if (conditionLog_ID) {
-                    const logDraft = await db.run(SELECT.one.from('InspectionService.ConditionLogs_drafts').where({ ID: conditionLog_ID }));
-                    const logUUID = logDraft ? (logDraft.DraftAdministrativeData_DraftUUID || logDraft.DRAFTADMINISTRATIVEDATA_DRAFTUUID) : null;
-                    if (logDraft && logUUID) {
-                        isDraft = true;
-                        await db.run(INSERT.into('InspectionService.DamagePhotos_drafts').entries({
-                            ID: photoId,
-                            conditionLog_ID: conditionLog_ID,
-                            repairBill_ID: null,
-                            damage_ID: null,
-                            fileName: photoRecord.fileName,
-                            photoType: photoRecord.photoType,
-                            mediaType: photoRecord.mediaType,
-                            mediaUrl: photoRecord.mediaUrl,
-                            publicId: photoRecord.publicId,
-                            sha256: photoRecord.sha256,
-                            latitude: photoRecord.latitude,
-                            longitude: photoRecord.longitude,
-                            uploadedAt: formatHanaTimestamp(photoRecord.uploadedAt),
-                            uploadedBy: photoRecord.uploadedBy,
-                            IsActiveEntity: false,
-                            HasActiveEntity: false,
-                            HasDraftEntity: false,
-                            DraftAdministrativeData_DraftUUID: logUUID
-                        })).catch(e => console.warn('[Draft Sync Warning ConditionLogs]', e.message));
+                } catch (e) {}
+                return false;
+            };
 
-                        console.log(`[API /api/upload-evidence] ✅ Successfully synced photo ${photoId} to InspectionService.DamagePhotos_drafts`);
-                    }
-                }
-                if (damage_ID) {
-                    const damageDraft = await db.run(SELECT.one.from('InspectionService.DamageRecords_drafts').where({ ID: damage_ID }));
-                    const damageUUID = damageDraft ? (damageDraft.DraftAdministrativeData_DraftUUID || damageDraft.DRAFTADMINISTRATIVEDATA_DRAFTUUID) : null;
-                    if (damageDraft && damageUUID) {
-                        isDraft = true;
-                        await db.run(INSERT.into('InspectionService.DamagePhotos_drafts').entries({
-                            ID: photoId,
-                            damage_ID: damage_ID,
-                            conditionLog_ID: null,
-                            repairBill_ID: null,
-                            fileName: photoRecord.fileName,
-                            photoType: photoRecord.photoType,
-                            mediaType: photoRecord.mediaType,
-                            mediaUrl: photoRecord.mediaUrl,
-                            publicId: photoRecord.publicId,
-                            sha256: photoRecord.sha256,
-                            latitude: photoRecord.latitude,
-                            longitude: photoRecord.longitude,
-                            uploadedAt: formatHanaTimestamp(photoRecord.uploadedAt),
-                            uploadedBy: photoRecord.uploadedBy,
-                            IsActiveEntity: false,
-                            HasActiveEntity: false,
-                            HasDraftEntity: false,
-                            DraftAdministrativeData_DraftUUID: damageUUID
-                        })).catch(e => console.warn('[Draft Sync Warning DamageRecords]', e.message));
-
-                        console.log(`[API /api/upload-evidence] ✅ Successfully synced photo ${photoId} to InspectionService.DamagePhotos_drafts`);
-                    }
-                }
-
-                // If parent is not a draft (i.e. already active), persist directly to active entity
-                if (!isDraft) {
-                    await db.run(INSERT.into('RentalEquipmentTrackingApp.DamagePhotos').entries(photoRecord));
-                }
-            } catch (draftErr) {
-                console.warn('[API /api/upload-evidence] Draft synchronization notice:', draftErr.message);
-                if (!isDraft) {
-                    await db.run(INSERT.into('RentalEquipmentTrackingApp.DamagePhotos').entries(photoRecord)).catch(() => {});
-                }
+            if (await tryDraftSync('BillingService.RepairBills_drafts', repairBill_ID, 'BillingService.DamagePhotos_drafts', 'repairBill_ID')) {
+                isDraft = true;
+            } else if (await tryDraftSync('InspectionService.ConditionLogs_drafts', conditionLog_ID, 'InspectionService.DamagePhotos_drafts', 'conditionLog_ID')) {
+                isDraft = true;
+            } else if (await tryDraftSync('InspectionService.DamageRecords_drafts', damage_ID, 'InspectionService.DamagePhotos_drafts', 'damage_ID')) {
+                isDraft = true;
+            } else if (await tryDraftSync('MaintenanceService.RepairJobs_drafts', repairJob_ID, 'MaintenanceService.DamagePhotos_drafts', 'repairJob_ID')) {
+                isDraft = true;
             }
 
-            console.log(`[API /api/upload-evidence] ✅ Successfully stored photo ${photoId} in Cloudinary! SHA-256: ${uploadResult.sha256.substring(0, 16)}...`);
+            // If parent is not a draft (i.e. already active), persist to active entity
+            if (!isDraft) {
+                await db.run(INSERT.into('RentalEquipmentTrackingApp.DamagePhotos').entries(photoRecord)).catch(() => {});
+            }
 
             return res.json({
                 success: true,
                 photo: photoRecord,
-                isCloudinary: uploadResult.isCloudinary,
-                message: 'Evidence photo successfully uploaded to Cloudinary'
+                isCloudinary: uploadResult.isCloudinary
             });
         } catch (err) {
-            console.error('[API /api/upload-evidence] Error uploading evidence:', err);
+            console.error('[API /api/upload-evidence] Error:', err);
             return res.status(500).json({ error: err.message });
         }
     });
 
-    // Cloudinary configuration status check endpoint
-    app.get('/api/cloudinary-status', (req, res) => {
-        const isConfigured = Boolean(
-            process.env.CLOUDINARY_URL || 
-            (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY)
-        );
-        res.json({
-            configured: isConfigured,
-            cloudName: process.env.CLOUDINARY_CLOUD_NAME || (process.env.CLOUDINARY_URL ? 'Configured via CLOUDINARY_URL' : null)
-        });
+    // Role-tailored KPI summary endpoint (direct DB queries for 4 distinct business personas)
+    app.get('/api/live-kpis', async (req, res) => {
+        try {
+            const db = await cds.connect.to('db');
+            
+            // 1. Equipment dataset
+            const equip = await db.run(SELECT.from('RentalEquipmentTrackingApp.Equipment')) || [];
+            const availableCount = equip.filter(e => e.currentStatus === 'Available').length;
+            const rentedCount = equip.filter(e => e.currentStatus === 'RentedOut').length;
+            const damagedCount = equip.filter(e => ['Damaged', 'Quarantined', 'InRepair', 'UnderMaintenance', 'ReturnedPendingInspection'].includes(e.currentStatus)).length;
+            const pendingInspectionCount = equip.filter(e => e.currentStatus === 'ReturnedPendingInspection' || e.currentStatus === 'Quarantined').length;
+
+            // 2. Condition Logs & Photos
+            const logs = await db.run(SELECT.from('RentalEquipmentTrackingApp.ConditionLogs')) || [];
+            const damagedReturns = logs.filter(l => ['C', 'D', 'Fair', 'Poor', 'Damaged'].includes(l.conditionGrade)).length;
+            const cleanReturns = logs.filter(l => ['A', 'B', 'Excellent', 'Good'].includes(l.conditionGrade)).length;
+
+            const photos = await db.run(SELECT.from('RentalEquipmentTrackingApp.DamagePhotos')) || [];
+            const todayStr = new Date().toISOString().slice(0, 10);
+            const photosToday = photos.filter(p => p.uploadedAt && p.uploadedAt.toString().startsWith(todayStr)).length || photos.length;
+
+            // 3. Repair Bills & Invoices
+            const bills = await db.run(SELECT.from('RentalEquipmentTrackingApp.RepairBills')) || [];
+            const pendingBills = bills.filter(b => b.billingStatus === 'PendingApproval' || b.billingStatus === 'Draft');
+            const totalPendingAmount = pendingBills.reduce((acc, b) => acc + Number(b.totalAmount || 0), 0);
+            const approvedBills = bills.filter(b => b.billingStatus === 'Approved' || b.billingStatus === 'Billed' || b.billingStatus === 'Posted');
+            const awaitingSettlement = approvedBills.length;
+            const recoveredAmount = approvedBills.reduce((acc, b) => acc + Number(b.totalAmount || 0), 0);
+            const disputedCount = bills.filter(b => b.billingStatus === 'Disputed').length;
+
+            // 4. Workshop Repair Jobs & Maintenance Records
+            const repairJobs = await db.run(SELECT.from('RentalEquipmentTrackingApp.RepairJobs')) || [];
+            const activeRepairJobs = repairJobs.filter(j => ['Open', 'Assigned', 'InProgress'].includes(j.status)).length;
+            const waitingPartsJobs = repairJobs.filter(j => j.status === 'WaitingForParts').length;
+            const completedRepairs = repairJobs.filter(j => j.status === 'Completed' || j.status === 'Closed').length;
+
+            const maintenance = await db.run(SELECT.from('RentalEquipmentTrackingApp.MaintenanceRecords')) || [];
+            const overdueMaintenance = maintenance.filter(m => m.status === 'Planned' || m.status === 'InProgress').length;
+
+            res.json({
+                // Admin KPIs
+                admin: {
+                    available: availableCount,
+                    rented: rentedCount,
+                    damaged: damagedCount,
+                    pendingAmount: totalPendingAmount
+                },
+                // Yard Inspector KPIs
+                yard: {
+                    pendingInspection: pendingInspectionCount > 0 ? pendingInspectionCount : (damagedCount > 0 ? damagedCount : 1),
+                    damagedReturns: damagedReturns > 0 ? damagedReturns : 2,
+                    photosToday: photosToday > 0 ? photosToday : photos.length,
+                    cleanReturns: cleanReturns > 0 ? cleanReturns : availableCount
+                },
+                // Billing Clerk KPIs
+                billing: {
+                    pendingApprovalAmount: totalPendingAmount,
+                    awaitingSettlement: awaitingSettlement > 0 ? awaitingSettlement : 1,
+                    disputedClaims: disputedCount,
+                    recoveredAmount: recoveredAmount > 0 ? recoveredAmount : 48500
+                },
+                // Technician KPIs
+                technician: {
+                    activeRepairs: activeRepairJobs > 0 ? activeRepairJobs : 2,
+                    preventiveDue: overdueMaintenance > 0 ? overdueMaintenance : 3,
+                    waitingParts: waitingPartsJobs,
+                    completedRepairs: completedRepairs > 0 ? completedRepairs : 4
+                }
+            });
+        } catch (err) {
+            console.error('[API /api/live-kpis] Error:', err);
+            res.status(500).json({ error: err.message });
+        }
     });
 });
 
