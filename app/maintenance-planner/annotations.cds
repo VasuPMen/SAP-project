@@ -68,7 +68,8 @@ annotate MaintenanceService.MaintenanceRecords with {
                                 { $Type: 'Common.ValueListParameterDisplayOnly', ValueListProperty: 'currentStatus' }
                             ]
                         };
-    maintenanceType     @title: 'Maintenance Type'             @Common.Label: 'Maintenance Type'
+    maintenanceType     @title : 'Maintenance Type'
+                        @Common.Label : 'Maintenance Type'
                         @Common.ValueListWithFixedValues;
     status              @title: 'Maintenance Status'           @Common.Label: 'Maintenance Status'
                         @Common.ValueListWithFixedValues;

@@ -42,50 +42,12 @@ type InspectorName : String(100) enum {
     Kavita_Reddy = 'Kavita Reddy';
     @title: 'Mike D''souza (Lead Workshop Technician)'
     Mike_Dsouza = 'Mike D''souza';
-    @title: 'Vikram Mehta (System Administrator)'
+    @title: 'Vikram Mehta1 (System Administrator)'
     Vikram_Mehta = 'Vikram Mehta';
     @title: 'Sanjay Verma (Operations & Fleet Director)'
     Sanjay_Verma = 'Sanjay Verma';
     @title: 'Yard Worker (Yard Staff)'
     Yard_Worker = 'Yard Worker';
-};
-
-type EquipmentArea : String(50) enum {
-    @title: 'Exterior & Bodywork'
-    Exterior = 'Exterior';
-    @title: 'Chassis & Undercarriage'
-    Chassis = 'Chassis';
-    @title: 'Engine & Powertrain'
-    Engine = 'Engine';
-    @title: 'Hydraulic System'
-    Hydraulic = 'Hydraulic';
-    @title: 'Operator Cabin & Controls'
-    Cabin = 'Cabin';
-    @title: 'Electrical & Electronics'
-    Electrical = 'Electrical';
-    @title: 'Tires, Rims & Tracks'
-    TiresTracks = 'TiresTracks';
-    @title: 'Bucket & Working Attachments'
-    Attachments = 'Attachments';
-};
-
-type DamageClassification : String(50) enum {
-    @title: 'Scratch / Cosmetic Dent'
-    ScratchDent = 'ScratchDent';
-    @title: 'Structural Crack / Bending'
-    StructuralCrack = 'StructuralCrack';
-    @title: 'Hydraulic Leak / Pressure Drop'
-    HydraulicLeak = 'HydraulicLeak';
-    @title: 'Electrical Malfunction'
-    ElectricalFault = 'ElectricalFault';
-    @title: 'Broken Glass / Mirror'
-    BrokenGlass = 'BrokenGlass';
-    @title: 'Missing Part / Tool'
-    MissingPart = 'MissingPart';
-    @title: 'Engine / Mechanical Failure'
-    MechanicalFailure = 'MechanicalFailure';
-    @title: 'Excessive Wear & Tear'
-    ExcessiveWear = 'ExcessiveWear';
 };
 
 type EvidenceType : String(50) enum {
@@ -135,19 +97,6 @@ type LocationType : String(50) enum {
     Workshop = 'Workshop';
 };
 
-type MaintenanceType : String(30) enum {
-    @title: 'Preventive Maintenance'
-    Preventive;
-    @title: 'Corrective Repair'
-    Corrective;
-    @title: 'Routine Safety Inspection'
-    Inspection;
-    @title: 'Instrument & Sensor Calibration'
-    Calibration;
-    @title: 'Major Overhaul / Workshop Job'
-    RepairJob;
-};
-
 type MaintenanceStatus : String(15) enum {
     @title: 'Planned'
     Planned;
@@ -188,11 +137,11 @@ type Money : Decimal(12,2);
    ========================================================================== */
 
 entity Customers : cuid, managed {
-    companyName   : String(100) @mandatory @title: 'Customer / Client' @Common.Label: 'Customer / Client';
-    contactPerson : String(100) @title: 'Authorized Contact Person' @Common.Label: 'Authorized Contact Person';
-    email         : String(100) @mandatory @title: 'Email Address' @Common.Label: 'Email Address';
-    phone         : String(20)  @mandatory @title: 'Phone / Mobile No' @Common.Label: 'Phone / Mobile No';
-    address       : String(255) @title: 'Office / Yard Address' @Common.Label: 'Office / Yard Address';
+    companyName   : String(100) @mandatory @title: 'Customer / Client';
+    contactPerson : String(100) @title: 'Authorized Contact Person';
+    email         : String(100) @mandatory @title: 'Email Address';
+    phone         : String(20)  @mandatory @title: 'Phone / Mobile No';
+    address       : String(255) @title: 'Office / Yard Address';
     rentals       : Association to many Rentals
                        on rentals.customer = $self;
 };
@@ -210,25 +159,25 @@ entity Locations : cuid, managed {
 };
 
 entity Equipment : cuid, managed {
-    equipmentNo         : String(50) @readonly @title: 'Equipment No' @Common.Label: 'Equipment No';
-    serialNumber        : String(100) @readonly @title: 'Serial Number' @Common.Label: 'Serial Number';
-    category            : String(50) @title: 'Category' @Common.Label: 'Category';
-    equipmentName       : String(100) @mandatory @title: 'Equipment Name' @Common.Label: 'Equipment Name';
-    equipmentType       : String(50) @title: 'Equipment Type' @Common.Label: 'Equipment Type';
-    manufacturer        : String(100) @title: 'Manufacturer' @Common.Label: 'Manufacturer';
-    model               : String(100) @title: 'Model' @Common.Label: 'Model';
+    equipmentNo         : String(50) @readonly @title: 'Equipment No';
+    serialNumber        : String(100) @readonly @title: 'Serial Number';
+    category            : String(50) @title: 'Category';
+    equipmentName       : String(100) @mandatory @title: 'Equipment Name';
+    equipmentType       : String(50) @title: 'Equipment Type';
+    manufacturer        : String(100) @title: 'Manufacturer';
+    model               : String(100) @title: 'Model';
     plant               : String(10) @UI.Hidden: true;
-    location            : Association to Locations @mandatory @title: 'Depot Location' @Common.Label: 'Depot Location';
+    location            : Association to Locations @mandatory @title: 'Depot Location';
     latitude            : Decimal(9,6) @UI.Hidden: true;
     longitude           : Decimal(9,6) @UI.Hidden: true;
-    purchaseDate        : Date @title: 'Purchase Date' @Common.Label: 'Purchase Date';
-    rentalRatePerDay    : Money @title: 'Daily Rental Rate' @Common.Label: 'Daily Rental Rate';
-    currentStatus       : EquipmentStatus default #Available @title: 'Operational Status' @Common.Label: 'Operational Status';
-    currentGrade        : ConditionGrade default #A @title: 'Condition Grade' @Common.Label: 'Condition Grade';
-    currentMeterReading : Decimal(10,2) @title: 'Meter Reading (Hours)' @Common.Label: 'Meter Reading (Hours)';
-    custodian           : String(100) @title: 'Current Custodian' @Common.Label: 'Current Custodian';
+    purchaseDate        : Date @title: 'Purchase Date';
+    rentalRatePerDay    : Money @title: 'Daily Rental Rate';
+    currentStatus       : EquipmentStatus default #Available @title: 'Operational Status';
+    currentGrade        : ConditionGrade default #A @title: 'Condition Grade';
+    currentMeterReading : Decimal(10,2) @title: 'Meter Reading (Hours)';
+    custodian           : String(100) @title: 'Current Custodian';
     barcode             : String(100) @UI.Hidden: true;
-    nextServiceDate     : Date @title: 'Next Service Date' @Common.Label: 'Next Service Date';
+    nextServiceDate     : Date @title: 'Next Service Date';
     maintenance         : Association to many MaintenanceRecords
                               on maintenance.equipment = $self;
     conditionLogs       : Association to many ConditionLogs
@@ -274,13 +223,13 @@ entity AssetStatusHistory : cuid {
    ========================================================================== */
 
 entity Rentals : cuid, managed {
-    contractNo         : String(50) @mandatory @title: 'Contract Number' @Common.Label: 'Contract Number';
-    customer           : Association to Customers @mandatory @title: 'Customer / Client' @Common.Label: 'Customer / Client';
-    rentalDate         : Date @mandatory @title: 'Rental Start Date' @Common.Label: 'Rental Start Date';
-    expectedReturnDate : Date @mandatory @title: 'Expected Return Date' @Common.Label: 'Expected Return Date';
-    actualReturnDate   : Date @title: 'Actual Return Date' @Common.Label: 'Actual Return Date' @UI.Hidden;
-    rentalStatus       : RentalStatus default #Booked @title: 'Contract Status' @Common.Label: 'Contract Status';
-    totalRentalAmount  : Money @title: 'Total Contract Value ($)' @Common.Label: 'Total Contract Value ($)';
+    contractNo         : String(50) @mandatory @title: 'Contract Number';
+    customer           : Association to Customers @mandatory @utitle: 'Customer / Client';
+    rentalDate         : Date @mandatory @title: 'Rental Start Date';
+    expectedReturnDate : Date @mandatory @title: 'Expected Return Date';
+    actualReturnDate   : Date @title: 'Actual Return Date' @UI.Hidden;
+    rentalStatus       : RentalStatus default #Booked @title: 'Contract Status';
+    totalRentalAmount  : Money @title: 'Total Contract Value ($)';
     items              : Composition of many RentalItems
                             on items.rental = $self;
     statusHistory      : Association to many RentalStatusHistory
@@ -290,12 +239,12 @@ entity Rentals : cuid, managed {
 };
 
 entity RentalItems : cuid, managed {
-    rental          : Association to Rentals @mandatory @title: 'Rental Contract' @Common.Label: 'Rental Contract';
-    equipment       : Association to Equipment @mandatory @title: 'Equipment Asset' @Common.Label: 'Equipment Asset';
-    dailyRentalRate : Money @title: 'Daily Rental Rate ($)' @Common.Label: 'Daily Rental Rate ($)';
-    startDate       : Date @title: 'Start Date' @Common.Label: 'Start Date';
-    endDate         : Date @title: 'End Date' @Common.Label: 'End Date';
-    itemStatus      : ItemStatus default #Reserved @title: 'Item Status' @Common.Label: 'Item Status';
+    rental          : Association to Rentals @mandatory @title: 'Rental Contract';
+    equipment       : Association to Equipment @mandatory @title: 'Equipment Asset';
+    dailyRentalRate : Money @title: 'Daily Rental Rate ($)';
+    startDate       : Date @title: 'Start Date';
+    endDate         : Date @title: 'End Date';
+    itemStatus      : ItemStatus default #Reserved @title: 'Item Status';
 };
 
 entity RentalStatusHistory : cuid {
@@ -311,20 +260,20 @@ entity RentalStatusHistory : cuid {
    ========================================================================== */
 
 entity ConditionLogs : cuid, managed {
-    equipment        : Association to Equipment @mandatory @title: 'Equipment Asset' @Common.Label: 'Equipment Asset';
-    rental           : Association to Rentals @title: 'Rental Contract' @Common.Label: 'Rental Contract';
-    inspectionDate   : DateTime @mandatory @title: 'Date & Time' @Common.Label: 'Date & Time';
-    inspectionType   : InspectionType @mandatory @title: 'Inspection Type' @Common.Label: 'Inspection Type';
-    conditionGrade   : ConditionGrade @mandatory @title: 'Condition Grade' @Common.Label: 'Condition Grade';
-    suggestedGrade   : ConditionGrade @title: 'Suggested Grade' @Common.Label: 'Suggested Grade';
-    inspectionStatus : String(20) default 'Draft' @title: 'Review State' @Common.Label: 'Review State';
-    inspector        : InspectorName default #Yard_Worker @title: 'Inspector Name' @Common.Label: 'Inspector Name';
-    meterReading     : Decimal(10,2) @title: 'Meter Reading (Hours)' @Common.Label: 'Meter Reading (Hours)';
+    equipment        : Association to Equipment @mandatory @title: 'Equipment Asset';
+    rental           : Association to Rentals @title: 'Rental Contract';
+    inspectionDate   : DateTime @mandatory @title: 'Date & Time';
+    inspectionType   : InspectionType @mandatory @title: 'Inspection Type';
+    conditionGrade   : ConditionGrade @mandatory @title: 'Condition Grade';
+    suggestedGrade   : ConditionGrade @title: 'Suggested Grade';
+    inspectionStatus : String(20) default 'Draft' @title: 'Review State';
+    inspector        : InspectorName default #Yard_Worker @title: 'Inspector Name';
+    meterReading     : Decimal(10,2) @title: 'Meter Reading (Hours)';
     checklistJson    : LargeString; // Structured inspection checklist items
-    notes            : String(500) @title: 'Inspection Notes' @Common.Label: 'Inspection Notes';
-    customerAck      : Boolean default false @title: 'Customer Acknowledged' @Common.Label: 'Customer Acknowledged';
-    signatureUrl     : String(500) @title: 'Digital Signature Ref' @Common.Label: 'Digital Signature Ref';
-    locked           : Boolean default false @title: 'Report Locked (Immutable)' @Common.Label: 'Report Locked (Immutable)';
+    notes            : String(500) @title: 'Inspection Notes';
+    customerAck      : Boolean default false @title: 'Customer Acknowledged';
+    signatureUrl     : String(500) @title: 'Digital Signature Ref';
+    locked           : Boolean default false @title: 'Report Locked (Immutable)';
     damages          : Association to many DamageRecords
                            on damages.conditionLog = $self;
     photos           : Composition of many DamagePhotos
@@ -332,20 +281,45 @@ entity ConditionLogs : cuid, managed {
 };
 
 entity DamageRecords : cuid, managed {
-    conditionLog   : Association to ConditionLogs @title: 'Inspection Reference' @Common.Label: 'Inspection Reference';
-    area           : EquipmentArea @title: 'Equipment Area' @Common.Label: 'Equipment Area';
-    damageType     : DamageClassification @mandatory @title: 'Damage Type' @Common.Label: 'Damage Type';
-    description    : String(500) @title: 'Damage Description' @Common.Label: 'Damage Description';
-    severity       : Severity @mandatory @title: 'Severity' @Common.Label: 'Severity';
-    origin         : String(20) @title: 'Origin (New/Pre-existing)' @Common.Label: 'Origin (New/Pre-existing)';
-    billable       : Boolean @title: 'Billable' @Common.Label: 'Billable';
-    repairEstimate : Money @title: 'Estimated Repair ($)' @Common.Label: 'Estimated Repair ($)';
-    customerLiable : Boolean default false @title: 'Customer Liable' @Common.Label: 'Customer Liable';
+    conditionLog   : Association to ConditionLogs
+        @title : 'Inspection Reference';
+
+    area           : String(500)
+        @title : 'Equipment Area';
+
+    damageType     : String(50)
+        @mandatory
+        @title : 'Damage Type';
+
+    description    : String(500)
+        @title : 'Damage Description';
+
+    severity       : Severity
+        @mandatory
+        @title : 'Severity';
+
+    origin         : String(20)
+        @title : 'Origin (New/Pre-existing)';
+
+    billable       : Boolean
+        @title : 'Billable';
+
+    repairEstimate : Money
+        @title : 'Estimated Repair ($)';
+
+    customerLiable : Boolean default false
+        @title : 'Customer Liable';
+
     liableParty    : Association to Customers;
+
     preExisting    : Boolean default false;
-    damageStatus   : DamageStatus @title: 'Damage Status' @Common.Label: 'Damage Status';
+
+    damageStatus   : DamageStatus
+        @title : 'Damage Status';
+
     photos         : Composition of many DamagePhotos
                         on photos.damage = $self;
+
     repairBills    : Association to many RepairBills
                         on repairBills.damage = $self;
 };
@@ -354,8 +328,8 @@ entity DamagePhotos : cuid {
     repairBill   : Association to RepairBills;
     damage       : Association to DamageRecords;
     conditionLog : Association to ConditionLogs;
-    fileName     : String(255) @title: 'Photo Filename' @Common.Label: 'Photo Filename';
-    photoType    : EvidenceType default #Return @title: 'Evidence Type' @Common.Label: 'Evidence Type';
+    fileName     : String(255) @title: 'Photo Filename';
+    photoType    : EvidenceType default #Return @title: 'Evidence Type';
     mediaType    : String(100) @Core.IsMediaType;
     content      : LargeBinary @Core.MediaType: mediaType;
     mediaUrl     : String(500) @Core.IsURL;
@@ -372,27 +346,27 @@ entity DamagePhotos : cuid {
    ========================================================================== */
 
 entity MaintenanceRecords : cuid, managed {
-    equipment           : Association to Equipment @mandatory @title: 'Equipment Asset' @Common.Label: 'Equipment Asset';
-    maintenanceType     : MaintenanceType @mandatory @title: 'Maintenance Type' @Common.Label: 'Maintenance Type';
-    maintenanceDate     : Date @title: 'Maintenance Date' @Common.Label: 'Maintenance Date';
-    description         : String(500) @title: 'Scope of Work / Description' @Common.Label: 'Scope of Work / Description';
-    serviceProvider     : String(150) @title: 'Service Provider / Workshop' @Common.Label: 'Service Provider / Workshop';
-    cost                : Money @title: 'Estimated Service Cost ($)' @Common.Label: 'Estimated Service Cost ($)';
-    nextMaintenanceDate : Date @title: 'Next Service Due Date' @Common.Label: 'Next Service Due Date';
-    status              : MaintenanceStatus default #Planned @title: 'Maintenance Status' @Common.Label: 'Maintenance Status';
+    equipment           : Association to Equipment @mandatory @title: 'Equipment Asset';
+    maintenanceType     : String(50) @mandatory @title: 'Maintenance Type';
+    maintenanceDate     : Date @title: 'Maintenance Date';
+    description         : String(500) @title: 'Scope of Work / Description';
+    serviceProvider     : String(150) @title: 'Service Provider / Workshop';
+    cost                : Money @title: 'Estimated Service Cost ($)';
+    nextMaintenanceDate : Date @title: 'Next Service Due Date';
+    status              : MaintenanceStatus default #Planned @title: 'Maintenance Status';
 };
 
 entity RepairJobs : cuid, managed {
-    equipment        : Association to Equipment @mandatory @title: 'Equipment Asset' @Common.Label: 'Equipment Asset';
-    damage           : Association to DamageRecords @title: 'Damage Reference' @Common.Label: 'Damage Reference';
-    technician       : String(100) @title: 'Lead Technician' @Common.Label: 'Lead Technician';
-    labourHours      : Decimal(5,2) @title: 'Labour Hours' @Common.Label: 'Labour Hours';
-    actualCost       : Money @title: 'Material & Labor Cost ($)' @Common.Label: 'Material & Labor Cost ($)';
-    repairDetails    : String(500) @title: 'Technician Work Log' @Common.Label: 'Technician Work Log';
-    status           : String(20) default 'Open' @title: 'Job Status' @Common.Label: 'Job Status';
-    beforePhotoUrl   : String(500) @title: 'Pre-Repair Photo URL' @Common.Label: 'Pre-Repair Photo URL';
-    afterPhotoUrl    : String(500) @title: 'Post-Repair Evidence URL' @Common.Label: 'Post-Repair Evidence URL';
-    closedAt         : DateTime @title: 'Completion Timestamp' @Common.Label: 'Completion Timestamp';
+    equipment        : Association to Equipment @mandatory @title: 'Equipment Asset';
+    damage           : Association to DamageRecords @title: 'Damage Reference';
+    technician       : String(100) @title: 'Lead Technician';
+    labourHours      : Decimal(5,2) @title: 'Labour Hours';
+    actualCost       : Money @title: 'Material & Labor Cost ($)';
+    repairDetails    : String(500) @title: 'Technician Work Log';
+    status           : String(20) default 'Open' @title: 'Job Status';
+    beforePhotoUrl   : String(500) @title: 'Pre-Repair Photo URL';
+    afterPhotoUrl    : String(500) @title: 'Post-Repair Evidence URL';
+    closedAt         : DateTime @title: 'Completion Timestamp';
 };
 
 /* ==========================================================================
@@ -400,38 +374,38 @@ entity RepairJobs : cuid, managed {
    ========================================================================== */
 
 entity RepairBills : cuid, managed {
-    rental            : Association to Rentals @mandatory @title: 'Rental Contract' @Common.Label: 'Rental Contract';
-    customer          : Association to Customers @mandatory @title: 'Customer / Client' @Common.Label: 'Customer / Client';
-    equipment         : Association to Equipment @title: 'Damaged Equipment' @Common.Label: 'Damaged Equipment';
-    damageDescription : String(500) @title: 'Damage Description' @Common.Label: 'Damage Description';
-    severity          : Severity @title: 'Severity' @Common.Label: 'Severity';
-    damageType        : String(50) @title: 'Damage Classification' @Common.Label: 'Damage Classification';
-    area              : String(100) @title: 'Area / Component' @Common.Label: 'Area / Component';
-    origin            : String(50) @title: 'Origin' @Common.Label: 'Origin';
-    inspectionRef     : String(100) @title: 'Inspection Reference' @Common.Label: 'Inspection Reference';
-    damage            : Association to DamageRecords @title: 'Damage Record Reference' @Common.Label: 'Damage Record Reference';
+    rental            : Association to Rentals @mandatory @title: 'Rental Contract';
+    customer          : Association to Customers @mandatory @title: 'Customer / Client';
+    equipment         : Association to Equipment @title: 'Damaged Equipment';
+    damageDescription : String(500) @title: 'Damage Description';
+    severity          : Severity @title: 'Severity';
+    damageType        : String(50) @title: 'Damage Classification';
+    area              : String(100) @title: 'Area / Component';
+    origin            : String(50) @title: 'Origin';
+    inspectionRef     : String(100) @title: 'Inspection Reference';
+    damage            : Association to DamageRecords @title: 'Damage Record Reference';
     photos            : Composition of many DamagePhotos on photos.repairBill = $self;
-    billDate         : Date @title: 'Bill Date' @Common.Label: 'Bill Date';
-    partsCost        : Money @title: 'Parts Cost ($)' @Common.Label: 'Parts Cost ($)';
-    labourCost       : Money @title: 'Labour Cost ($)' @Common.Label: 'Labour Cost ($)';
-    paintingCost     : Money @title: 'Painting Cost ($)' @Common.Label: 'Painting Cost ($)';
-    repairAmount     : Money @title: 'Net Repair Amount ($)' @Common.Label: 'Net Repair Amount ($)';
-    taxAmount        : Money @title: 'Tax Amount ($)' @Common.Label: 'Tax Amount ($)';
-    totalAmount      : Money @title: 'Total Invoice Amount ($)' @Common.Label: 'Total Invoice Amount ($)';
-    billingStatus    : BillingStatus default #Draft @title: 'Approval Status' @Common.Label: 'Approval Status';
-    approvalReason   : String(255) @title: 'Approval Notes' @Common.Label: 'Approval Notes';
-    invoiceNo        : String(50) @title: 'Invoice Number' @Common.Label: 'Invoice Number';
+    billDate          : Date @title: 'Bill Date';
+    partsCost         : Money @title: 'Parts Cost ($)';
+    labourCost        : Money @title: 'Labour Cost ($)';
+    paintingCost      : Money @title: 'Painting Cost ($)';
+    repairAmount      : Money @title: 'Net Repair Amount ($)';
+    taxAmount         : Money @title: 'Tax Amount ($)';
+    totalAmount       : Money @title: 'Total Invoice Amount ($)';
+    billingStatus     : BillingStatus default #Draft @title: 'Approval Status';
+    approvalReason    : String(255) @title: 'Approval Notes';
+    invoiceNo         : String(50) @title: 'Invoice Number';
 };
 
 entity PricingRules : cuid, managed {
-    damageType       : String(50) @mandatory @title: 'Damage Category' @Common.Label: 'Damage Category';
-    severity         : Severity @mandatory @title: 'Severity Level' @Common.Label: 'Severity Level';
-    baseCharge       : Money @mandatory @title: 'Base Diagnostic Fee ($)' @Common.Label: 'Base Diagnostic Fee ($)';
-    partsCharge      : Money @title: 'Standard Parts ($)' @Common.Label: 'Standard Parts ($)';
-    labourRate       : Decimal(10,2) @title: 'Labour Rate ($/hr)' @Common.Label: 'Labour Rate ($/hr)';
-    paintingCharge   : Money @title: 'Painting Surcharge ($)' @Common.Label: 'Painting Surcharge ($)';
-    taxPercent       : Decimal(5,2) @title: 'Tax Percentage (%)' @Common.Label: 'Tax Percentage (%)';
-    autoApproveLimit : Money @title: 'Auto-Approve Threshold ($)' @Common.Label: 'Auto-Approve Threshold ($)';
+    damageType       : String(50) @mandatory @title: 'Damage Category';
+    severity         : Severity @mandatory @title: 'Severity Level';
+    baseCharge       : Money @mandatory @title: 'Base Diagnostic Fee ($)';
+    partsCharge      : Money @title: 'Standard Parts ($)';
+    labourRate       : Decimal(10,2) @title: 'Labour Rate ($/hr)';
+    paintingCharge   : Money @title: 'Painting Surcharge ($)';
+    taxPercent       : Decimal(5,2) @title: 'Tax Percentage (%)';
+    autoApproveLimit : Money @title: 'Auto-Approve Threshold ($)';
 };
 
 /* ==========================================================================
@@ -441,7 +415,7 @@ entity PricingRules : cuid, managed {
 entity IntegrationMessages : cuid, managed {
     messageType     : String(100) @mandatory; // e.g. Damage Billing Request
     reference       : String(100) @mandatory; // e.g. RENT-10001
-    targetSystem    : String(50) default 'SAP S/4HANA';
+    targetSystem    : String(50) default 'SAP HANA';
     status          : String(20) default 'Pending'; // Success, Pending, Failed
     billingDocument : String(50);             // e.g. 9000123456
     payload         : LargeString;
@@ -449,4 +423,3 @@ entity IntegrationMessages : cuid, managed {
     retryCount      : Integer default 0;
     lastAttemptAt   : Timestamp;
 };
-

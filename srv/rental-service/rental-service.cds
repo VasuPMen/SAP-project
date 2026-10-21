@@ -6,7 +6,7 @@ service RentalService {
 
     @odata.draft.enabled
     @restrict: [
-        { grant: ['READ'], to: ['Dispatcher', 'YardWorker', 'Manager', 'Admin', 'Auditor'] },
+        { grant: ['READ'], to: ['YardWorker', 'Auditor'] },
         { grant: ['*'], to: ['Dispatcher', 'Manager', 'Admin'] }
     ]
     entity Customers as projection on my.Customers;
