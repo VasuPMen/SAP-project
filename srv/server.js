@@ -30,6 +30,17 @@ cds.on('bootstrap', (app) => {
         next();
     });
 
+    // Custom /api routes are mounted before CAP's protocol adapters, so they don't get
+    // CAP's auth by default. Run CAP's middlewares here too and require an app role,
+    // mirroring the @requires on the OData services. (Locally, 'dummy' auth lets everyone in.)
+    const APP_ROLES = ['Admin', 'YardWorker', 'Technician', 'BillingClerk'];
+    app.use('/api', cds.middlewares.before, (req, res, next) => {
+        const user = cds.context.user;
+        if (!user || user._is_anonymous) return res.sendStatus(401);
+        if (!APP_ROLES.some(role => user.is(role))) return res.sendStatus(403);
+        next();
+    });
+
     // Support large photo uploads up to 50MB
     app.use(express.json({ limit: '50mb' }));
     app.use(express.urlencoded({ extended: true, limit: '50mb' }));
@@ -83,7 +94,7 @@ cds.on('bootstrap', (app) => {
                 latitude: latitude ? parseFloat(latitude) : null,
                 longitude: longitude ? parseFloat(longitude) : null,
                 uploadedAt: new Date(),
-                uploadedBy: uploadedBy || (req.user && req.user.id !== 'anonymous' ? req.user.id : 'Yard Staff')
+                uploadedBy: uploadedBy || (cds.context.user && !cds.context.user._is_anonymous ? cds.context.user.id : 'Yard Staff')
             };
 
             let isDraft = false;
@@ -131,7 +142,7 @@ cds.on('bootstrap', (app) => {
 
             // If parent is not a draft (i.e. already active), persist to active entity
             if (!isDraft) {
-                await db.run(INSERT.into('RentalEquipmentTrackingApp.DamagePhotos').entries(photoRecord)).catch(() => {});
+                await db.run(INSERT.into('RentalEquipmentTrackingApp.DamagePhotos').entries(photoRecord));
             }
 
             return res.json({
