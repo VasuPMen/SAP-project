@@ -14,9 +14,9 @@
             const currentAppId = urlParams.get('app');
             const APP_REGISTRY = {
                 'customer-management': { title: 'Customer Management', ns: 'retcl.customermanagement', path: '/customer-management/webapp' },
-                'damage-charge-approval': { title: 'Damage Charge Approval', ns: 'retcl.damagechargeapproval', path: '/damage-charge-approval/webapp' },
+                'damage-charge-approval': { title: 'Damage Record', ns: 'retcl.damagechargeapproval', path: '/damage-charge-approval/webapp' },
                 'fleet-overview': { title: 'Fleet Overview & Asset Detail', ns: 'retcl.fleetoverview', path: '/fleet-overview/webapp' },
-                'inspections': { title: 'Condition Logging & Inspections', ns: 'retcl.inspections', path: '/inspections/webapp' },
+                'inspections': { title: 'Equipment Inspections', ns: 'retcl.inspections', path: '/inspections/webapp' },
                 'locations': { title: 'Depot & Yard Locations', ns: 'retcl.locations', path: '/locations/webapp' },
                 'maintenance-planner': { title: 'Maintenance Planner & Schedules', ns: 'retcl.maintenanceplanner', path: '/maintenance-planner/webapp' },
                 'rentals': { title: 'Rental Contracts & Allocations', ns: 'retcl.rentals', path: '/rentals/webapp' },
@@ -62,87 +62,7 @@
         }
     </script>
 
-    <!-- 1. LOGIN SCREEN -->
-    <div id="login-view">
-        <div class="login-card">
-            
-            <div class="login-header">
-                <!-- SAP Official SVG Logo -->
-                <svg class="login-logo" viewBox="0 0 70 34" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M0 0H70V34H0V0Z" fill="#0070F2"/>
-                    <path d="M12.8 23.5H9.2L16.2 8.5H19.8L26.8 23.5H23.2L21.7 20.3H14.3L12.8 23.5ZM15.5 17.6H20.5L18 12.3L15.5 17.6ZM34.2 23.7C31.5 23.7 29.5 22.8 28.1 21L29.9 18.9C31 20.4 32.5 21.1 34.4 21.1C35.9 21.1 37.1 20.6 37.1 19.5C37.1 18.6 36.3 18.1 34.6 17.6L32.7 17.1C29.8 16.3 28.5 14.8 28.5 12.6C28.5 10.1 30.6 8.3 34.1 8.3C36.4 8.3 38.2 9 39.5 10.3L37.8 12.5C36.7 11.4 35.5 10.9 34 10.9C32.8 10.9 31.8 11.4 31.8 12.4C31.8 13.2 32.5 13.7 34.2 14.2L36 14.7C39.2 15.6 40.5 17.1 40.5 19.3C40.5 22 38.3 23.7 34.2 23.7ZM44.2 23.5V8.5H50.5C54.1 8.5 56.6 10.5 56.6 14C56.6 17.5 54.1 19.5 50.5 19.5H47.4V23.5H44.2ZM47.4 16.9H50.3C52.1 16.9 53.3 15.9 53.3 14C53.3 12.1 52.1 11.1 50.3 11.1H47.4V16.9Z" fill="white"/>
-                </svg>
-                <h1 class="login-title">Rental Equipment Tracking & Condition Logging</h1>
-                <p class="login-subtitle">SAP S/4HANA Cloud & BTP CAP Enterprise Suite</p>
-                <div class="login-tag">🔐 Role-Based Access Control (RBAC)</div>
-            </div>
-
-            <div id="login-error-box" class="login-error">
-                <span>⚠️</span>
-                <span id="login-error-msg">Invalid user credentials or unrecognized role.</span>
-            </div>
-
-            <form id="fiori-login-form" onsubmit="handleFormLogin(event)">
-                <div class="form-group">
-                    <label class="form-label" for="login-username">SAP Universal ID / Username</label>
-                    <input type="text" id="login-username" class="form-input" placeholder="e.g. admin, inspector, finance, technician" value="admin" required autocomplete="username">
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label" for="login-password">Password</label>
-                    <input type="password" id="login-password" class="form-input" placeholder="Enter password (e.g. admin123)" value="admin123" required autocomplete="current-password">
-                </div>
-
-                <button type="submit" id="btn-login-submit" class="btn-primary">
-                    Sign In to Fiori Launchpad &rarr;
-                </button>
-            </form>
-
-            <!-- Quick-Access Personas Grid -->
-            <div class="personas-section">
-                <div class="personas-title">&bull; Quick Sign-In as Business Persona &bull;</div>
-                <div class="personas-grid">
-                    
-                    <button type="button" class="persona-btn" onclick="quickLogin('admin')">
-                        <div class="persona-avatar" style="background:#0070f2;">VM</div>
-                        <div class="persona-info">
-                            <div class="persona-name">Vikram Mehta</div>
-                            <div class="persona-role">👔 Administrator (All Apps)</div>
-                        </div>
-                    </button>
-
-                    <button type="button" class="persona-btn" onclick="quickLogin('inspector')">
-                        <div class="persona-avatar" style="background:#107e3e;">RP</div>
-                        <div class="persona-info">
-                            <div class="persona-name">Ramesh Patel</div>
-                            <div class="persona-role">🚜 Yard Inspector (Inspection & Damage Charge)</div>
-                        </div>
-                    </button>
-
-                    <button type="button" class="persona-btn" onclick="quickLogin('finance')">
-                        <div class="persona-avatar" style="background:#8e44ad;">AS</div>
-                        <div class="persona-info">
-                            <div class="persona-name">Ananya Sharma</div>
-                            <div class="persona-role">💳 Billing Clerk (Financial & Repair Billing)</div>
-                        </div>
-                    </button>
-
-                    <button type="button" class="persona-btn" onclick="quickLogin('technician')">
-                        <div class="persona-avatar" style="background:#e67e22;">MD</div>
-                        <div class="persona-info">
-                            <div class="persona-name">Mike D'souza</div>
-                            <div class="persona-role">🔧 Technician (Workshop & Maintenance)</div>
-                        </div>
-                    </button>
-
-                </div>
-            </div>
-
-        </div>
-    </div>
-
-
-    <!-- 2. LAUNCHPAD VIEW -->
+    <!-- SAP FIORI LAUNCHPAD -->
     <div id="launchpad-view">
 
         <header class="fiori-shell">
@@ -161,10 +81,6 @@
                     <span id="shell-user-name" style="font-weight:600;">Administrator</span>
                     <span class="user-role-tag" id="shell-user-role">ADMIN</span>
                 </div>
-
-                <button class="btn-shell" onclick="openSwitchModal()" title="Switch Persona / Role">
-                    <span>🔄 Switch Role</span>
-                </button>
 
                 <button class="btn-shell" onclick="handleLogout()" title="Log out" style="background:rgba(239, 68, 68, 0.2); border-color:rgba(239, 68, 68, 0.4);">
                     <span>🚪 Sign Out</span>
@@ -229,6 +145,20 @@
                         </div>
                     </a>
 
+                    <!-- Tile: Depot & Yard Locations -->
+                    <a href="/index.html?app=locations" class="fiori-tile" id="tile-locations" data-app="locations" data-roles="Admin">
+                        <div class="tile-top">
+                            <div class="tile-icon-box">📍</div>
+                            <span class="tile-badge">Depot / Yard</span>
+                        </div>
+                        <h3 class="tile-title">Depot & Yard Locations</h3>
+                        <p class="tile-desc">Maintain depot facilities, regional yard locations, on-site workshops, and GPS geo-fenced coordinates.</p>
+                        <div class="tile-footer">
+                            <span>Open Application</span>
+                            <span class="tile-action-arrow">&rarr;</span>
+                        </div>
+                    </a>
+
                     <!-- Tile 1: Fleet Overview & Asset Detail -->
                     <a href="/index.html?app=fleet-overview" class="fiori-tile" id="tile-fleet-overview" data-app="fleet-overview" data-roles="Admin">
                         <div class="tile-top">
@@ -257,27 +187,13 @@
                         </div>
                     </a>
 
-                    <!-- Tile: Depot & Yard Locations -->
-                    <a href="/index.html?app=locations" class="fiori-tile" id="tile-locations" data-app="locations" data-roles="Admin">
-                        <div class="tile-top">
-                            <div class="tile-icon-box">📍</div>
-                            <span class="tile-badge">Depot / Yard</span>
-                        </div>
-                        <h3 class="tile-title">Depot & Yard Locations</h3>
-                        <p class="tile-desc">Maintain depot facilities, regional yard locations, on-site workshops, and GPS geo-fenced coordinates.</p>
-                        <div class="tile-footer">
-                            <span>Open Application</span>
-                            <span class="tile-action-arrow">&rarr;</span>
-                        </div>
-                    </a>
-
-                    <!-- Tile: Condition Logs & Inspections -->
+                    <!-- Tile: Equipment Inspections -->
                     <a href="/index.html?app=inspections" class="fiori-tile" id="tile-inspections" data-app="inspections" data-roles="Admin,YardWorker">
                         <div class="tile-top">
                             <div class="tile-icon-box">📋</div>
                             <span class="tile-badge">Audit & Return</span>
                         </div>
-                        <h3 class="tile-title">Condition Logs & Inspections</h3>
+                        <h3 class="tile-title">Equipment Inspections</h3>
                         <p class="tile-desc">Capture check-out and return condition logs, record meter readings, assign grades (A-D), and lock audit reports.</p>
                         <div class="tile-footer">
                             <span>Open Application</span>
@@ -285,13 +201,13 @@
                         </div>
                     </a>
 
-                    <!-- Tile 3: Damage Charge Approval -->
+                    <!-- Tile 3: Damage Record -->
                     <a href="/index.html?app=damage-charge-approval" class="fiori-tile" id="tile-damage-charge" data-app="damage-charge-approval" data-roles="Admin,YardWorker,BillingClerk">
                         <div class="tile-top">
                             <div class="tile-icon-box">💳</div>
-                            <span class="tile-badge">Billing Worklist</span>
+                            <span class="tile-badge">Damage Worklist</span>
                         </div>
-                        <h3 class="tile-title">Damage Charge Approval</h3>
+                        <h3 class="tile-title">Damage Record</h3>
                         <p class="tile-desc">Review automated repair bills with damage particulars, inspect photo evidence, and approve customer repair charges.</p>
                         <div class="tile-footer">
                             <span>Open Application</span>
@@ -342,66 +258,6 @@
     </div>
 
     <!-- 3. MODAL FOR FAST SWITCHING PERSONAS -->
-    <div id="switch-modal" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div>
-                    <h3 class="modal-title">Switch Enterprise Role</h3>
-                    <p class="modal-subtitle">Select an authorized business persona to preview dedicated views and KPIs</p>
-                </div>
-                <button class="modal-close" onclick="closeSwitchModal()" title="Close">&times;</button>
-            </div>
-            
-            <div class="modal-personas-grid">
-                
-                <button type="button" class="modal-persona-card" onclick="quickLogin('admin'); closeSwitchModal();">
-                    <div class="modal-persona-avatar" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);">VM</div>
-                    <div class="modal-persona-details">
-                        <div class="modal-persona-top">
-                            <span class="modal-persona-name">Vikram Mehta</span>
-                            <span class="modal-role-pill admin">Executive</span>
-                        </div>
-                        <div class="modal-persona-desc">Fleet Director &bull; All Apps &amp; KPI Overview</div>
-                    </div>
-                </button>
-
-                <button type="button" class="modal-persona-card" onclick="quickLogin('inspector'); closeSwitchModal();">
-                    <div class="modal-persona-avatar" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">RP</div>
-                    <div class="modal-persona-details">
-                        <div class="modal-persona-top">
-                            <span class="modal-persona-name">Ramesh Patel</span>
-                            <span class="modal-role-pill yard">Yard Ops</span>
-                        </div>
-                        <div class="modal-persona-desc">Yard Inspector &bull; Check-In &amp; Condition Logging</div>
-                    </div>
-                </button>
-
-                <button type="button" class="modal-persona-card" onclick="quickLogin('finance'); closeSwitchModal();">
-                    <div class="modal-persona-avatar" style="background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);">AS</div>
-                    <div class="modal-persona-details">
-                        <div class="modal-persona-top">
-                            <span class="modal-persona-name">Ananya Sharma</span>
-                            <span class="modal-role-pill finance">Finance</span>
-                        </div>
-                        <div class="modal-persona-desc">Billing Clerk &bull; Damage Invoicing &amp; Approvals</div>
-                    </div>
-                </button>
-
-                <button type="button" class="modal-persona-card" onclick="quickLogin('technician'); closeSwitchModal();">
-                    <div class="modal-persona-avatar" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">MD</div>
-                    <div class="modal-persona-details">
-                        <div class="modal-persona-top">
-                            <span class="modal-persona-name">Mike D'souza</span>
-                            <span class="modal-role-pill tech">Workshop</span>
-                        </div>
-                        <div class="modal-persona-desc">Technician &bull; Repair Orders &amp; Maintenance</div>
-                    </div>
-                </button>
-
-            </div>
-        </div>
-    </div>
-
     <!-- 4. CORE JAVASCRIPT -->
     <script src="/index.js" defer></script>
 

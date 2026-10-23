@@ -5,43 +5,28 @@
 
 const FIORI_ROLES_CONFIG = {
     'Admin': {
-        name: 'Vikram Mehta',
         title: 'System Administrator',
-        avatar: 'VM',
         color: '#0070f2',
         apps: ['customer-management', 'rentals', 'locations', 'fleet-overview', 'inspections', 'damage-charge-approval', 'repair-jobs', 'maintenance-planner']
     },
     'YardWorker': {
-        name: 'Ramesh Patel',
         title: 'Yard Inspector',
-        avatar: 'RP',
         color: '#107e3e',
         apps: ['inspections', 'damage-charge-approval']
     },
     'BillingClerk': {
-        name: 'Ananya Sharma',
         title: 'Billing Clerk',
-        avatar: 'AS',
         color: '#8e44ad',
         apps: ['damage-charge-approval']
     },
     'Technician': {
-        name: 'Mike D\'souza',
         title: 'Workshop Technician',
-        avatar: 'MD',
         color: '#e67e22',
         apps: ['repair-jobs', 'maintenance-planner']
     }
 };
 
-const FIORI_USERS = {
-    'admin': { role: 'Admin', pass: 'admin123' },
-    'inspector': { role: 'YardWorker', pass: 'yard123' },
-    'finance': { role: 'BillingClerk', pass: 'finance123' },
-    'technician': { role: 'Technician', pass: 'tech123' }
-};
-
-// Check current user session
+// Check current user session (set from real authenticated backend /api/user-info)
 function getFioriSession() {
     try {
         const raw = localStorage.getItem('fiori_user_session');
@@ -52,22 +37,6 @@ function getFioriSession() {
     return null;
 }
 
-function setFioriSession(username) {
-    const userCfg = FIORI_USERS[username] || { role: 'Admin' };
-    const roleCfg = FIORI_ROLES_CONFIG[userCfg.role] || FIORI_ROLES_CONFIG['Admin'];
-    const session = {
-        username: username,
-        role: userCfg.role,
-        name: roleCfg.name,
-        title: roleCfg.title,
-        avatar: roleCfg.avatar,
-        plant: 'PLANT-AHMD (Ahmedabad Yard)',
-        loginTime: new Date().toISOString()
-    };
-    localStorage.setItem('fiori_user_session', JSON.stringify(session));
-    return session;
-}
-
 function clearFioriSession() {
     localStorage.removeItem('fiori_user_session');
 }
@@ -75,14 +44,15 @@ function clearFioriSession() {
 // In sub-apps: Guard access and render top Fiori navigation bar
 function initSubAppGuard(currentAppId, currentAppTitle) {
     let session = getFioriSession();
-    
-    // Default to admin if no session exists yet for smooth local testing
+
     if (!session) {
-        session = setFioriSession('admin');
+        // If no session exists yet, try to fetch it synchronously or redirect to launchpad
+        window.location.href = '/index.html';
+        return false;
     }
 
-    const roleCfg = FIORI_ROLES_CONFIG[session.role];
-    const isAllowed = roleCfg && (roleCfg.apps.includes(currentAppId) || session.role === 'Admin');
+    const roleCfg = FIORI_ROLES_CONFIG[session.role] || { title: session.role || 'User', color: '#0070f2', apps: [] };
+    const isAllowed = session.role === 'Admin' || (roleCfg.apps && roleCfg.apps.includes(currentAppId));
 
     if (!isAllowed) {
         // Render Access Denied Screen
@@ -261,9 +231,7 @@ function getAllowedRolesForApp(appId) {
 
 // Export globals
 window.FIORI_ROLES_CONFIG = FIORI_ROLES_CONFIG;
-window.FIORI_USERS = FIORI_USERS;
 window.getFioriSession = getFioriSession;
-window.setFioriSession = setFioriSession;
 window.clearFioriSession = clearFioriSession;
 window.initSubAppGuard = initSubAppGuard;
 

@@ -1,33 +1,59 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     if (window.__FIORI_APP_CONFIG) {
         return; // Sub-app runner handles its own UI lifecycle
     }
-    const session = getFioriSession();
-    if (session) {
-        renderLaunchpadForSession(session);
-    } else {
-        showLoginView();
+
+    // Always fetch fresh authenticated user session from backend XSUAA
+    try {
+        const res = await fetch('/api/user-info', { cache: 'no-store' });
+        if (res.ok) {
+            const data = await res.json();
+            const roleCfg = window.FIORI_ROLES_CONFIG[data.role] || { title: data.role || 'User', color: '#0070f2' };
+            const session = {
+                username: data.id,
+                role: data.role || 'Guest',
+                name: data.name || data.id,
+                title: roleCfg.title,
+                avatar: data.name ? data.name.split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'US',
+                plant: 'PLANT-AHMD (Ahmedabad Yard)',
+                loginTime: new Date().toISOString()
+            };
+            localStorage.setItem('fiori_user_session', JSON.stringify(session));
+            renderLaunchpadForSession(session);
+        } else {
+            const fallbackSession = getFioriSession();
+            if (fallbackSession) renderLaunchpadForSession(fallbackSession);
+        }
+    } catch (e) {
+        console.warn('Could not fetch /api/user-info:', e.message);
+        const fallbackSession = getFioriSession();
+        if (fallbackSession) renderLaunchpadForSession(fallbackSession);
     }
     loadLiveKPIData();
 });
 
-function showLoginView() {
-    document.getElementById('login-view').style.display = 'flex';
-    document.getElementById('launchpad-view').style.display = 'none';
-}
-
 function renderLaunchpadForSession(session) {
-    document.getElementById('login-view').style.display = 'none';
-    document.getElementById('launchpad-view').style.display = 'flex';
+    const launchpad = document.getElementById('launchpad-view');
+    if (launchpad) {
+        launchpad.style.display = 'flex';
+    }
 
     const roleCfg = window.FIORI_ROLES_CONFIG[session.role] || window.FIORI_ROLES_CONFIG['Admin'];
 
     // Header info
-    document.getElementById('shell-user-avatar').textContent = session.avatar || 'AD';
-    document.getElementById('shell-user-avatar').style.backgroundColor = roleCfg.color || '#0070f2';
-    document.getElementById('shell-user-name').textContent = session.name;
-    document.getElementById('shell-user-role').textContent = session.role;
-
+    const avatarEl = document.getElementById('shell-user-avatar');
+    if (avatarEl) {
+        avatarEl.textContent = session.avatar || 'AD';
+        avatarEl.style.backgroundColor = roleCfg.color || '#0070f2';
+    }
+    const nameEl = document.getElementById('shell-user-name');
+    if (nameEl) {
+        nameEl.textContent = session.name;
+    }
+    const roleEl = document.getElementById('shell-user-role');
+    if (roleEl) {
+        roleEl.textContent = session.role;
+    }
 
     // Filter tiles by role
     const tiles = document.querySelectorAll('.fiori-tile');
@@ -47,63 +73,11 @@ function renderLaunchpadForSession(session) {
     }
 }
 
-function handleFormLogin(e) {
-    e.preventDefault();
-    const usernameInput = document.getElementById('login-username').value.trim().toLowerCase();
-    const passwordInput = document.getElementById('login-password').value.trim();
-
-    const userEntry = window.FIORI_USERS[usernameInput];
-    if (!userEntry) {
-        showLoginError('User "' + usernameInput + '" not found. Try: admin, inspector, finance, technician.');
-        return;
-    }
-
-    if (userEntry.pass !== passwordInput && passwordInput !== 'password123' && passwordInput !== 'admin123') {
-        showLoginError('Incorrect password for ' + usernameInput + '. (Demo password: ' + userEntry.pass + ')');
-        return;
-    }
-
-    hideLoginError();
-    const session = setFioriSession(usernameInput);
-    renderLaunchpadForSession(session);
-}
-
-function quickLogin(username) {
-    hideLoginError();
-    const session = setFioriSession(username);
-    renderLaunchpadForSession(session);
-}
-
 function handleLogout() {
     clearFioriSession();
-    showLoginView();
+    // Redirect through Approuter logout endpoint to clear XSUAA session and return to SAP login
+    window.location.href = '/my/logout';
 }
-
-function showLoginError(msg) {
-    const errBox = document.getElementById('login-error-box');
-    const errMsg = document.getElementById('login-error-msg');
-    errMsg.textContent = msg;
-    errBox.style.display = 'flex';
-}
-
-function hideLoginError() {
-    document.getElementById('login-error-box').style.display = 'none';
-}
-
-function openSwitchModal() {
-    document.getElementById('switch-modal').style.display = 'flex';
-}
-
-function closeSwitchModal() {
-    document.getElementById('switch-modal').style.display = 'none';
-}
-
-window.onclick = function(event) {
-    const modal = document.getElementById('switch-modal');
-    if (event.target === modal) {
-        closeSwitchModal();
-    }
-};
 
 // Admin Executive KPI Definitions
 const ADMIN_KPI_CONFIG = [

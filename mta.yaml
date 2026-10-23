@@ -1,7 +1,7 @@
 _schema-version: 3.3.0
 ID: sprint
 version: 1.0.0
-description: "A simple CAP project."
+description:  A simple CAP project.
 
 parameters:
   enable-parallel-deployments: true
@@ -12,6 +12,7 @@ build-parameters:
       commands:
         - npm ci
         - npx cds build --production
+        - npm run build:app
 
 modules:
   - name: sprint-srv
@@ -25,7 +26,7 @@ modules:
     provides:
       - name: srv-api
         properties:
-          srv-url: ${default-url}
+          srv-url: "${default-url}"
     requires:
       - name: sprint-auth
       - name: RETS
@@ -37,6 +38,27 @@ modules:
       buildpack: nodejs_buildpack
     requires:
       - name: RETS
+
+  - name: sprint
+    type: approuter.nodejs
+    path: .deploy/app-router
+    parameters:
+      keep-existing-routes: true
+      disk-quota: 256M
+      memory: 256M
+    requires:
+      - name: srv-api
+        group: destinations
+        properties:
+          name: srv-api
+          url: ~{srv-url}
+          forwardAuthToken: true
+      - name: sprint-auth
+    provides:
+      - name: app-api
+        properties:
+          app-protocol: "${protocol}"
+          app-uri: "${default-uri}"
 
 resources:
   - name: sprint-auth
@@ -50,8 +72,29 @@ resources:
         tenant-mode: dedicated
         oauth2-configuration:
           credential-types:
-            - "binding-secret"
-            - "x509"
+            - binding-secret
+            - x509
+          redirect-uris:
+            - https://*~{app-api/app-uri}/**
+        role-collections:
+          - name: 'Admin (sprint ${org}-${space})'
+            description: 'generated'
+            role-template-references:
+              - '$XSAPPNAME.Admin'
+          - name: 'YardWorker (sprint ${org}-${space})'
+            description: 'generated'
+            role-template-references:
+              - '$XSAPPNAME.YardWorker'
+          - name: 'Technician (sprint ${org}-${space})'
+            description: 'generated'
+            role-template-references:
+              - '$XSAPPNAME.Technician'
+          - name: 'BillingClerk (sprint ${org}-${space})'
+            description: 'generated'
+            role-template-references:
+              - '$XSAPPNAME.BillingClerk'
+    requires:
+      - name: app-api
 
   - name: RETS
     type: com.sap.xs.hdi-container

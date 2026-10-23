@@ -38,7 +38,7 @@ service BillingService {
             'Admin'
         ]
     }]
-    entity ConditionLogs       as projection on my.ConditionLogs;
+    entity ConditionLogs  as projection on my.ConditionLogs;
 
     @readonly
     @restrict: [{

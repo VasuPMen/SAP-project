@@ -4,6 +4,10 @@ import path from 'path';
 import { uploadEvidencePhoto } from './common/cloudinary.js';
 
 cds.on('bootstrap', (app) => {
+    // Serve static frontend assets from app folder (Launchpad, Fiori subapps, CSS, JS)
+    const appDir = path.resolve('app');
+    app.use(express.static(appDir));
+
     // Route any app Component.js request to the single shared app/Component.js
     app.get(['/:app/webapp/Component.js', '/:app/Component.js', '/Component.js'], (req, res, next) => {
         const sharedCompPath = path.resolve('app/Component.js');
@@ -33,6 +37,68 @@ cds.on('bootstrap', (app) => {
     // Support large photo uploads up to 50MB
     app.use(express.json({ limit: '50mb' }));
     app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+    // User Info endpoint resolving BTP XSUAA identity & roles
+    app.get('/api/user-info', (req, res) => {
+        let authHeader = req.headers.authorization || '';
+        let tokenData = null;
+
+        if (authHeader.startsWith('Bearer ')) {
+            try {
+                const token = authHeader.substring(7);
+                const parts = token.split('.');
+                if (parts.length === 3) {
+                    tokenData = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf-8'));
+                }
+            } catch (err) {
+                console.warn('[user-info] Failed to parse JWT payload:', err.message);
+            }
+        }
+
+        // Determine user identity
+        const userId = tokenData?.user_name || tokenData?.email || tokenData?.user_id || req.user?.id || 'admin';
+        const userEmail = tokenData?.email || req.user?.attr?.email || (userId.includes('@') ? userId : 'user@sap.com');
+        const givenName = tokenData?.given_name || req.user?.attr?.givenName;
+        const familyName = tokenData?.family_name || req.user?.attr?.familyName;
+        const displayName = givenName && familyName ? `${givenName} ${familyName}` : (tokenData?.user_name || userEmail);
+
+        // Extract scopes from decoded JWT
+        const scopes = tokenData?.scope || [];
+        console.log(`[user-info] Token scopes for ${userId}:`, scopes);
+
+        let role = null;
+        const hasScope = (name) => scopes.some(s => s.toLowerCase().endsWith('.' + name.toLowerCase()) || s.toLowerCase() === name.toLowerCase());
+
+        if (hasScope('Admin')) {
+            role = 'Admin';
+        } else if (hasScope('Technician')) {
+            role = 'Technician';
+        } else if (hasScope('BillingClerk')) {
+            role = 'BillingClerk';
+        } else if (hasScope('YardWorker')) {
+            role = 'YardWorker';
+        }
+
+        // Check req.user if tokenData was not present (e.g. local)
+        if (!role && req.user && typeof req.user.is === 'function') {
+            if (req.user.is('Admin')) role = 'Admin';
+            else if (req.user.is('Technician')) role = 'Technician';
+            else if (req.user.is('BillingClerk')) role = 'BillingClerk';
+            else if (req.user.is('YardWorker')) role = 'YardWorker';
+        }
+
+        if (!role) {
+            role = scopes.length > 0 ? scopes[0].split('.').pop() : 'Guest';
+        }
+
+        res.json({
+            id: userId,
+            email: userEmail,
+            name: displayName,
+            role: role,
+            roles: scopes.length ? scopes : [role]
+        });
+    });
 
     // Cloudinary & SHA-256 Photo Evidence Upload REST Endpoint
     app.post('/api/upload-evidence', async (req, res) => {

@@ -74,13 +74,13 @@ export async function uploadEvidencePhoto({
     const { sha256, buffer, mimeType } = computeSha256(imageBase64);
 
     // Format Data URI for Cloudinary uploader
-    const dataUri = imageBase64.startsWith('data:') 
-        ? imageBase64 
+    const dataUri = imageBase64.startsWith('data:')
+        ? imageBase64
         : `data:${mimeType};base64,${buffer.toString('base64')}`;
 
     // 2. Check if Cloudinary is configured
     const isConfigured = Boolean(
-        process.env.CLOUDINARY_URL || 
+        process.env.CLOUDINARY_URL ||
         (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY)
     );
 
