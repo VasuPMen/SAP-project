@@ -98,14 +98,14 @@ The portal provides 8 specialized role-based applications under `app/`:
 
 | App Path | Module Name | Primary Responsibilities |
 | :--- | :--- | :--- |
-| [`app/fleet-overview`](file:///c:/Users/admin/Desktop/SAP_SPRINT/app/fleet-overview) | **Fleet Overview** | Master equipment catalog, health meters, status filtering, category stats |
-| [`app/rentals`](file:///c:/Users/admin/Desktop/SAP_SPRINT/app/rentals) | **Rentals** | Contract creation, item booking, customer assignment, dispatch validation |
-| [`app/inspections`](file:///c:/Users/admin/Desktop/SAP_SPRINT/app/inspections) | **Inspections** | Return check-ins, pre-rental photos, damage identification, condition grading |
-| [`app/maintenance-planner`](file:///c:/Users/admin/Desktop/SAP_SPRINT/app/maintenance-planner) | **Maintenance Planner** | Periodic safety inspections, preventative maintenance, calibration logs |
-| [`app/repair-jobs`](file:///c:/Users/admin/Desktop/SAP_SPRINT/app/repair-jobs) | **Repair Jobs** | Workshop work orders, technician scheduling, replacement parts, labor hours |
-| [`app/damage-charge-approval`](file:///c:/Users/admin/Desktop/SAP_SPRINT/app/damage-charge-approval) | **Charge Approval** | Damage cost calculation, billing disputes, manager approval workflow |
-| [`app/customer-management`](file:///c:/Users/admin/Desktop/SAP_SPRINT/app/customer-management) | **Customers** | Client directory, authorized personnel contacts, active accounts |
-| [`app/locations`](file:///c:/Users/admin/Desktop/SAP_SPRINT/app/locations) | **Locations & Yards** | Yards, depots, workshop facilities with geo-coordinates and plant codes |
+| [`app/fleet-overview`](app/fleet-overview) | **Fleet Overview** | Master equipment catalog, health meters, status filtering, category stats |
+| [`app/rentals`](app/rentals) | **Rentals** | Contract creation, item booking, customer assignment, dispatch validation |
+| [`app/inspections`](app/inspections) | **Inspections** | Return check-ins, pre-rental photos, damage identification, condition grading |
+| [`app/maintenance-planner`](app/maintenance-planner) | **Maintenance Planner** | Periodic safety inspections, preventative maintenance, calibration logs |
+| [`app/repair-jobs`](app/repair-jobs) | **Repair Jobs** | Workshop work orders, technician scheduling, replacement parts, labor hours |
+| [`app/damage-charge-approval`](app/damage-charge-approval) | **Charge Approval** | Damage cost calculation, billing disputes, manager approval workflow |
+| [`app/customer-management`](app/customer-management) | **Customers** | Client directory, authorized personnel contacts, active accounts |
+| [`app/locations`](app/locations) | **Locations & Yards** | Yards, depots, workshop facilities with geo-coordinates and plant codes |
 
 Unified Launchpad available at: `http://localhost:4004/app/index.html`
 
@@ -168,7 +168,7 @@ SAP_SPRINT/
 
 ### Environment Configuration
 
-Create a local `.env` file based on [`.env.example`](file:///c:/Users/admin/Desktop/SAP_SPRINT/.env.example):
+Create a local `.env` file based on [`.env.example`](.env.example):
 
 ```powershell
 cp .env.example .env
@@ -181,7 +181,7 @@ CLOUDINARY_URL=cloudinary://<api_key>:<api_secret>@<cloud_name>
 ```
 
 > [!IMPORTANT]
-> The `.env` file is protected by [`.gitignore`](file:///c:/Users/admin/Desktop/SAP_SPRINT/.gitignore) and will not be pushed to GitHub to safeguard API credentials.
+> The `.env` file is protected by [`.gitignore`](.gitignore) and will not be pushed to GitHub to safeguard API credentials.
 
 ### Installation & Local Run
 
@@ -215,7 +215,7 @@ node scripts/seed-data.js
 
 During yard inspections (Check-In / Return from Rent), inspectors take photos of equipment condition and damage.
 
-- **Storage**: Assets are streamed to Cloudinary CDN via [`srv/common/cloudinary.js`](file:///c:/Users/admin/Desktop/SAP_SPRINT/srv/common/cloudinary.js).
+- **Storage**: Assets are streamed to Cloudinary CDN via [`srv/common/cloudinary.js`](srv/common/cloudinary.js).
 - **Metadata**: Each photo record stores secure URLs, public IDs, timestamps, damage classifications, and inspector identifiers in the `DamagePhotos` entity.
 - **Audit Proof**: High-resolution photos provide dispute-proof verification for damage invoices.
 
@@ -244,15 +244,22 @@ The MTA builds:
 
 ## 🔐 Security & Role-Based Access (RBAC)
 
-The application enforces role-based access control via [`xs-security.json`](file:///c:/Users/admin/Desktop/SAP_SPRINT/xs-security.json):
+The application enforces role-based access control via [`xs-security.json`](xs-security.json):
 
-| Role / Scope | Description |
-| :--- | :--- |
-| `YardInspector` | Create and finalize check-in/check-out inspections, take photos |
-| `RentalDispatcher` | Create rentals, assign equipment, manage customer contracts |
-| `WorkshopTechnician` | Update repair orders, log labor, complete maintenance tasks |
-| `BillingManager` | Review and approve damage charges, generate repair bills |
-| `FleetAdmin` | Full administrative access to equipment, plants, and users |
+| Role / Scope | Services | Description |
+| :--- | :--- | :--- |
+| `Admin` | All services | Full administrative access, incl. customers, locations, rentals and pricing rules |
+| `YardWorker` | `InspectionService`, `BillingService` | Create and finalize check-in/check-out inspections, take photos, raise repair bills |
+| `Technician` | `MaintenanceService` | Update repair jobs, complete maintenance tasks |
+| `BillingClerk` | `BillingService` | Review and approve damage charges and repair bills |
+
+`xs-security.json` is generated from the `@requires` / `@restrict` annotations in `srv/`. After changing roles, regenerate it with:
+
+```powershell
+npx cds compile srv --to xsuaa -o xs-security.json
+```
+
+Use `-o` rather than `> xs-security.json`: in Windows PowerShell, `>` writes UTF-16, which the MTA deploy service can't parse, and `cf deploy` then fails while creating `sprint-auth`.
 
 ---
 
