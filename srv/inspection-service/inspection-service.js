@@ -126,10 +126,9 @@ export default class InspectionService extends cds.ApplicationService {
             return items;
         });
 
-        // Pre-populate sensible defaults on new inspection log drafts
         this.before(['CREATE', 'NEW'], 'ConditionLogs.drafts', async (req) => {
             if (!req.data.conditionGrade) req.data.conditionGrade = 'A';
-            if (!req.data.inspector) req.data.inspector = 'Ramesh Patel';
+            if (!req.data.inspector) req.data.inspector = (req.user && req.user.id !== 'anonymous' ? req.user.id : 'Yard Inspector');
             if (!req.data.inspectionDate) req.data.inspectionDate = new Date().toISOString();
             if (!req.data.inspectionStatus) req.data.inspectionStatus = 'Draft';
 

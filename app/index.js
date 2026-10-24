@@ -85,28 +85,28 @@ const ADMIN_KPI_CONFIG = [
         label: 'Available Fleet',
         icon: '🚜',
         theme: 'success',
-        targetUrl: '/fleet-overview/webapp/index.html',
+        targetUrl: '/index.html?app=fleet-overview',
         getValue: (d) => `${d?.admin?.available ?? 0} Assets`
     },
     {
         label: 'Rented Out Fleet',
         icon: '📑',
         theme: 'primary',
-        targetUrl: '/rentals/webapp/index.html',
+        targetUrl: '/index.html?app=rentals',
         getValue: (d) => `${d?.admin?.rented ?? 0} Assets`
     },
     {
         label: 'Pending Damage Bill',
         icon: '💳',
         theme: 'warning',
-        targetUrl: '/damage-charge-approval/webapp/index.html',
+        targetUrl: '/index.html?app=damage-charge-approval',
         getValue: (d) => '₹' + Math.round(d?.admin?.pendingAmount ?? 0).toLocaleString('en-IN')
     },
     {
         label: 'Quarantined / Damaged',
         icon: '🔧',
         theme: 'error',
-        targetUrl: '/repair-jobs/webapp/index.html',
+        targetUrl: '/index.html?app=repair-jobs',
         getValue: (d) => `${d?.admin?.damaged ?? 0} Assets`
     }
 ];
