@@ -92,6 +92,10 @@ resources:
             description: 'generated'
             role-template-references:
               - '$XSAPPNAME.BillingClerk'
+          - name: 'Manager (sprint ${org}-${space})'
+            description: 'generated'
+            role-template-references:
+              - '$XSAPPNAME.Manager'
     requires:
       - name: app-api
 

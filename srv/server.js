@@ -194,10 +194,10 @@ cds.on('bootstrap', (app) => {
                             HasActiveEntity: false,
                             HasDraftEntity: false,
                             DraftAdministrativeData_DraftUUID: draftUUID
-                        })).catch(() => {});
+                        })).catch(() => { });
                         return true;
                     }
-                } catch (e) {}
+                } catch (e) { }
                 return false;
             };
 
@@ -231,7 +231,7 @@ cds.on('bootstrap', (app) => {
     app.get('/api/live-kpis', async (req, res) => {
         try {
             const db = await cds.connect.to('db');
-            
+
             // 1. Equipment dataset
             const equip = await db.run(SELECT.from('RentalEquipmentTrackingApp.Equipment')) || [];
             const availableCount = equip.filter(e => e.currentStatus === 'Available').length;

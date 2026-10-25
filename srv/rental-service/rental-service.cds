@@ -1,18 +1,18 @@
 using { RentalEquipmentTrackingApp as my } from '../../db/schema';
 
 @path: '/rental'
-@requires: ['Admin']
+@requires: ['Admin', 'Manager']
 service RentalService {
 
     @odata.draft.enabled
     @restrict: [
-        { grant: ['*'], to: ['Admin'] }
+        { grant: ['*'], to: ['Admin', 'Manager'] }
     ]
     entity Customers as projection on my.Customers;
 
     @odata.draft.enabled
     @restrict: [
-        { grant: ['*'], to: ['Admin'] }
+        { grant: ['*'], to: ['Admin', 'Manager'] }
     ]
     entity Locations as projection on my.Locations {
         *,
@@ -46,13 +46,13 @@ service RentalService {
     @odata.draft.enabled
     @cds.redirection.target
     @restrict: [
-        { grant: ['*'], to: ['Admin'] }
+        { grant: ['*'], to: ['Admin', 'Manager'] }
     ]
     entity Equipment as projection on my.Equipment;
 
     @readonly
     @restrict: [
-        { grant: ['READ'], to: ['Admin'] }
+        { grant: ['READ'], to: ['Admin', 'Manager'] }
     ]
     entity AvailableEquipment as projection on my.Equipment {
         ID,
@@ -71,42 +71,42 @@ service RentalService {
 
     @odata.draft.enabled
     @restrict: [
-        { grant: ['*'], to: ['Admin'] }
+        { grant: ['*'], to: ['Admin', 'Manager'] }
     ]
     entity Rentals as projection on my.Rentals;
 
     @restrict: [
-        { grant: ['*'], to: ['Admin'] }
+        { grant: ['*'], to: ['Admin', 'Manager'] }
     ]
     entity RentalItems as projection on my.RentalItems;
 
     @readonly
     @restrict: [
-        { grant: ['READ'], to: ['Admin'] }
+        { grant: ['READ'], to: ['Admin', 'Manager'] }
     ]
     entity RentalStatusHistory as projection on my.RentalStatusHistory;
 
     @readonly
     @restrict: [
-        { grant: ['READ'], to: ['Admin'] }
+        { grant: ['READ'], to: ['Admin', 'Manager'] }
     ]
     entity EquipmentTransfers as projection on my.EquipmentTransfers;
 
     @readonly
     @restrict: [
-        { grant: ['READ'], to: ['Admin'] }
+        { grant: ['READ'], to: ['Admin', 'Manager'] }
     ]
     entity LocationEvents as projection on my.LocationEvents;
 
     @readonly
     @restrict: [
-        { grant: ['READ'], to: ['Admin'] }
+        { grant: ['READ'], to: ['Admin', 'Manager'] }
     ]
     entity AssetStatusHistory as projection on my.AssetStatusHistory;
 
     @readonly
     @restrict: [
-        { grant: ['READ'], to: ['Admin'] }
+        { grant: ['READ'], to: ['Admin', 'Manager'] }
     ]
     entity LocationTypes {
         key code : String(50);

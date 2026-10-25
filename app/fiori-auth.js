@@ -9,6 +9,11 @@ const FIORI_ROLES_CONFIG = {
         color: '#0070f2',
         apps: ['customer-management', 'rentals', 'locations', 'fleet-overview', 'inspections', 'damage-charge-approval', 'repair-jobs', 'maintenance-planner']
     },
+    'Manager': {
+        title: 'Operations Manager',
+        color: '#0284c7',
+        apps: ['customer-management', 'locations', 'fleet-overview', 'rentals']
+    },
     'YardWorker': {
         title: 'Yard Inspector',
         color: '#107e3e',
@@ -63,8 +68,7 @@ function initSubAppGuard(currentAppId, currentAppTitle) {
                         <div style="font-size:3.5rem; margin-bottom:1rem;">🚫</div>
                         <h2 style="color:#1d2d3e; font-size:1.6rem; margin-bottom:0.75rem;">Authorization Required</h2>
                         <p style="color:#556b82; font-size:0.95rem; line-height:1.5; margin-bottom:1.5rem;">
-                            You are logged in as <strong>${session.name}</strong> (<span style="color:#0070f2; font-weight:600;">${roleCfg ? roleCfg.title : session.role}</span>).
-                            Your current role does not have authorization to access <strong>${currentAppTitle || currentAppId}</strong>.
+                            Your current role (<span style="color:#0070f2; font-weight:600;">${roleCfg ? roleCfg.title : session.role}</span>) does not have authorization to access <strong>${currentAppTitle || currentAppId}</strong>.
                         </p>
                         <div style="background:#fff3cd; color:#856404; padding:0.75rem 1rem; border-radius:6px; font-size:0.85rem; margin-bottom:1.75rem; border:1px solid #ffeeba;">
                             Allowed Roles: <strong>${getAllowedRolesForApp(currentAppId).join(', ')}</strong>
@@ -109,14 +113,9 @@ function initSubAppGuard(currentAppId, currentAppTitle) {
                 <span style="font-weight:700; color:#fff; letter-spacing:0.2px;">${currentAppTitle || 'SAP Fiori Application'}</span>
             </div>
             <div style="display:flex; align-items:center; gap:0.75rem;">
-                <span style="background:#0070f2; color:#fff; font-size:0.7rem; font-weight:700; padding:0.15rem 0.5rem; border-radius:10px; text-transform:uppercase;">
+                <span style="background:${roleCfg ? roleCfg.color : '#0070f2'}; color:#fff; font-size:0.7rem; font-weight:700; padding:0.15rem 0.65rem; border-radius:10px; text-transform:uppercase;">
                     ${session.role}
                 </span>
-                <div style="width:26px; height:26px; border-radius:50%; background:${roleCfg ? roleCfg.color : '#0070f2'}; color:#fff; display:flex; align-items:center; justify-content:center; font-size:0.75rem; font-weight:700;">
-                    ${session.avatar}
-                </div>
-                <span style="color:#e1e7ed; font-size:0.8rem; font-weight:500;">${session.name.split(' ')[0]}</span>
-                <span style="color:#809fb8; font-size:0.75rem;">(${session.plant.split(' ')[0]})</span>
             </div>
         `;
 

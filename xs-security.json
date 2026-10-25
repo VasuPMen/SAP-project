@@ -15,6 +15,10 @@
     {
       "name": "$XSAPPNAME.BillingClerk",
       "description": "BillingClerk"
+    },
+    {
+      "name": "$XSAPPNAME.Manager",
+      "description": "Manager"
     }
   ],
   "attributes": [],
@@ -24,6 +28,14 @@
       "description": "generated",
       "scope-references": [
         "$XSAPPNAME.Admin"
+      ],
+      "attribute-references": []
+    },
+    {
+      "name": "Manager",
+      "description": "generated",
+      "scope-references": [
+        "$XSAPPNAME.Manager"
       ],
       "attribute-references": []
     },

@@ -72,14 +72,11 @@
                     <path d="M12.8 23.5H9.2L16.2 8.5H19.8L26.8 23.5H23.2L21.7 20.3H14.3L12.8 23.5ZM15.5 17.6H20.5L18 12.3L15.5 17.6ZM34.2 23.7C31.5 23.7 29.5 22.8 28.1 21L29.9 18.9C31 20.4 32.5 21.1 34.4 21.1C35.9 21.1 37.1 20.6 37.1 19.5C37.1 18.6 36.3 18.1 34.6 17.6L32.7 17.1C29.8 16.3 28.5 14.8 28.5 12.6C28.5 10.1 30.6 8.3 34.1 8.3C36.4 8.3 38.2 9 39.5 10.3L37.8 12.5C36.7 11.4 35.5 10.9 34 10.9C32.8 10.9 31.8 11.4 31.8 12.4C31.8 13.2 32.5 13.7 34.2 14.2L36 14.7C39.2 15.6 40.5 17.1 40.5 19.3C40.5 22 38.3 23.7 34.2 23.7ZM44.2 23.5V8.5H50.5C54.1 8.5 56.6 10.5 56.6 14C56.6 17.5 54.1 19.5 50.5 19.5H47.4V23.5H44.2ZM47.4 16.9H50.3C52.1 16.9 53.3 15.9 53.3 14C53.3 12.1 52.1 11.1 50.3 11.1H47.4V16.9Z" fill="white"/>
                 </svg>
                 <span class="shell-title">Rental Equipment Tracking & Condition Logging</span>
-                <span class="shell-subtitle">SAP S/4HANA Cloud & BTP CAP</span>
             </div>
 
             <div class="shell-actions">
-                <div class="user-capsule">
-                    <div class="user-avatar-circle" id="shell-user-avatar">AD</div>
-                    <span id="shell-user-name" style="font-weight:600;">Administrator</span>
-                    <span class="user-role-tag" id="shell-user-role">ADMIN</span>
+                <div class="user-capsule" id="shell-user-capsule" style="opacity: 0; transition: opacity 0.2s;">
+                    <span class="user-role-tag" id="shell-user-role"></span>
                 </div>
 
                 <button class="btn-shell" onclick="handleLogout()" title="Log out" style="background:rgba(239, 68, 68, 0.2); border-color:rgba(239, 68, 68, 0.4);">
@@ -132,7 +129,7 @@
                 <div class="tiles-grid">
 
                     <!-- Tile: Customer Management -->
-                    <a href="/index.html?app=customer-management" class="fiori-tile" id="tile-customer-management" data-app="customer-management" data-roles="Admin">
+                    <a href="/index.html?app=customer-management" class="fiori-tile" id="tile-customer-management" data-app="customer-management" data-roles="Admin,Manager">
                         <div class="tile-top">
                             <div class="tile-icon-box">🏢</div>
                             <span class="tile-badge">Master Data</span>
@@ -146,7 +143,7 @@
                     </a>
 
                     <!-- Tile: Depot & Yard Locations -->
-                    <a href="/index.html?app=locations" class="fiori-tile" id="tile-locations" data-app="locations" data-roles="Admin">
+                    <a href="/index.html?app=locations" class="fiori-tile" id="tile-locations" data-app="locations" data-roles="Admin,Manager">
                         <div class="tile-top">
                             <div class="tile-icon-box">📍</div>
                             <span class="tile-badge">Depot / Yard</span>
@@ -160,7 +157,7 @@
                     </a>
 
                     <!-- Tile 1: Fleet Overview & Asset Detail -->
-                    <a href="/index.html?app=fleet-overview" class="fiori-tile" id="tile-fleet-overview" data-app="fleet-overview" data-roles="Admin">
+                    <a href="/index.html?app=fleet-overview" class="fiori-tile" id="tile-fleet-overview" data-app="fleet-overview" data-roles="Admin,Manager">
                         <div class="tile-top">
                             <div class="tile-icon-box">🚜</div>
                             <span class="tile-badge">Fleet Overview</span>
@@ -174,7 +171,7 @@
                     </a>
 
                     <!-- Tile: Rental Contracts & Allocations -->
-                    <a href="/index.html?app=rentals" class="fiori-tile" id="tile-rentals" data-app="rentals" data-roles="Admin">
+                    <a href="/index.html?app=rentals" class="fiori-tile" id="tile-rentals" data-app="rentals" data-roles="Admin,Manager">
                         <div class="tile-top">
                             <div class="tile-icon-box">📑</div>
                             <span class="tile-badge">Contracts</span>
@@ -249,11 +246,6 @@
 
 
         </main>
-
-        <footer class="fiori-footer">
-            <span>SAP BTP Cloud Application Programming (CAP) Model &bull; SAP HANA Cloud &bull; SAP Fiori Elements</span>
-            <span>Plant: Ahmedabad Depot (PLANT-AHMD) &bull; Enterprise Suite v1.0</span>
-        </footer>
 
     </div>
 
