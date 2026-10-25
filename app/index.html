@@ -1,15 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SAP Fiori Launchpad - Rental Equipment Tracking</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
     <script src="/fiori-auth.js"></script>
     <script>
-        (function() {
+        (function () {
             const urlParams = new URLSearchParams(window.location.search);
             const currentAppId = urlParams.get('app');
             const APP_REGISTRY = {
@@ -46,6 +49,7 @@
     </script>
     <link rel="stylesheet" href="/index.css">
 </head>
+
 <body>
     <script>
         if (window.__FIORI_APP_CONFIG) {
@@ -68,10 +72,15 @@
         <header class="fiori-shell">
             <div class="shell-brand">
                 <svg class="sap-logo" viewBox="0 0 70 34" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M0 0H70V34H0V0Z" fill="#0070F2"/>
-                    <path d="M12.8 23.5H9.2L16.2 8.5H19.8L26.8 23.5H23.2L21.7 20.3H14.3L12.8 23.5ZM15.5 17.6H20.5L18 12.3L15.5 17.6ZM34.2 23.7C31.5 23.7 29.5 22.8 28.1 21L29.9 18.9C31 20.4 32.5 21.1 34.4 21.1C35.9 21.1 37.1 20.6 37.1 19.5C37.1 18.6 36.3 18.1 34.6 17.6L32.7 17.1C29.8 16.3 28.5 14.8 28.5 12.6C28.5 10.1 30.6 8.3 34.1 8.3C36.4 8.3 38.2 9 39.5 10.3L37.8 12.5C36.7 11.4 35.5 10.9 34 10.9C32.8 10.9 31.8 11.4 31.8 12.4C31.8 13.2 32.5 13.7 34.2 14.2L36 14.7C39.2 15.6 40.5 17.1 40.5 19.3C40.5 22 38.3 23.7 34.2 23.7ZM44.2 23.5V8.5H50.5C54.1 8.5 56.6 10.5 56.6 14C56.6 17.5 54.1 19.5 50.5 19.5H47.4V23.5H44.2ZM47.4 16.9H50.3C52.1 16.9 53.3 15.9 53.3 14C53.3 12.1 52.1 11.1 50.3 11.1H47.4V16.9Z" fill="white"/>
+                    <path d="M0 0H70V34H0V0Z" fill="#0070F2" />
+                    <path
+                        d="M12.8 23.5H9.2L16.2 8.5H19.8L26.8 23.5H23.2L21.7 20.3H14.3L12.8 23.5ZM15.5 17.6H20.5L18 12.3L15.5 17.6ZM34.2 23.7C31.5 23.7 29.5 22.8 28.1 21L29.9 18.9C31 20.4 32.5 21.1 34.4 21.1C35.9 21.1 37.1 20.6 37.1 19.5C37.1 18.6 36.3 18.1 34.6 17.6L32.7 17.1C29.8 16.3 28.5 14.8 28.5 12.6C28.5 10.1 30.6 8.3 34.1 8.3C36.4 8.3 38.2 9 39.5 10.3L37.8 12.5C36.7 11.4 35.5 10.9 34 10.9C32.8 10.9 31.8 11.4 31.8 12.4C31.8 13.2 32.5 13.7 34.2 14.2L36 14.7C39.2 15.6 40.5 17.1 40.5 19.3C40.5 22 38.3 23.7 34.2 23.7ZM44.2 23.5V8.5H50.5C54.1 8.5 56.6 10.5 56.6 14C56.6 17.5 54.1 19.5 50.5 19.5H47.4V23.5H44.2ZM47.4 16.9H50.3C52.1 16.9 53.3 15.9 53.3 14C53.3 12.1 52.1 11.1 50.3 11.1H47.4V16.9Z"
+                        fill="white" />
                 </svg>
-                <span class="shell-title">Rental Equipment Tracking & Condition Logging</span>
+                <span class="shell-title">
+                    <span class="shell-title-full">Rental Equipment Tracking & Condition Logging</span>
+                    <span class="shell-title-short">Equipment Tracking</span>
+                </span>
             </div>
 
             <div class="shell-actions">
@@ -79,8 +88,9 @@
                     <span class="user-role-tag" id="shell-user-role"></span>
                 </div>
 
-                <button class="btn-shell" onclick="handleLogout()" title="Log out" style="background:rgba(239, 68, 68, 0.2); border-color:rgba(239, 68, 68, 0.4);">
-                    <span>🚪 Sign Out</span>
+                <button class="btn-shell" onclick="handleLogout()" title="Log out" id="shell-logout-btn">
+                    <span class="btn-shell-icon">🚪</span>
+                    <span class="btn-shell-text">Sign Out</span>
                 </button>
             </div>
         </header>
@@ -89,53 +99,23 @@
 
         <main class="launchpad-container">
 
-            <!-- Executive Role-Tailored KPI Banner -->
-            <section class="kpi-banner" id="kpi-banner">
-                <div class="kpi-card" id="kpi-slot-1">
-                    <div class="kpi-top">
-                        <span class="kpi-label" id="kpi-label-1">Available Fleet</span>
-                        <div class="kpi-icon-badge" id="kpi-icon-1">🚜</div>
-                    </div>
-                    <div class="kpi-value" id="kpi-value-1">--</div>
-                </div>
-
-                <div class="kpi-card" id="kpi-slot-2">
-                    <div class="kpi-top">
-                        <span class="kpi-label" id="kpi-label-2">Rented Out Fleet</span>
-                        <div class="kpi-icon-badge" id="kpi-icon-2">📑</div>
-                    </div>
-                    <div class="kpi-value" id="kpi-value-2">--</div>
-                </div>
-
-                <div class="kpi-card" id="kpi-slot-3">
-                    <div class="kpi-top">
-                        <span class="kpi-label" id="kpi-label-3">Pending Damage Bill</span>
-                        <div class="kpi-icon-badge" id="kpi-icon-3">💳</div>
-                    </div>
-                    <div class="kpi-value" id="kpi-value-3">--</div>
-                </div>
-
-                <div class="kpi-card" id="kpi-slot-4">
-                    <div class="kpi-top">
-                        <span class="kpi-label" id="kpi-label-4">Quarantined / Damaged</span>
-                        <div class="kpi-icon-badge" id="kpi-icon-4">🔧</div>
-                    </div>
-                    <div class="kpi-value" id="kpi-value-4">--</div>
-                </div>
-            </section>
+            <!-- Role-Tailored KPI Banner -->
+            <section class="kpi-banner" id="kpi-banner"></section>
 
             <!-- ALL APPLICATIONS DIRECTORY -->
             <section class="tile-group" id="group-customers">
                 <div class="tiles-grid">
 
                     <!-- Tile: Customer Management -->
-                    <a href="/index.html?app=customer-management" class="fiori-tile" id="tile-customer-management" data-app="customer-management" data-roles="Admin,Manager">
+                    <a href="/index.html?app=customer-management" class="fiori-tile" id="tile-customer-management"
+                        data-app="customer-management" data-roles="Admin,Manager">
                         <div class="tile-top">
                             <div class="tile-icon-box">🏢</div>
                             <span class="tile-badge">Master Data</span>
                         </div>
                         <h3 class="tile-title">Customer Management</h3>
-                        <p class="tile-desc">Register new corporate rental customers, manage contact persons, view site addresses, and review active agreements.</p>
+                        <p class="tile-desc">Register new corporate rental customers, manage contact persons, view site
+                            addresses, and review active agreements.</p>
                         <div class="tile-footer">
                             <span>Open Application</span>
                             <span class="tile-action-arrow">&rarr;</span>
@@ -143,13 +123,15 @@
                     </a>
 
                     <!-- Tile: Depot & Yard Locations -->
-                    <a href="/index.html?app=locations" class="fiori-tile" id="tile-locations" data-app="locations" data-roles="Admin,Manager">
+                    <a href="/index.html?app=locations" class="fiori-tile" id="tile-locations" data-app="locations"
+                        data-roles="Admin,Manager">
                         <div class="tile-top">
                             <div class="tile-icon-box">📍</div>
                             <span class="tile-badge">Depot / Yard</span>
                         </div>
                         <h3 class="tile-title">Depot & Yard Locations</h3>
-                        <p class="tile-desc">Maintain depot facilities, regional yard locations, on-site workshops, and GPS geo-fenced coordinates.</p>
+                        <p class="tile-desc">Maintain depot facilities, regional yard locations, on-site workshops, and
+                            GPS geo-fenced coordinates.</p>
                         <div class="tile-footer">
                             <span>Open Application</span>
                             <span class="tile-action-arrow">&rarr;</span>
@@ -157,13 +139,15 @@
                     </a>
 
                     <!-- Tile 1: Fleet Overview & Asset Detail -->
-                    <a href="/index.html?app=fleet-overview" class="fiori-tile" id="tile-fleet-overview" data-app="fleet-overview" data-roles="Admin,Manager">
+                    <a href="/index.html?app=fleet-overview" class="fiori-tile" id="tile-fleet-overview"
+                        data-app="fleet-overview" data-roles="Admin,Manager">
                         <div class="tile-top">
                             <div class="tile-icon-box">🚜</div>
                             <span class="tile-badge">Fleet Overview</span>
                         </div>
                         <h3 class="tile-title">Fleet Overview & Asset Detail</h3>
-                        <p class="tile-desc">Track equipment availability, operational telemetry, condition grades (A-D), and active allocations across depots.</p>
+                        <p class="tile-desc">Track equipment availability, operational telemetry, condition grades
+                            (A-D), and active allocations across depots.</p>
                         <div class="tile-footer">
                             <span>Open Application</span>
                             <span class="tile-action-arrow">&rarr;</span>
@@ -171,13 +155,15 @@
                     </a>
 
                     <!-- Tile: Rental Contracts & Allocations -->
-                    <a href="/index.html?app=rentals" class="fiori-tile" id="tile-rentals" data-app="rentals" data-roles="Admin,Manager">
+                    <a href="/index.html?app=rentals" class="fiori-tile" id="tile-rentals" data-app="rentals"
+                        data-roles="Admin,Manager">
                         <div class="tile-top">
                             <div class="tile-icon-box">📑</div>
                             <span class="tile-badge">Contracts</span>
                         </div>
                         <h3 class="tile-title">Rental Contracts & Allocations</h3>
-                        <p class="tile-desc">Create rental contracts, reserve equipment assets, schedule delivery periods, and trigger check-out dispatch.</p>
+                        <p class="tile-desc">Create rental contracts, reserve equipment assets, schedule delivery
+                            periods, and trigger check-out dispatch.</p>
                         <div class="tile-footer">
                             <span>Open Application</span>
                             <span class="tile-action-arrow">&rarr;</span>
@@ -185,13 +171,15 @@
                     </a>
 
                     <!-- Tile: Equipment Inspections -->
-                    <a href="/index.html?app=inspections" class="fiori-tile" id="tile-inspections" data-app="inspections" data-roles="Admin,YardWorker">
+                    <a href="/index.html?app=inspections" class="fiori-tile" id="tile-inspections"
+                        data-app="inspections" data-roles="Admin,YardWorker">
                         <div class="tile-top">
                             <div class="tile-icon-box">📋</div>
                             <span class="tile-badge">Audit & Return</span>
                         </div>
                         <h3 class="tile-title">Equipment Inspections</h3>
-                        <p class="tile-desc">Capture check-out and return condition logs, record meter readings, assign grades (A-D), and lock audit reports.</p>
+                        <p class="tile-desc">Capture check-out and return condition logs, record meter readings, assign
+                            grades (A-D), and lock audit reports.</p>
                         <div class="tile-footer">
                             <span>Open Application</span>
                             <span class="tile-action-arrow">&rarr;</span>
@@ -199,13 +187,15 @@
                     </a>
 
                     <!-- Tile 3: Damage Record -->
-                    <a href="/index.html?app=damage-charge-approval" class="fiori-tile" id="tile-damage-charge" data-app="damage-charge-approval" data-roles="Admin,YardWorker,BillingClerk">
+                    <a href="/index.html?app=damage-charge-approval" class="fiori-tile" id="tile-damage-charge"
+                        data-app="damage-charge-approval" data-roles="Admin,YardWorker,BillingClerk">
                         <div class="tile-top">
                             <div class="tile-icon-box">💳</div>
                             <span class="tile-badge">Damage Worklist</span>
                         </div>
                         <h3 class="tile-title">Damage Record</h3>
-                        <p class="tile-desc">Review automated repair bills with damage particulars, inspect photo evidence, and approve customer repair charges.</p>
+                        <p class="tile-desc">Review automated repair bills with damage particulars, inspect photo
+                            evidence, and approve customer repair charges.</p>
                         <div class="tile-footer">
                             <span>Open Application</span>
                             <span class="tile-action-arrow">&rarr;</span>
@@ -213,13 +203,15 @@
                     </a>
 
                     <!-- Tile 5: Workshop Repair Jobs -->
-                    <a href="/index.html?app=repair-jobs" class="fiori-tile" id="tile-repair-jobs" data-app="repair-jobs" data-roles="Admin,Technician">
+                    <a href="/index.html?app=repair-jobs" class="fiori-tile" id="tile-repair-jobs"
+                        data-app="repair-jobs" data-roles="Admin,Technician">
                         <div class="tile-top">
                             <div class="tile-icon-box">🔧</div>
                             <span class="tile-badge">Workshop</span>
                         </div>
                         <h3 class="tile-title">Workshop Repair Jobs</h3>
-                        <p class="tile-desc">Dispatch damage repair jobs, capture technician hours & parts cost, and attach before/after photo evidence.</p>
+                        <p class="tile-desc">Dispatch damage repair jobs, capture technician hours & parts cost, and
+                            attach before/after photo evidence.</p>
                         <div class="tile-footer">
                             <span>Open Application</span>
                             <span class="tile-action-arrow">&rarr;</span>
@@ -227,13 +219,15 @@
                     </a>
 
                     <!-- Tile 6: Maintenance Planner -->
-                    <a href="/index.html?app=maintenance-planner" class="fiori-tile" id="tile-maintenance-planner" data-app="maintenance-planner" data-roles="Admin,Technician">
+                    <a href="/index.html?app=maintenance-planner" class="fiori-tile" id="tile-maintenance-planner"
+                        data-app="maintenance-planner" data-roles="Admin,Technician">
                         <div class="tile-top">
                             <div class="tile-icon-box">📅</div>
                             <span class="tile-badge">Preventive PM</span>
                         </div>
                         <h3 class="tile-title">Maintenance Planner</h3>
-                        <p class="tile-desc">Track scheduled 250h/500h preventive services, calibration routines, service intervals, and provider costs.</p>
+                        <p class="tile-desc">Track scheduled 250h/500h preventive services, calibration routines,
+                            service intervals, and provider costs.</p>
                         <div class="tile-footer">
                             <span>Open Application</span>
                             <span class="tile-action-arrow">&rarr;</span>
@@ -253,4 +247,5 @@
     <script src="/index.js" defer></script>
 
 </body>
+
 </html>

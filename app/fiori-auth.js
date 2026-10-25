@@ -88,32 +88,34 @@ function initSubAppGuard(currentAppId, currentAppTitle) {
         const topBar = document.createElement('div');
         topBar.id = 'fiori-subapp-topbar';
         topBar.style.cssText = `
-            height: 42px;
+            min-height: 42px;
+            height: auto;
             background: linear-gradient(135deg, #1d2d3e 0%, #0d1926 100%);
             color: #ffffff;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 1.25rem;
+            padding: 0.35rem 0.85rem;
             font-family: '72', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             font-size: 0.85rem;
             position: relative;
             z-index: 99999;
             box-shadow: 0 1px 4px rgba(0,0,0,0.2);
             flex-shrink: 0;
+            gap: 0.5rem;
         `;
 
         topBar.innerHTML = `
-            <div style="display:flex; align-items:center; gap:1rem;">
-                <a href="/index.html" style="color:#ffffff; text-decoration:none; display:flex; align-items:center; gap:0.4rem; font-weight:600; font-size:0.85rem; background:rgba(255,255,255,0.12); padding:0.25rem 0.65rem; border-radius:4px; border:1px solid rgba(255,255,255,0.2); transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.22)'" onmouseout="this.style.background='rgba(255,255,255,0.12)'">
+            <div style="display:flex; align-items:center; gap:0.65rem; min-width:0; overflow:hidden;">
+                <a href="/index.html" style="color:#ffffff; text-decoration:none; display:flex; align-items:center; gap:0.35rem; font-weight:600; font-size:0.82rem; background:rgba(255,255,255,0.12); padding:0.22rem 0.55rem; border-radius:4px; border:1px solid rgba(255,255,255,0.2); transition:background 0.2s; white-space:nowrap; flex-shrink:0;" onmouseover="this.style.background='rgba(255,255,255,0.22)'" onmouseout="this.style.background='rgba(255,255,255,0.12)'">
                     <span>&larr;</span>
                     <span>Launchpad</span>
                 </a>
-                <span style="color:#9cb5cf;">|</span>
-                <span style="font-weight:700; color:#fff; letter-spacing:0.2px;">${currentAppTitle || 'SAP Fiori Application'}</span>
+                <span style="color:#9cb5cf; flex-shrink:0;">|</span>
+                <span style="font-weight:700; color:#fff; letter-spacing:0.2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0;">${currentAppTitle || 'SAP Fiori Application'}</span>
             </div>
-            <div style="display:flex; align-items:center; gap:0.75rem;">
-                <span style="background:${roleCfg ? roleCfg.color : '#0070f2'}; color:#fff; font-size:0.7rem; font-weight:700; padding:0.15rem 0.65rem; border-radius:10px; text-transform:uppercase;">
+            <div style="display:flex; align-items:center; gap:0.5rem; flex-shrink:0;">
+                <span style="background:${roleCfg ? roleCfg.color : '#0070f2'}; color:#fff; font-size:0.68rem; font-weight:700; padding:0.18rem 0.55rem; border-radius:10px; text-transform:uppercase; white-space:nowrap;">
                     ${session.role}
                 </span>
             </div>
