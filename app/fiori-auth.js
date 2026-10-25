@@ -261,7 +261,8 @@ window.openEvidencePhotoCaptureDialog = function(options = {}) {
     // Strategy A: Query active UI5 control binding context
     if (!entityId && window.sap && sap.ui && sap.ui.getCore) {
         try {
-            const elements = document.querySelectorAll('.sapUxAPObjectPageLayout, [data-sap-ui-area], .sapMPage, .sapFDynamicPage');
+            const tableEl = options.tableElement;
+            const elements = [tableEl, ...document.querySelectorAll('.sapUxAPObjectPageLayout, [data-sap-ui-area], .sapMPage, .sapFDynamicPage')].filter(Boolean);
             for (const el of elements) {
                 if (el.id) {
                     const ctrl = sap.ui.getCore().byId(el.id);
@@ -709,47 +710,8 @@ function setupPhotoEvidenceTableObserver() {
                             e.preventDefault();
                             e.stopPropagation();
                             e.stopImmediatePropagation();
-
-                            let parentId = null;
                             const table = section.querySelector('.sapMList, .sapMTable, .sapUiTable');
-                            if (table && table.id && window.sap && sap.ui && sap.ui.getCore) {
-                                const ui5Ctrl = sap.ui.getCore().byId(table.id);
-                                if (ui5Ctrl && ui5Ctrl.getBindingContext) {
-                                    const ctx = ui5Ctrl.getBindingContext();
-                                    if (ctx && ctx.getProperty) {
-                                        parentId = ctx.getProperty('ID');
-                                    }
-                                }
-                            }
-                            if (!parentId) {
-                                const fullUrl = decodeURIComponent(window.location.href || '');
-                                const uuidMatch = fullUrl.match(/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/i);
-                                if (uuidMatch && uuidMatch[1]) {
-                                    parentId = uuidMatch[1];
-                                }
-                            }
-
-                            // Robust entity type detection
-                            const fullUrl = decodeURIComponent(window.location.href);
-                            let detectedType = null;
-                            if (fullUrl.includes('RepairBills') || fullUrl.includes('damage-charge') || fullUrl.includes('damage charge') || fullUrl.includes('billing')) {
-                                detectedType = 'RepairBills';
-                            } else if (fullUrl.includes('ConditionLogs') || fullUrl.includes('inspection')) {
-                                detectedType = 'ConditionLogs';
-                            } else if (fullUrl.includes('DamageRecords')) {
-                                detectedType = 'DamageRecords';
-                            } else if (fullUrl.includes('RepairJobs') || fullUrl.includes('repair-jobs') || fullUrl.includes('repair')) {
-                                detectedType = 'RepairJobs';
-                            }
-
-                            window.openEvidencePhotoCaptureDialog({
-                                entityId: parentId,
-                                entityType: detectedType,
-                                repairJob_ID: detectedType === 'RepairJobs' ? parentId : null,
-                                repairBill_ID: detectedType === 'RepairBills' ? parentId : null,
-                                conditionLog_ID: detectedType === 'ConditionLogs' ? parentId : null,
-                                damage_ID: detectedType === 'DamageRecords' ? parentId : null
-                            });
+                            window.openEvidencePhotoCaptureDialog({ tableElement: table });
                         }, true);
                     }
                 });

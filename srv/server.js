@@ -41,7 +41,7 @@ cds.on('bootstrap', (app) => {
     // Custom /api routes are mounted before CAP's protocol adapters, so they don't get
     // CAP's auth by default. Run CAP's middlewares here too.
     // Allow /user-info and /live-kpis for any authenticated user so identity & launchpad load properly
-    const APP_ROLES = ['Admin', 'YardWorker', 'Technician', 'BillingClerk'];
+    const APP_ROLES = ['Admin', 'Manager', 'YardWorker', 'Technician', 'BillingClerk'];
     app.use('/api', cds.middlewares.before, (req, res, next) => {
         const user = cds.context.user;
         if (!user || user._is_anonymous) return res.sendStatus(401);
@@ -74,9 +74,7 @@ cds.on('bootstrap', (app) => {
         // Determine user identity
         const userId = tokenData?.user_name || tokenData?.email || tokenData?.user_id || req.user?.id || 'admin';
         const userEmail = tokenData?.email || req.user?.attr?.email || (userId.includes('@') ? userId : 'user@sap.com');
-        const givenName = tokenData?.given_name || req.user?.attr?.givenName;
-        const familyName = tokenData?.family_name || req.user?.attr?.familyName;
-        const displayName = givenName && familyName ? `${givenName} ${familyName}` : (tokenData?.user_name || userEmail);
+        const displayName = tokenData?.user_name || userEmail;
 
         // Extract scopes from decoded JWT
         const scopes = tokenData?.scope || [];
@@ -87,6 +85,8 @@ cds.on('bootstrap', (app) => {
 
         if (hasScope('Admin')) {
             role = 'Admin';
+        } else if (hasScope('Manager')) {
+            role = 'Manager';
         } else if (hasScope('Technician')) {
             role = 'Technician';
         } else if (hasScope('BillingClerk')) {
@@ -98,6 +98,7 @@ cds.on('bootstrap', (app) => {
         // Check req.user if tokenData was not present (e.g. local)
         if (!role && req.user && typeof req.user.is === 'function') {
             if (req.user.is('Admin')) role = 'Admin';
+            else if (req.user.is('Manager')) role = 'Manager';
             else if (req.user.is('Technician')) role = 'Technician';
             else if (req.user.is('BillingClerk')) role = 'BillingClerk';
             else if (req.user.is('YardWorker')) role = 'YardWorker';
