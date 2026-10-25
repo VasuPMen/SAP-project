@@ -12,6 +12,16 @@ cds.on('bootstrap', (app) => {
     // Redirect /app and /app/ to /index.html
     app.get(['/app', '/app/'], (req, res) => res.redirect('/index.html'));
 
+    // Handle logout routes so sprint-srv redirects cleanly to Approuter logout
+    app.get(['/my/logout', '/logout'], (req, res) => {
+        const host = req.get('host') || '';
+        if (host.includes('-srv.')) {
+            const approuterUrl = `https://${host.replace('-srv.', '.')}/my/logout`;
+            return res.redirect(approuterUrl);
+        }
+        res.redirect('/index.html');
+    });
+
     // Route any app Component.js request to the single shared app/Component.js
     app.get(['/:app/webapp/Component.js', '/:app/Component.js', '/Component.js'], (req, res, next) => {
         const sharedCompPath = path.resolve('app/Component.js');
@@ -43,9 +53,9 @@ cds.on('bootstrap', (app) => {
     // Allow /user-info and /live-kpis for any authenticated user so identity & launchpad load properly
     const APP_ROLES = ['Admin', 'Manager', 'YardWorker', 'Technician', 'BillingClerk'];
     app.use('/api', cds.middlewares.before, (req, res, next) => {
+        if (req.path === '/user-info' || req.path === '/live-kpis') return next();
         const user = cds.context.user;
         if (!user || user._is_anonymous) return res.sendStatus(401);
-        if (req.path === '/user-info' || req.path === '/live-kpis') return next();
         if (!APP_ROLES.some(role => user.is(role))) return res.sendStatus(403);
         next();
     });
@@ -72,9 +82,13 @@ cds.on('bootstrap', (app) => {
         }
 
         // Determine user identity
-        const userId = tokenData?.user_name || tokenData?.email || tokenData?.user_id || req.user?.id || 'admin';
-        const userEmail = tokenData?.email || req.user?.attr?.email || (userId.includes('@') ? userId : 'user@sap.com');
-        const displayName = tokenData?.user_name || userEmail;
+        const userEmail = tokenData?.email 
+            || (tokenData?.user_name && tokenData.user_name.includes('@') ? tokenData.user_name : null) 
+            || req.user?.attr?.email 
+            || 'mendaparavasu8483@gmail.com';
+
+        const userId = tokenData?.user_name || tokenData?.email || tokenData?.user_id || req.user?.id || userEmail;
+        const displayName = tokenData?.name || (tokenData?.given_name && tokenData?.family_name ? `${tokenData.given_name} ${tokenData.family_name}` : null) || userEmail;
 
         // Extract scopes from decoded JWT
         const scopes = tokenData?.scope || [];
@@ -233,16 +247,25 @@ cds.on('bootstrap', (app) => {
         try {
             const db = await cds.connect.to('db');
 
-            // 1. Customers
-            const customers = await db.run(SELECT.from('RentalEquipmentTrackingApp.Customers')) || [];
+            const safeQuery = async (entityName) => {
+                try {
+                    return (await db.run(SELECT.from(entityName))) || [];
+                } catch (e) {
+                    console.warn(`[live-kpis] Error querying ${entityName}:`, e.message);
+                    return [];
+                }
+            };
+
+            // 1. Customers (Master data)
+            const customers = await safeQuery('RentalEquipmentTrackingApp.Customers');
             const customersCount = customers.length;
 
-            // 2. Yard Locations
-            const locations = await db.run(SELECT.from('RentalEquipmentTrackingApp.Locations')) || [];
+            // 2. Yard & Depot Locations
+            const locations = await safeQuery('RentalEquipmentTrackingApp.Locations');
             const yardLocationsCount = locations.length;
 
-            // 3. Equipment Dataset
-            const equip = await db.run(SELECT.from('RentalEquipmentTrackingApp.Equipment')) || [];
+            // 3. Equipment Assets
+            const equip = await safeQuery('RentalEquipmentTrackingApp.Equipment');
             const totalAssets = equip.length;
             const availableCount = equip.filter(e => e.currentStatus === 'Available').length;
             const rentedAssets = equip.filter(e => e.currentStatus === 'RentedOut').length;
@@ -251,140 +274,65 @@ cds.on('bootstrap', (app) => {
             const equipmentInMaintenance = equip.filter(e => e.currentStatus === 'UnderMaintenance').length;
             const pendingInspectionCount = equip.filter(e => e.currentStatus === 'ReturnedPendingInspection' || e.currentStatus === 'Quarantined').length;
 
-            // 4. Rentals & Contracts
-            const rentals = await db.run(SELECT.from('RentalEquipmentTrackingApp.Rentals')) || [];
+            // 4. Rental Contracts
+            const rentals = await safeQuery('RentalEquipmentTrackingApp.Rentals');
             const totalContractsCreated = rentals.length;
             const today = new Date().toISOString().slice(0, 10);
 
             const runningContracts = rentals.filter(r => {
+                if (['Active', 'Booked'].includes(r.rentalStatus)) return true;
                 const finishDate = r.expectedReturnDate || r.actualReturnDate;
                 if (!finishDate) return true;
                 return finishDate >= today && !['Closed', 'Cancelled', 'Returned'].includes(r.rentalStatus);
             }).length;
 
             const finishedContracts = rentals.filter(r => {
+                if (['Closed', 'Returned'].includes(r.rentalStatus)) return true;
                 const finishDate = r.expectedReturnDate || r.actualReturnDate;
                 if (!finishDate) return false;
-                return finishDate < today || ['Closed', 'Returned'].includes(r.rentalStatus);
+                return finishDate < today;
             }).length;
 
-            // 5. Repair Jobs & Maintenance Records
-            const repairJobs = await db.run(SELECT.from('RentalEquipmentTrackingApp.RepairJobs')) || [];
+            // 5. Repair Jobs & Workshop Workorders
+            const repairJobs = await safeQuery('RentalEquipmentTrackingApp.RepairJobs');
             const activeRepairJobs = repairJobs.filter(j => ['Open', 'Assigned', 'InProgress'].includes(j.status)).length;
             const totalEquipmentInRepair = Math.max(equipmentInRepair, activeRepairJobs);
 
-            const maintenance = await db.run(SELECT.from('RentalEquipmentTrackingApp.MaintenanceRecords')) || [];
+            // 6. Preventive Maintenance Schedules
+            const maintenance = await safeQuery('RentalEquipmentTrackingApp.MaintenanceRecords');
             const activeMaintenance = maintenance.filter(m => ['Planned', 'InProgress'].includes(m.status)).length;
             const totalEquipmentInMaintenance = Math.max(equipmentInMaintenance, activeMaintenance);
 
-            // 6. Condition Logs (Daily Check-In & Check-Out Graph)
-            const logs = await db.run(SELECT.from('RentalEquipmentTrackingApp.ConditionLogs')) || [];
+            // 7. Condition Logs (Check-In & Check-Out Inspections)
+            const logs = await safeQuery('RentalEquipmentTrackingApp.ConditionLogs');
             const totalCheckIns = logs.filter(l => l.inspectionType === 'CheckIn').length;
             const totalCheckOuts = logs.filter(l => l.inspectionType === 'CheckOut').length;
 
-            // Build past 7-day timeline
-            const dateMap = {};
-            for (let i = 6; i >= 0; i--) {
-                const d = new Date();
-                d.setDate(d.getDate() - i);
-                const dStr = d.toISOString().slice(0, 10);
-                const label = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                dateMap[dStr] = { date: dStr, label, checkIns: 0, checkOuts: 0 };
-            }
-
-            let hasRecentLogs = false;
-            logs.forEach(l => {
-                if (!l.inspectionDate) return;
-                const dStr = (typeof l.inspectionDate === 'string' ? l.inspectionDate : new Date(l.inspectionDate).toISOString()).slice(0, 10);
-                if (dateMap[dStr]) {
-                    hasRecentLogs = true;
-                    if (l.inspectionType === 'CheckIn') dateMap[dStr].checkIns++;
-                    else if (l.inspectionType === 'CheckOut') dateMap[dStr].checkOuts++;
-                }
-            });
-
-            let dailyGraph = Object.values(dateMap);
-            if (!hasRecentLogs && logs.length > 0) {
-                const historicalMap = {};
-                logs.forEach(l => {
-                    const dStr = (typeof l.inspectionDate === 'string' ? l.inspectionDate : new Date(l.inspectionDate || Date.now()).toISOString()).slice(0, 10);
-                    if (!historicalMap[dStr]) {
-                        const d = new Date(dStr);
-                        const label = isNaN(d.getTime()) ? dStr : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                        historicalMap[dStr] = { date: dStr, label, checkIns: 0, checkOuts: 0 };
-                    }
-                    if (l.inspectionType === 'CheckIn') historicalMap[dStr].checkIns++;
-                    else if (l.inspectionType === 'CheckOut') historicalMap[dStr].checkOuts++;
-                });
-                const histDays = Object.values(historicalMap).sort((a, b) => a.date.localeCompare(b.date)).slice(-7);
-                if (histDays.length > 0) dailyGraph = histDays;
-            }
-
-            // 7. Repair Bills
-            const bills = await db.run(SELECT.from('RentalEquipmentTrackingApp.RepairBills')) || [];
+            // 8. Repair Bills & Financial Assessments
+            const bills = await safeQuery('RentalEquipmentTrackingApp.RepairBills');
             const pendingBills = bills.filter(b => b.billingStatus === 'PendingApproval' || b.billingStatus === 'Draft');
+            const pendingBillsCount = pendingBills.length;
             const totalPendingAmount = pendingBills.reduce((acc, b) => acc + Number(b.totalAmount || 0), 0);
 
-            // Fallback realistic metrics if table is unseeded in HANA Cloud
-            const finalCustomers = customersCount > 0 ? customersCount : 12;
-            const finalYardLocations = yardLocationsCount > 0 ? yardLocationsCount : 4;
-            const finalTotalAssets = totalAssets > 0 ? totalAssets : 36;
-            const finalRentedAssets = rentedAssets > 0 ? rentedAssets : 22;
-            const finalDamagedAssets = damagedAssets > 0 ? damagedAssets : 3;
-            const finalContractsCreated = totalContractsCreated > 0 ? totalContractsCreated : 45;
-            const finalRunningContracts = runningContracts > 0 ? runningContracts : 19;
-            const finalFinishedContracts = finishedContracts > 0 ? finishedContracts : 26;
-            const finalEquipmentInRepair = totalEquipmentInRepair > 0 ? totalEquipmentInRepair : 2;
-            const finalEquipmentInMaintenance = totalEquipmentInMaintenance > 0 ? totalEquipmentInMaintenance : 1;
-
-            if (dailyGraph.every(d => d.checkIns === 0 && d.checkOuts === 0)) {
-                const sampleDays = [
-                    { in: 4, out: 3 },
-                    { in: 5, out: 4 },
-                    { in: 3, out: 5 },
-                    { in: 6, out: 2 },
-                    { in: 7, out: 6 },
-                    { in: 2, out: 3 },
-                    { in: 4, out: 2 }
-                ];
-                dailyGraph.forEach((d, idx) => {
-                    d.checkIns = sampleDays[idx % sampleDays.length].in;
-                    d.checkOuts = sampleDays[idx % sampleDays.length].out;
-                });
-            }
-
-            const finalCheckIns = totalCheckIns > 0 ? totalCheckIns : dailyGraph.reduce((a, b) => a + b.checkIns, 0);
-            const finalCheckOuts = totalCheckOuts > 0 ? totalCheckOuts : dailyGraph.reduce((a, b) => a + b.checkOuts, 0);
-
-            console.log(`[live-kpis] Metrics -> Cust:${finalCustomers}, Loc:${finalYardLocations}, Assets:${finalTotalAssets}, Rented:${finalRentedAssets}, Damaged:${finalDamagedAssets}`);
+            console.log(`[live-kpis] Real DB Metrics -> Customers:${customersCount}, Locations:${yardLocationsCount}, TotalAssets:${totalAssets}, Rented:${rentedAssets}, Damaged:${damagedAssets}, Contracts:${totalContractsCreated}, Running:${runningContracts}, Finished:${finishedContracts}, InRepair:${totalEquipmentInRepair}, Maintenance:${totalEquipmentInMaintenance}, CheckIns:${totalCheckIns}, CheckOuts:${totalCheckOuts}`);
 
             res.json({
-                customersCount: finalCustomers,
-                yardLocationsCount: finalYardLocations,
-                totalAssets: finalTotalAssets,
-                rentedAssets: finalRentedAssets,
-                damagedAssets: finalDamagedAssets,
-                totalContractsCreated: finalContractsCreated,
-                runningContracts: finalRunningContracts,
-                finishedContracts: finalFinishedContracts,
-                equipmentInRepair: finalEquipmentInRepair,
-                equipmentInMaintenance: finalEquipmentInMaintenance,
-                dailyGraph,
-                totalCheckIns: finalCheckIns,
-                totalCheckOuts: finalCheckOuts,
-
-                // Legacy object mappings for backward compatibility
-                admin: {
-                    available: finalTotalAssets - finalRentedAssets - finalDamagedAssets,
-                    rented: finalRentedAssets,
-                    damaged: finalDamagedAssets,
-                    pendingAmount: totalPendingAmount || 12450
-                },
-                yard: {
-                    pendingInspection: pendingInspectionCount > 0 ? pendingInspectionCount : 2,
-                    totalCheckIns: finalCheckIns,
-                    totalCheckOuts: finalCheckOuts
-                }
+                customersCount,
+                yardLocationsCount,
+                totalAssets,
+                availableAssets: availableCount,
+                rentedAssets,
+                damagedAssets,
+                totalContractsCreated,
+                runningContracts,
+                finishedContracts,
+                equipmentInRepair: totalEquipmentInRepair,
+                equipmentInMaintenance: totalEquipmentInMaintenance,
+                totalCheckIns,
+                totalCheckOuts,
+                pendingBillsCount,
+                totalPendingAmount,
+                pendingInspectionCount
             });
         } catch (err) {
             console.error('[API /api/live-kpis] Error:', err);

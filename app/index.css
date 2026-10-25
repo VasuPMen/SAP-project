@@ -1,43 +1,33 @@
 :root {
-    --font-heading: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    --font-body: 'Inter', '72', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-heading: '72', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-body: '72', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
     /* Theme colors */
-    --sapShellBg: #0b1320;
+    --sapShellBg: #0b1a2d;
     --sapShellBorder: rgba(255, 255, 255, 0.08);
-    --sapShellGradient: linear-gradient(135deg, #0e1a2e 0%, #060c16 100%);
+    --sapShellGradient: linear-gradient(135deg, #0e1e38 0%, #081120 100%);
 
-    --bg-page: #f8fafc;
+    --bg-page: #f5f7fa;
     --bg-card: #ffffff;
-    --border-card: #e2e8f0;
-    --border-card-hover: #93c5fd;
+    --border-card: #d9e1e8;
+    --border-card-hover: #0070f2;
 
-    --text-primary: #0f172a;
-    --text-secondary: #475569;
+    --text-primary: #1d2d3e;
+    --text-secondary: #556b82;
     --text-muted: #64748b;
     --text-light: #94a3b8;
 
-    --primary: #0284c7;
-    --primary-hover: #0369a1;
+    --primary: #0070f2;
+    --primary-hover: #0056bd;
     --primary-light: #e0f2fe;
 
-    --success: #10b981;
-    --success-light: #ecfdf5;
-
-    --warning: #f59e0b;
-    --warning-light: #fffbeb;
-
-    --danger: #ef4444;
-    --danger-light: #fef2f2;
-
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
-    --shadow-md: 0 4px 12px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
-    --shadow-lg: 0 12px 24px -3px rgba(0, 0, 0, 0.08), 0 4px 8px -4px rgba(0, 0, 0, 0.04);
-    --shadow-glow: 0 0 24px rgba(14, 165, 233, 0.15);
+    --success: #107e3e;
+    --warning: #e9730c;
+    --danger: #bb0000;
 
     --radius-sm: 8px;
     --radius-md: 12px;
-    --radius-lg: 16px;
+    --radius-lg: 14px;
     --radius-xl: 20px;
 }
 
@@ -52,8 +42,8 @@
 body {
     background-color: var(--bg-page);
     background-image:
-        radial-gradient(at 100% 0%, rgba(2, 132, 199, 0.03) 0px, transparent 50%),
-        radial-gradient(at 0% 100%, rgba(16, 185, 129, 0.02) 0px, transparent 50%);
+        radial-gradient(at 100% 0%, rgba(0, 112, 242, 0.03) 0px, transparent 50%),
+        radial-gradient(at 0% 100%, rgba(16, 126, 62, 0.02) 0px, transparent 50%);
     color: var(--text-primary);
     min-height: 100vh;
     display: flex;
@@ -72,7 +62,6 @@ body.fiori-subapp-mode {
     background-color: var(--bg-page);
 }
 
-body.fiori-subapp-mode #login-view,
 body.fiori-subapp-mode #launchpad-view {
     display: none !important;
 }
@@ -92,7 +81,9 @@ body.fiori-subapp-mode .sapFDynamicPageFooter {
     z-index: 100 !important;
 }
 
-/* 2. SAP FIORI LAUNCHPAD MAIN */
+/* ==========================================================================
+   1. SAP FIORI SHELL HEADER
+   ========================================================================== */
 #launchpad-view {
     display: flex;
     flex-direction: column;
@@ -114,13 +105,13 @@ body.fiori-subapp-mode .sapFDynamicPageFooter {
     z-index: 1000;
     border-bottom: 1px solid var(--sapShellBorder);
     backdrop-filter: blur(16px);
-    gap: 0.75rem;
+    gap: 1rem;
 }
 
 .shell-brand {
     display: flex;
     align-items: center;
-    gap: 1.15rem;
+    gap: 0.85rem;
     flex: 1 1 auto;
     min-width: 0;
     overflow: hidden;
@@ -133,62 +124,128 @@ body.fiori-subapp-mode .sapFDynamicPageFooter {
     filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.3));
 }
 
-.shell-title {
+.shell-divider {
+    height: 24px;
+    width: 1px;
+    background: rgba(255, 255, 255, 0.18);
+    flex-shrink: 0;
+}
+
+.shell-title-group {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.shell-title-main {
     font-family: var(--font-heading);
-    font-size: 1.125rem;
+    font-size: 1.05rem;
     font-weight: 700;
     letter-spacing: -0.01em;
     color: #ffffff;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    min-width: 0;
     line-height: 1.25;
 }
 
-.shell-title-full {
-    display: inline;
-}
-
-.shell-title-short {
-    display: none;
+.shell-title-sub {
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
 }
 
 .shell-actions {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.85rem;
     flex-shrink: 0;
 }
 
 .user-capsule {
     display: flex;
     align-items: center;
+    gap: 0.75rem;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 999px;
+    padding: 0.25rem 0.95rem 0.25rem 0.35rem;
     flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.user-capsule:hover {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.28);
+}
+
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #0070f2 0%, #004fb0 100%);
+    color: #ffffff;
+    font-size: 0.82rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    flex-shrink: 0;
+    text-transform: uppercase;
+}
+
+.user-details {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+    line-height: 1.1;
+}
+
+.user-name {
+    font-family: var(--font-heading);
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #ffffff;
+    white-space: nowrap;
+    letter-spacing: -0.01em;
 }
 
 .user-role-tag {
-    background: #0070f2;
-    color: #ffffff;
-    font-size: 0.72rem;
-    font-weight: 800;
-    padding: 0.32rem 0.85rem;
-    border-radius: 999px;
+    font-family: var(--font-body);
+    font-size: 0.64rem;
+    font-weight: 700;
+    color: #90c7fe;
+    background: rgba(0, 112, 242, 0.24);
+    border: 1px solid rgba(144, 199, 254, 0.32);
+    padding: 1px 7px;
+    border-radius: 4px;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
-    border: 1px solid rgba(255, 255, 255, 0.2);
     white-space: nowrap;
-    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
 }
 
 .btn-shell {
-    background: rgba(239, 68, 68, 0.2);
+    background: rgba(239, 68, 68, 0.18);
     color: #ffffff;
-    border: 1px solid rgba(239, 68, 68, 0.4);
+    border: 1px solid rgba(239, 68, 68, 0.35);
     padding: 0.42rem 0.85rem;
     border-radius: var(--radius-sm);
-    font-size: 0.82rem;
+    font-size: 0.8rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
@@ -200,100 +257,18 @@ body.fiori-subapp-mode .sapFDynamicPageFooter {
 }
 
 .btn-shell:hover {
-    background: rgba(239, 68, 68, 0.35);
+    background: rgba(239, 68, 68, 0.32);
     border-color: rgba(239, 68, 68, 0.6);
     transform: translateY(-1px);
 }
 
-/* Responsive Topbar Rules */
-@media (max-width: 900px) {
-    .fiori-shell {
-        padding: 0 1.25rem;
-        min-height: 3.5rem;
-    }
-
-    .shell-brand {
-        gap: 0.85rem;
-    }
-
-    .shell-title {
-        font-size: 0.98rem;
-    }
-}
-
-@media (max-width: 640px) {
-    .fiori-shell {
-        padding: 0.4rem 0.75rem;
-        min-height: 3.25rem;
-        gap: 0.45rem;
-    }
-
-    .sap-logo {
-        height: 24px;
-    }
-
-    .shell-brand {
-        gap: 0.5rem;
-    }
-
-    .shell-title {
-        font-size: 0.88rem;
-    }
-
-    /* Switch to compact title on mobile to eliminate wrapping/overflow */
-    .shell-title-full {
-        display: none;
-    }
-
-    .shell-title-short {
-        display: inline;
-    }
-
-    .shell-actions {
-        gap: 0.4rem;
-    }
-
-    .user-role-tag {
-        font-size: 0.66rem;
-        padding: 0.22rem 0.55rem;
-        letter-spacing: 0.03em;
-    }
-
-    .btn-shell {
-        padding: 0.32rem 0.55rem;
-        font-size: 0.75rem;
-        gap: 0.25rem;
-    }
-}
-
-@media (max-width: 380px) {
-    .fiori-shell {
-        padding: 0.35rem 0.5rem;
-        gap: 0.35rem;
-    }
-
-    .sap-logo {
-        height: 20px;
-    }
-
-    .shell-title {
-        font-size: 0.78rem;
-    }
-
-    .btn-shell .btn-shell-text {
-        display: none;
-    }
-
-    .btn-shell {
-        padding: 0.28rem 0.45rem;
-        font-size: 0.75rem;
-    }
-}
-
+/* ==========================================================================
+   2. MAIN LAUNCHPAD CONTAINER
+   ========================================================================== */
 .launchpad-container {
-    max-width: 1420px;
+    max-width: 1480px;
     margin: 0 auto;
-    padding: 2.5rem 2.25rem 4rem;
+    padding: 2.25rem 2.25rem 4rem;
     width: 100%;
     flex: 1;
 }
@@ -305,346 +280,344 @@ body.fiori-subapp-mode .sapFDynamicPageFooter {
 }
 
 /* ==========================================================================
-   SAP FIORI HORIZON KPI GENERIC TILES
+   3. SAP FIORI KPI BANNER & GENERIC TILES
    ========================================================================== */
-.kpi-banner {
-    display: none;
-    grid-template-columns: repeat(auto-fill, minmax(185px, 1fr));
-    gap: 0.95rem;
-    margin-bottom: 2.25rem;
-}
-
-@media (max-width: 900px) {
-    .kpi-banner {
-        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-        gap: 0.75rem;
-    }
-}
-
-@media (max-width: 600px) {
-    .kpi-banner {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 0.65rem;
-    }
-}
-
-@media (max-width: 380px) {
-    .kpi-banner {
-        grid-template-columns: 1fr;
-    }
-}
-
-.fiori-kpi-tile {
-    background: #ffffff;
-    border: 1px solid #d9e1e8;
-    border-radius: 10px;
-    height: 112px;
-    padding: 0.85rem 1rem;
+.kpi-section-header {
     display: flex;
-    flex-direction: column;
+    align-items: center;
     justify-content: space-between;
-    text-decoration: none;
-    position: relative;
-    overflow: hidden;
-    cursor: pointer;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    box-sizing: border-box;
+    margin-bottom: 1rem;
 }
 
-/* Authentic SAP Fiori Horizon Semantic Top Accent */
-.fiori-kpi-tile::before {
-    content: '';
+.kpi-section-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #1d2d3e;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-family: var(--font-heading);
+}
+
+.kpi-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    background: #e0f2fe;
+    color: #0070f2;
+    padding: 3px 10px;
+    border-radius: 12px;
+    border: 1px solid #bae6fd;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.kpi-banner {
+    display: grid;
+    gap: 1.15rem;
+    margin-bottom: 2.5rem;
+    width: 100%;
+}
+
+/* Role-Tailored KPI Grid Layouts - Eliminates orphan hanging cards! */
+.kpi-banner.kpi-count-10 {
+    grid-template-columns: repeat(5, 1fr);
+}
+
+.kpi-banner.kpi-count-8 {
+    grid-template-columns: repeat(4, 1fr);
+}
+
+.kpi-banner.kpi-count-2 {
+    grid-template-columns: repeat(2, minmax(240px, 340px));
+    justify-content: start;
+}
+
+.kpi-banner.kpi-count-1 {
+    grid-template-columns: minmax(240px, 340px);
+    justify-content: start;
+}
+
+/* Native SAP Fiori GenericTile in KPI Banner */
+.kpi-banner .sapMGT {
+    margin: 0 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    height: 10.25rem !important;
+    border-radius: 12px !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+    border: 1px solid #d9e1e8 !important;
+    background: #ffffff !important;
+    position: relative !important;
+    overflow: hidden !important;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease !important;
+    cursor: pointer !important;
+}
+
+/* Fiori Horizon Semantic Colored Top Accent Bar */
+.kpi-banner .sapMGT::before {
+    content: "";
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
-    height: 3.5px;
-    background: #0070f2; /* SAP Fiori Horizon Blue (Info) */
-    transition: height 0.2s ease;
+    height: 4px;
+    z-index: 2;
+    background: #0070f2;
 }
 
-.fiori-kpi-tile.fiori-kpi-good::before {
-    background: #107e3e; /* SAP Fiori Positive Green */
+.kpi-banner .fiori-kpi-semantic-good::before {
+    background: #107e3e !important;
 }
 
-.fiori-kpi-tile.fiori-kpi-critical::before {
-    background: #df6e0c; /* SAP Fiori Warning Orange */
+.kpi-banner .fiori-kpi-semantic-critical::before {
+    background: #e9730c !important;
 }
 
-.fiori-kpi-tile.fiori-kpi-negative::before {
-    background: #bb0000; /* SAP Fiori Negative Red */
+.kpi-banner .fiori-kpi-semantic-error::before,
+.kpi-banner .fiori-kpi-semantic-negative::before {
+    background: #bb0000 !important;
 }
 
-.fiori-kpi-tile:hover {
-    border-color: #0070f2;
-    box-shadow: 0 4px 14px rgba(0, 112, 242, 0.16);
-    transform: translateY(-2px);
+.kpi-banner .fiori-kpi-semantic-neutral::before,
+.kpi-banner .fiori-kpi-semantic-info::before {
+    background: #0070f2 !important;
 }
 
-.fiori-kpi-tile:hover::before {
-    height: 4.5px;
+.kpi-banner .sapMGT:hover {
+    transform: translateY(-3px) !important;
+    box-shadow: 0 8px 20px rgba(0, 112, 242, 0.12) !important;
+    border-color: #0070f2 !important;
 }
 
-.fiori-kpi-top {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 0.5rem;
+.kpi-banner .sapMGT:focus {
+    outline: 2px solid #0070f2 !important;
+    outline-offset: 2px !important;
 }
 
-.fiori-kpi-headings {
-    display: flex;
-    flex-direction: column;
-    gap: 0.2rem;
-    min-width: 0;
+.kpi-banner .sapMGTHdrContent {
+    padding: 0.85rem 0.85rem 0.25rem !important;
 }
 
-.fiori-kpi-title {
-    font-family: '72', var(--font-heading), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    font-size: 0.84rem;
-    font-weight: 700;
-    color: #1d2d3e;
-    line-height: 1.25;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+.kpi-banner .sapMGTTitle {
+    font-family: var(--font-heading) !important;
+    font-size: 0.88rem !important;
+    font-weight: 700 !important;
+    color: #1d2d3e !important;
+    line-height: 1.25 !important;
 }
 
-.fiori-kpi-subtitle {
-    font-size: 0.68rem;
-    font-weight: 500;
-    color: #556b82;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+.kpi-banner .sapMGTSubTitle {
+    font-family: var(--font-body) !important;
+    font-size: 0.74rem !important;
+    color: #556b82 !important;
+    line-height: 1.2 !important;
 }
 
-/* SAP Fiori Icon Badge with Soft Semantic Tint */
-.fiori-kpi-icon-wrap {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    background: rgba(0, 112, 242, 0.08);
-    color: #0070f2;
-}
-
-.fiori-kpi-icon-wrap svg {
-    width: 17px;
-    height: 17px;
-    fill: currentColor;
-}
-
-.fiori-kpi-icon-wrap.fiori-icon-good {
-    background: rgba(16, 126, 62, 0.1);
-    color: #107e3e;
-}
-
-.fiori-kpi-icon-wrap.fiori-icon-critical {
-    background: rgba(223, 110, 12, 0.1);
-    color: #df6e0c;
-}
-
-.fiori-kpi-icon-wrap.fiori-icon-negative {
-    background: rgba(187, 0, 0, 0.1);
-    color: #bb0000;
-}
-
-.fiori-kpi-bottom {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    margin-top: auto;
-}
-
-.fiori-kpi-value {
-    font-family: '72', var(--font-heading), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    font-size: 1.95rem;
-    font-weight: 700;
-    color: #1d2d3e;
-    line-height: 1;
-    letter-spacing: -0.02em;
-    font-variant-numeric: tabular-nums;
-}
-
-.fiori-kpi-value.fiori-val-good {
-    color: #107e3e;
-}
-
-.fiori-kpi-value.fiori-val-critical {
-    color: #df6e0c;
-}
-
-.fiori-kpi-value.fiori-val-negative {
-    color: #bb0000;
+.kpi-banner .sapMNCValue {
+    font-family: var(--font-heading) !important;
+    font-weight: 700 !important;
 }
 
 /* ==========================================================================
-   TILE GROUPS & SECTION HEADERS
+   4. SAP FIORI BUSINESS APPLICATIONS GRID
    ========================================================================== */
 .tile-group {
     margin-bottom: 3.25rem;
     transition: all 0.2s;
 }
 
-
-
 .tiles-grid {
     display: grid;
+    gap: 1.25rem;
+    align-items: stretch;
+    width: 100%;
+}
+
+/* Role-Tailored Business Application Grid Layouts */
+.tiles-grid.apps-count-8 {
     grid-template-columns: repeat(4, 1fr);
-    gap: 1.5rem;
 }
 
-@media (max-width: 1200px) {
-    .tiles-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
+.tiles-grid.apps-count-4 {
+    grid-template-columns: repeat(4, 1fr);
 }
 
-@media (max-width: 650px) {
-    .tiles-grid {
-        grid-template-columns: 1fr;
-    }
+.tiles-grid.apps-count-2 {
+    grid-template-columns: repeat(2, minmax(280px, 400px));
+    justify-content: start;
 }
 
-/* ==========================================================================
-   CARDS / TILES (State-of-the-Art Enterprise UI)
-   ========================================================================== */
-.fiori-tile {
-    background: #ffffff;
-    border: 1px solid var(--border-card);
-    border-radius: var(--radius-lg);
-    padding: 1.5rem 1.6rem;
-    text-decoration: none;
-    color: inherit;
-    display: none;
-    flex-direction: column;
-    justify-content: space-between;
-    min-height: 205px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03), 0 4px 12px rgba(0, 0, 0, 0.02);
-    transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
-    position: relative;
-    overflow: hidden;
-    cursor: pointer;
+.tiles-grid.apps-count-1 {
+    grid-template-columns: minmax(300px, 420px);
+    justify-content: start;
 }
 
-.fiori-tile:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 16px 32px rgba(2, 132, 199, 0.12), 0 4px 8px rgba(0, 0, 0, 0.02);
-    border-color: var(--border-card-hover);
+/* SAPUI5 Native GenericTile in Business Applications Grid */
+.tiles-grid .sapMGT {
+    margin: 0 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    height: 11.75rem !important;
+    border-radius: 14px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+    border: 1px solid #d9e1e8 !important;
+    background: #ffffff !important;
+    position: relative !important;
+    overflow: hidden !important;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease !important;
+    cursor: pointer !important;
 }
 
-.fiori-tile::before {
-    content: '';
+/* Sleek Fiori Blue Top Accent Line */
+.tiles-grid .sapMGT::before {
+    content: "";
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     height: 3px;
-    background: linear-gradient(90deg, #0284c7 0%, #38bdf8 100%);
-    opacity: 0;
-    transition: opacity 0.25s;
+    background: linear-gradient(90deg, #0070f2 0%, #299cfd 100%);
+    z-index: 2;
 }
 
-.fiori-tile:hover::before {
-    opacity: 1;
+.tiles-grid .sapMGT:hover {
+    transform: translateY(-3px) !important;
+    box-shadow: 0 8px 24px rgba(0, 112, 242, 0.16) !important;
+    border-color: #0070f2 !important;
 }
 
-.tile-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.9rem;
+.tiles-grid .sapMGT:focus {
+    outline: 2px solid #0070f2 !important;
+    outline-offset: 2px !important;
 }
 
-.tile-icon-box {
-    width: 44px;
-    height: 44px;
-    border-radius: var(--radius-md);
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    display: flex;
+.tiles-grid .sapMGTHdrContent {
+    padding: 1rem 1rem 0.25rem !important;
+}
+
+.tiles-grid .sapMGTTitle {
+    font-family: var(--font-heading) !important;
+    font-size: 0.96rem !important;
+    font-weight: 700 !important;
+    color: #1d2d3e !important;
+    line-height: 1.3 !important;
+}
+
+.tiles-grid .sapMGTSubTitle {
+    font-family: var(--font-body) !important;
+    font-size: 0.78rem !important;
+    color: #556b82 !important;
+    line-height: 1.3 !important;
+    white-space: normal !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+}
+
+.fiori-app-tile-icon {
+    display: flex !important;
     align-items: center;
     justify-content: center;
-    font-size: 1.5rem;
-    transition: transform 0.25s;
+    margin-top: 0.5rem;
+    transition: transform 0.2s ease;
 }
 
-.fiori-tile:hover .tile-icon-box {
-    transform: scale(1.08);
-    background: var(--primary-light);
-    border-color: rgba(2, 132, 199, 0.3);
+.tiles-grid .sapMGT:hover .fiori-app-tile-icon {
+    transform: scale(1.12);
 }
 
-.tile-badge {
-    background: #f1f5f9;
-    color: #475569;
-    font-size: 0.72rem;
-    font-weight: 700;
-    padding: 0.3rem 0.65rem;
-    border-radius: 999px;
-    border: 1px solid #e2e8f0;
-    letter-spacing: 0.02em;
-}
-
-.tile-title {
-    font-family: var(--font-heading);
-    font-size: 1.15rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin-bottom: 0.5rem;
-    letter-spacing: -0.015em;
-    line-height: 1.35;
-}
-
-.tile-desc {
-    font-size: 0.88rem;
-    color: var(--text-secondary);
-    line-height: 1.55;
-    flex-grow: 1;
-    margin-bottom: 1.25rem;
-}
-
-.tile-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-top: 1px solid #f1f5f9;
-    padding-top: 0.85rem;
-    font-family: var(--font-heading);
-    font-size: 0.84rem;
-    font-weight: 700;
-    color: var(--primary);
-    transition: color 0.2s;
-}
-
-.tile-action-arrow {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    transition: transform 0.2s;
-}
-
-.fiori-tile:hover .tile-action-arrow {
-    transform: translateX(4px);
-    color: var(--primary-hover);
+.tiles-grid .sapMTCFooter {
+    font-family: var(--font-heading) !important;
+    font-size: 0.72rem !important;
+    font-weight: 700 !important;
+    color: #0070f2 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.04em !important;
 }
 
 /* ==========================================================================
-   FOOTER
+   5. RESPONSIVE BREAKPOINTS
    ========================================================================== */
-.fiori-footer {
-    background: #ffffff;
-    padding: 1.4rem 2.25rem;
-    font-size: 0.82rem;
-    color: var(--text-muted);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-top: 1px solid var(--border-card);
-    margin-top: auto;
+@media (max-width: 1200px) {
+    .kpi-banner.kpi-count-10 {
+        grid-template-columns: repeat(5, 1fr);
+    }
+    .tiles-grid.apps-count-8 {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+@media (max-width: 1080px) {
+    .kpi-banner.kpi-count-10 {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    .kpi-banner.kpi-count-8 {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    .tiles-grid.apps-count-8,
+    .tiles-grid.apps-count-4 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .fiori-shell {
+        padding: 0 1.25rem;
+        min-height: 3.5rem;
+    }
+
+    .shell-brand {
+        gap: 0.65rem;
+    }
+
+    .shell-title-main {
+        font-size: 0.95rem;
+    }
+
+    .shell-title-sub {
+        display: none;
+    }
+
+    .kpi-banner {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+
+    .tiles-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+@media (max-width: 540px) {
+    .fiori-shell {
+        padding: 0.4rem 0.75rem;
+        min-height: 3.25rem;
+    }
+
+    .sap-logo {
+        height: 24px;
+    }
+
+    .shell-title-main {
+        font-size: 0.84rem;
+    }
+
+    .user-name {
+        display: none;
+    }
+
+    .btn-shell .btn-shell-text {
+        display: none;
+    }
+
+    .kpi-banner {
+        grid-template-columns: 1fr !important;
+    }
+
+    .tiles-grid {
+        grid-template-columns: 1fr !important;
+    }
 }

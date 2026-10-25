@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 role: data.role || 'Guest',
                 name: data.name || data.id || 'User',
                 title: roleCfg.title || 'User',
-                avatar: data.name ? data.name.split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase() : (data.role ? data.role.substring(0, 2).toUpperCase() : 'US'),
+                avatar: (data.name && !data.name.includes('@')) ? data.name.split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase() : (data.email ? data.email[0].toUpperCase() : (data.name ? data.name[0].toUpperCase() : 'M')),
                 loginTime: new Date().toISOString()
             };
             localStorage.setItem('fiori_user_session', JSON.stringify(session));
@@ -36,149 +36,380 @@ function renderLaunchpadForSession(session) {
         launchpad.style.display = 'flex';
     }
 
-    const roleCfg = window.FIORI_ROLES_CONFIG[session.role] || window.FIORI_ROLES_CONFIG['Admin'];
+    const roleCfg = (window.FIORI_ROLES_CONFIG && window.FIORI_ROLES_CONFIG[session.role]) || { title: session.role || 'User', color: '#0070f2' };
 
-    // Header info (only show role badge, no user name)
+    // Header info (avatar, full name, role pill)
     const capsuleEl = document.getElementById('shell-user-capsule');
     if (capsuleEl) {
         capsuleEl.style.opacity = '1';
     }
+    const avatarEl = document.getElementById('shell-user-avatar');
+    if (avatarEl) {
+        avatarEl.textContent = session.avatar || (session.role ? session.role.substring(0, 2).toUpperCase() : 'US');
+    }
+    const nameEl = document.getElementById('shell-user-name');
+    if (nameEl) {
+        nameEl.textContent = session.name || session.username || 'User';
+    }
     const roleEl = document.getElementById('shell-user-role');
     if (roleEl) {
-        roleEl.textContent = session.role;
-        if (roleCfg && roleCfg.color) {
-            roleEl.style.backgroundColor = roleCfg.color;
-        }
+        roleEl.textContent = session.role || 'User';
     }
 
-    // Filter tiles by role
-    const tiles = document.querySelectorAll('.fiori-tile');
-    tiles.forEach(tile => {
-        const allowedRoles = (tile.getAttribute('data-roles') || '').split(',').map(s => s.trim());
-        tile.style.display = (session.role === 'Admin' || allowedRoles.includes(session.role)) ? 'flex' : 'none';
-    });
+    // Display Role-Tailored Business Application Cards (SAP Fiori GenericTiles)
+    renderRoleAppTiles(session.role);
 
     // Display Role-Tailored KPIs
     const roleKpis = ROLE_KPI_CONFIGS[session.role];
     const kpiBanner = document.getElementById('kpi-banner');
+    const kpiSectionHeader = document.getElementById('kpi-section-header');
     if (kpiBanner) {
         if (roleKpis && roleKpis.length > 0) {
             kpiBanner.style.display = 'grid';
-            if (roleKpis.length === 1) {
-                kpiBanner.classList.add('single-item');
-            } else {
-                kpiBanner.classList.remove('single-item');
-            }
+            if (kpiSectionHeader) kpiSectionHeader.style.display = 'flex';
             renderRoleKPIs(session.role);
         } else {
             kpiBanner.style.display = 'none';
+            if (kpiSectionHeader) kpiSectionHeader.style.display = 'none';
         }
     }
 }
 
 function handleLogout() {
     clearFioriSession();
-    // Redirect through Approuter logout endpoint to clear XSUAA session and return to SAP login
-    window.location.href = '/my/logout';
+    const host = window.location.host;
+    if (host.includes('-srv.')) {
+        window.location.href = window.location.protocol + '//' + host.replace('-srv.', '.') + '/my/logout';
+    } else {
+        window.location.href = '/my/logout';
+    }
 }
 
-// SAP Fiori SVG Icons for KPI GenericTiles
-const FIORI_ICONS = {
-    customer: '<svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>',
-    location: '<svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg>',
-    assets: '<svg viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9l1.96 2.5H17V9.5h2.5zm-1.5 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>',
-    rented: '<svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>',
-    alert: '<svg viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>',
-    contract: '<svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>',
-    running: '<svg viewBox="0 0 24 24"><path d="M6 2v6h.01L6 8.01 10 12l-4 4 .01.01H6V22h12v-5.99h-.01L18 16l-4-4 4-3.99-.01-.01H18V2H6zm10 14.5V20H8v-3.5l4-4 4 4zM12 11.5l-4-4V4h8v3.5l-4 4z"/></svg>',
-    finished: '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>',
-    repair: '<svg viewBox="0 0 24 24"><path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z"/></svg>',
-    maintenance: '<svg viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z"/></svg>',
-    checkin: '<svg viewBox="0 0 24 24"><path d="M19 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.89-2-2-2zm-7 14l-5-5h3V8h4v4h3l-5 5z"/></svg>',
-    checkout: '<svg viewBox="0 0 24 24"><path d="M19 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.89-2-2-2zm-2 10h-3v4h-4v-4H7l5-5 5 5z"/></svg>'
-};
-
-// Role-tailored KPI definitions (Clean Fiori Tiles with titles, subtitles, and semantic icons)
+// Official SAP Fiori GenericTile Configuration
 const ROLE_KPI_CONFIGS = {
     Admin: [
-        { key: 'customersCount', label: 'Customers', subtitle: 'Active Accounts', semantic: 'info', icon: 'customer', targetUrl: '/index.html?app=customer-management' },
-        { key: 'yardLocationsCount', label: 'Yard Locations', subtitle: 'Operational Yards', semantic: 'info', icon: 'location', targetUrl: '/index.html?app=locations' },
-        { key: 'totalAssets', label: 'Total Assets', subtitle: 'Fleet Inventory', semantic: 'info', icon: 'assets', targetUrl: '/index.html?app=fleet-overview' },
-        { key: 'rentedAssets', label: 'Rented Assets', subtitle: 'Currently On Rent', semantic: 'good', icon: 'rented', targetUrl: '/index.html?app=rentals' },
-        { key: 'damagedAssets', label: 'Damaged Assets', subtitle: 'Requires Action', semantic: 'negative', icon: 'alert', targetUrl: '/index.html?app=fleet-overview' },
-        { key: 'totalContractsCreated', label: 'Contracts Created', subtitle: 'Total Agreements', semantic: 'info', icon: 'contract', targetUrl: '/index.html?app=rentals' },
-        { key: 'runningContracts', label: 'Running Contracts', subtitle: 'Active Leases', semantic: 'good', icon: 'running', targetUrl: '/index.html?app=rentals' },
-        { key: 'finishedContracts', label: 'Finished Contracts', subtitle: 'Completed Terms', semantic: 'info', icon: 'finished', targetUrl: '/index.html?app=rentals' },
-        { key: 'equipmentInRepair', label: 'In Repair', subtitle: 'Workshop Bays', semantic: 'critical', icon: 'repair', targetUrl: '/index.html?app=repair-jobs' },
-        { key: 'equipmentInMaintenance', label: 'In Maintenance', subtitle: 'Scheduled Service', semantic: 'critical', icon: 'maintenance', targetUrl: '/index.html?app=maintenance-planner' }
+        { key: 'customersCount', label: 'Customers', subtitle: 'Active Accounts', valueColor: 'Neutral', sapIcon: 'sap-icon://customer', targetUrl: '/index.html?app=customer-management' },
+        { key: 'yardLocationsCount', label: 'Yard Locations', subtitle: 'Operational Yards', valueColor: 'Neutral', sapIcon: 'sap-icon://functional-location', targetUrl: '/index.html?app=locations' },
+        { key: 'totalAssets', label: 'Total Assets', subtitle: 'Fleet Inventory', valueColor: 'Neutral', sapIcon: 'sap-icon://product', targetUrl: '/index.html?app=fleet-overview' },
+        { key: 'rentedAssets', label: 'Rented Assets', subtitle: 'Currently On Rent', valueColor: 'Good', sapIcon: 'sap-icon://shipping-status', targetUrl: '/index.html?app=rentals' },
+        { key: 'damagedAssets', label: 'Damaged Assets', subtitle: 'Requires Action', valueColor: 'Error', sapIcon: 'sap-icon://alert', targetUrl: '/index.html?app=fleet-overview' },
+        { key: 'totalContractsCreated', label: 'Contracts Created', subtitle: 'Total Agreements', valueColor: 'Neutral', sapIcon: 'sap-icon://document-text', targetUrl: '/index.html?app=rentals' },
+        { key: 'runningContracts', label: 'Running Contracts', subtitle: 'Active Leases', valueColor: 'Good', sapIcon: 'sap-icon://in-progress', targetUrl: '/index.html?app=rentals' },
+        { key: 'finishedContracts', label: 'Finished Contracts', subtitle: 'Completed Terms', valueColor: 'Neutral', sapIcon: 'sap-icon://accept', targetUrl: '/index.html?app=rentals' },
+        { key: 'equipmentInRepair', label: 'In Repair', subtitle: 'Workshop Bays', valueColor: 'Critical', sapIcon: 'sap-icon://wrench', targetUrl: '/index.html?app=repair-jobs' },
+        { key: 'equipmentInMaintenance', label: 'In Maintenance', subtitle: 'Scheduled Service', valueColor: 'Critical', sapIcon: 'sap-icon://calendar', targetUrl: '/index.html?app=maintenance-planner' }
     ],
     Manager: [
-        { key: 'customersCount', label: 'Customers', subtitle: 'Active Accounts', semantic: 'info', icon: 'customer', targetUrl: '/index.html?app=customer-management' },
-        { key: 'yardLocationsCount', label: 'Yard Locations', subtitle: 'Operational Yards', semantic: 'info', icon: 'location', targetUrl: '/index.html?app=locations' },
-        { key: 'totalAssets', label: 'Total Assets', subtitle: 'Fleet Inventory', semantic: 'info', icon: 'assets', targetUrl: '/index.html?app=fleet-overview' },
-        { key: 'rentedAssets', label: 'Rented Assets', subtitle: 'Currently On Rent', semantic: 'good', icon: 'rented', targetUrl: '/index.html?app=rentals' },
-        { key: 'damagedAssets', label: 'Damaged Assets', subtitle: 'Requires Action', semantic: 'negative', icon: 'alert', targetUrl: '/index.html?app=fleet-overview' },
-        { key: 'totalContractsCreated', label: 'Contracts Created', subtitle: 'Total Agreements', semantic: 'info', icon: 'contract', targetUrl: '/index.html?app=rentals' },
-        { key: 'runningContracts', label: 'Running Contracts', subtitle: 'Active Leases', semantic: 'good', icon: 'running', targetUrl: '/index.html?app=rentals' },
-        { key: 'finishedContracts', label: 'Finished Contracts', subtitle: 'Completed Terms', semantic: 'info', icon: 'finished', targetUrl: '/index.html?app=rentals' }
+        { key: 'customersCount', label: 'Customers', subtitle: 'Active Accounts', valueColor: 'Neutral', sapIcon: 'sap-icon://customer', targetUrl: '/index.html?app=customer-management' },
+        { key: 'yardLocationsCount', label: 'Yard Locations', subtitle: 'Operational Yards', valueColor: 'Neutral', sapIcon: 'sap-icon://functional-location', targetUrl: '/index.html?app=locations' },
+        { key: 'totalAssets', label: 'Total Assets', subtitle: 'Fleet Inventory', valueColor: 'Neutral', sapIcon: 'sap-icon://product', targetUrl: '/index.html?app=fleet-overview' },
+        { key: 'rentedAssets', label: 'Rented Assets', subtitle: 'Currently On Rent', valueColor: 'Good', sapIcon: 'sap-icon://shipping-status', targetUrl: '/index.html?app=rentals' },
+        { key: 'damagedAssets', label: 'Damaged Assets', subtitle: 'Requires Action', valueColor: 'Error', sapIcon: 'sap-icon://alert', targetUrl: '/index.html?app=fleet-overview' },
+        { key: 'totalContractsCreated', label: 'Contracts Created', subtitle: 'Total Agreements', valueColor: 'Neutral', sapIcon: 'sap-icon://document-text', targetUrl: '/index.html?app=rentals' },
+        { key: 'runningContracts', label: 'Running Contracts', subtitle: 'Active Leases', valueColor: 'Good', sapIcon: 'sap-icon://in-progress', targetUrl: '/index.html?app=rentals' },
+        { key: 'finishedContracts', label: 'Finished Contracts', subtitle: 'Completed Terms', valueColor: 'Neutral', sapIcon: 'sap-icon://accept', targetUrl: '/index.html?app=rentals' }
     ],
     YardWorker: [
-        { key: 'totalCheckIns', label: 'Daily Check-Ins', subtitle: 'Received Today', semantic: 'good', icon: 'checkin', targetUrl: '/index.html?app=inspections' },
-        { key: 'totalCheckOuts', label: 'Daily Check-Outs', subtitle: 'Dispatched Today', semantic: 'info', icon: 'checkout', targetUrl: '/index.html?app=inspections' }
+        { key: 'totalCheckIns', label: 'Daily Check-Ins', subtitle: 'Received Today', valueColor: 'Good', sapIcon: 'sap-icon://inventory', targetUrl: '/index.html?app=inspections' },
+        { key: 'totalCheckOuts', label: 'Daily Check-Outs', subtitle: 'Dispatched Today', valueColor: 'Neutral', sapIcon: 'sap-icon://outbox', targetUrl: '/index.html?app=inspections' }
+    ],
+    Technician: [
+        { key: 'equipmentInRepair', label: 'In Repair', subtitle: 'Workshop Bays', valueColor: 'Critical', sapIcon: 'sap-icon://wrench', targetUrl: '/index.html?app=repair-jobs' },
+        { key: 'equipmentInMaintenance', label: 'In Maintenance', subtitle: 'Scheduled Service', valueColor: 'Critical', sapIcon: 'sap-icon://calendar', targetUrl: '/index.html?app=maintenance-planner' }
+    ],
+    BillingClerk: [
+        { key: 'damagedAssets', label: 'Damage Record', subtitle: 'Pending Review', valueColor: 'Error', sapIcon: 'sap-icon://alert', targetUrl: '/index.html?app=damage-charge-approval' },
+        { key: 'totalContractsCreated', label: 'Contracts', subtitle: 'Total Agreements', valueColor: 'Neutral', sapIcon: 'sap-icon://document-text', targetUrl: '/index.html?app=rentals' }
     ]
 };
 
 let cachedKPIData = null;
+let activeFioriTiles = [];
+let currentRenderedRole = null;
 
 function renderRoleKPIs(role) {
     const kpiBanner = document.getElementById('kpi-banner');
     if (!kpiBanner) return;
 
     const configs = ROLE_KPI_CONFIGS[role];
+    const kpiSectionHeader = document.getElementById('kpi-section-header');
+
     if (!configs || configs.length === 0) {
+        destroyActiveKpiTiles();
         kpiBanner.innerHTML = '';
         kpiBanner.style.display = 'none';
+        if (kpiSectionHeader) kpiSectionHeader.style.display = 'none';
         return;
     }
 
-    let html = '';
-    configs.forEach(cfg => {
-        const val = cachedKPIData ? (cachedKPIData[cfg.key] ?? 0) : '...';
-        const semantic = cfg.semantic || 'info';
-        const iconSvg = FIORI_ICONS[cfg.icon] || FIORI_ICONS.assets;
+    if (kpiSectionHeader) kpiSectionHeader.style.display = 'flex';
+    kpiBanner.style.display = 'grid';
+    kpiBanner.className = 'kpi-banner kpi-count-' + configs.length;
 
-        html += `
-            <div class="fiori-kpi-tile fiori-kpi-${semantic}" onclick="window.location.href='${cfg.targetUrl}'" title="${cfg.label} - ${cfg.subtitle}">
-                <div class="fiori-kpi-top">
-                    <div class="fiori-kpi-headings">
-                        <span class="fiori-kpi-title">${cfg.label}</span>
-                        <span class="fiori-kpi-subtitle">${cfg.subtitle}</span>
-                    </div>
-                    <div class="fiori-kpi-icon-wrap fiori-icon-${semantic}">
-                        ${iconSvg}
-                    </div>
-                </div>
-                <div class="fiori-kpi-bottom">
-                    <span class="fiori-kpi-value fiori-val-${semantic}">${val}</span>
-                </div>
-            </div>
-        `;
-    });
+    if (window.sap && sap.ui && sap.ui.require) {
+        sap.ui.require([
+            'sap/m/GenericTile',
+            'sap/m/TileContent',
+            'sap/m/NumericContent'
+        ], function (GenericTile, TileContent, NumericContent) {
+            if (activeFioriTiles.length === configs.length && currentRenderedRole === role) {
+                configs.forEach((cfg, idx) => {
+                    const item = activeFioriTiles[idx];
+                    if (item && item.numericControl) {
+                        const val = cachedKPIData ? String(cachedKPIData[cfg.key] ?? 0) : '0';
+                        item.numericControl.setValue(val);
+                    }
+                });
+                return;
+            }
 
-    kpiBanner.innerHTML = html;
+            destroyActiveKpiTiles();
+            kpiBanner.innerHTML = '';
+
+            configs.forEach(cfg => {
+                const val = cachedKPIData ? String(cachedKPIData[cfg.key] ?? 0) : '...';
+                
+                const oNumericContent = new NumericContent({
+                    value: val,
+                    valueColor: cfg.valueColor || 'Neutral',
+                    icon: cfg.sapIcon,
+                    withMargin: false
+                });
+
+                const oTileContent = new TileContent({
+                    footer: '',
+                    content: oNumericContent
+                });
+
+                const oGenericTile = new GenericTile({
+                    header: cfg.label,
+                    subheader: cfg.subtitle,
+                    frameType: 'OneByOne',
+                    tileContent: [oTileContent],
+                    press: function () {
+                        window.location.href = cfg.targetUrl;
+                    }
+                });
+
+                const semanticType = (cfg.valueColor || 'neutral').toLowerCase();
+                oGenericTile.addStyleClass('fiori-enterprise-kpi');
+                oGenericTile.addStyleClass('fiori-kpi-semantic-' + semanticType);
+                oGenericTile.placeAt('kpi-banner');
+
+                activeFioriTiles.push({
+                    tile: oGenericTile,
+                    numericControl: oNumericContent,
+                    config: cfg
+                });
+            });
+
+            currentRenderedRole = role;
+        });
+    }
 }
+
+function destroyActiveKpiTiles() {
+    if (activeFioriTiles && activeFioriTiles.length > 0) {
+        activeFioriTiles.forEach(item => {
+            if (item.tile && item.tile.destroy) {
+                item.tile.destroy();
+            }
+        });
+        activeFioriTiles = [];
+    }
+    currentRenderedRole = null;
+}
+
+// ==========================================================================
+// SAP FIORI APPLICATION LAUNCHER TILES (GenericTiles for All Roles)
+// ==========================================================================
+const APP_TILES_CONFIG = [
+    {
+        id: 'customer-management',
+        title: 'Customer Management',
+        subtitle: 'Master Data & Accounts',
+        badge: 'Master Data',
+        desc: 'Register new corporate rental customers, manage contact persons, view site addresses, and review active agreements.',
+        sapIcon: 'sap-icon://customer-and-supplier',
+        targetUrl: '/index.html?app=customer-management'
+    },
+    {
+        id: 'locations',
+        title: 'Depot & Yard Locations',
+        subtitle: 'Depot & Yard Facilities',
+        badge: 'Depot / Yard',
+        desc: 'Maintain depot facilities, regional yard locations, on-site workshops, and GPS geo-fenced coordinates.',
+        sapIcon: 'sap-icon://functional-location',
+        targetUrl: '/index.html?app=locations'
+    },
+    {
+        id: 'fleet-overview',
+        title: 'Fleet Overview & Assets',
+        subtitle: 'Fleet Inventory & Telemetry',
+        badge: 'Fleet Overview',
+        desc: 'Track equipment availability, operational telemetry, condition grades (A-D), and active allocations across depots.',
+        sapIcon: 'sap-icon://shipping-status',
+        targetUrl: '/index.html?app=fleet-overview'
+    },
+    {
+        id: 'rentals',
+        title: 'Rental Contracts & Allocations',
+        subtitle: 'Contracts & Dispatch',
+        badge: 'Contracts',
+        desc: 'Create rental contracts, reserve equipment assets, schedule delivery periods, and trigger check-out dispatch.',
+        sapIcon: 'sap-icon://document-text',
+        targetUrl: '/index.html?app=rentals'
+    },
+    {
+        id: 'inspections',
+        title: 'Equipment Inspections',
+        subtitle: 'Check-In/Out Audit & Return',
+        badge: 'Audit & Return',
+        desc: 'Capture check-out and return condition logs, record meter readings, assign grades (A-D), and lock audit reports.',
+        sapIcon: 'sap-icon://survey',
+        targetUrl: '/index.html?app=inspections'
+    },
+    {
+        id: 'damage-charge-approval',
+        title: 'Damage Record',
+        subtitle: 'Assessments & Repair Billing',
+        badge: 'Damage Worklist',
+        desc: 'Review automated repair bills with damage particulars, inspect photo evidence, and approve customer repair charges.',
+        sapIcon: 'sap-icon://money-bills',
+        targetUrl: '/index.html?app=damage-charge-approval'
+    },
+    {
+        id: 'repair-jobs',
+        title: 'Workshop Repair Jobs',
+        subtitle: 'Workshop Bays & Labor',
+        badge: 'Workshop',
+        desc: 'Dispatch damage repair jobs, capture technician hours & parts cost, and attach before/after photo evidence.',
+        sapIcon: 'sap-icon://wrench',
+        targetUrl: '/index.html?app=repair-jobs'
+    },
+    {
+        id: 'maintenance-planner',
+        title: 'Maintenance Planner',
+        subtitle: 'Preventive PM Schedules',
+        badge: 'Preventive PM',
+        desc: 'Track scheduled 250h/500h preventive services, calibration routines, service intervals, and provider costs.',
+        sapIcon: 'sap-icon://calendar',
+        targetUrl: '/index.html?app=maintenance-planner'
+    }
+];
+
+let activeFioriAppTiles = [];
+let currentAppTilesRole = null;
+
+function renderRoleAppTiles(role) {
+    const grid = document.getElementById('apps-tiles-grid');
+    if (!grid) return;
+
+    const allowedApps = (window.FIORI_ROLES_CONFIG && window.FIORI_ROLES_CONFIG[role] && window.FIORI_ROLES_CONFIG[role].apps)
+        || ['customer-management', 'rentals', 'locations', 'fleet-overview', 'inspections', 'damage-charge-approval', 'repair-jobs', 'maintenance-planner'];
+
+    const filteredApps = APP_TILES_CONFIG.filter(app => role === 'Admin' || allowedApps.includes(app.id));
+
+    if (window.sap && sap.ui && sap.ui.require) {
+        sap.ui.require([
+            'sap/m/GenericTile',
+            'sap/m/TileContent',
+            'sap/ui/core/Icon'
+        ], function (GenericTile, TileContent, Icon) {
+            if (activeFioriAppTiles.length === filteredApps.length && currentAppTilesRole === role) {
+                return;
+            }
+
+            destroyActiveAppTiles();
+            grid.innerHTML = '';
+            grid.className = 'tiles-grid apps-count-' + filteredApps.length;
+
+            filteredApps.forEach(cfg => {
+                const oIcon = new Icon({
+                    src: cfg.sapIcon,
+                    size: '2.4rem',
+                    color: '#0070f2'
+                });
+                oIcon.addStyleClass('fiori-app-tile-icon');
+
+                const oTileContent = new TileContent({
+                    footer: cfg.badge,
+                    content: oIcon
+                });
+
+                const oGenericTile = new GenericTile({
+                    header: cfg.title,
+                    subheader: cfg.subtitle,
+                    frameType: 'OneByOne',
+                    tileContent: [oTileContent],
+                    tooltip: cfg.desc,
+                    press: function () {
+                        window.location.href = cfg.targetUrl;
+                    }
+                });
+
+                oGenericTile.addStyleClass('fiori-enterprise-app-tile');
+                oGenericTile.placeAt('apps-tiles-grid');
+
+                activeFioriAppTiles.push(oGenericTile);
+            });
+
+            currentAppTilesRole = role;
+        });
+    }
+}
+
+function destroyActiveAppTiles() {
+    if (activeFioriAppTiles && activeFioriAppTiles.length > 0) {
+        activeFioriAppTiles.forEach(tile => {
+            if (tile && tile.destroy) {
+                tile.destroy();
+            }
+        });
+        activeFioriAppTiles = [];
+    }
+    currentAppTilesRole = null;
+}
+
+// Hook SAPUI5 Core lifecycle to automatically upgrade to GenericTiles as soon as UI5 initializes
+function hookUi5Initialization() {
+    function onInit() {
+        const session = getFioriSession();
+        const role = (session && session.role) || 'Admin';
+        renderRoleKPIs(role);
+        renderRoleAppTiles(role);
+    }
+
+    if (window.sap && sap.ui && sap.ui.getCore) {
+        if (sap.ui.getCore().isInitialized()) {
+            onInit();
+        } else {
+            sap.ui.getCore().attachInit(onInit);
+        }
+    } else {
+        const timer = setInterval(() => {
+            if (window.sap && sap.ui && sap.ui.getCore) {
+                clearInterval(timer);
+                sap.ui.getCore().attachInit(onInit);
+            }
+        }, 100);
+        setTimeout(() => clearInterval(timer), 6000);
+    }
+}
+hookUi5Initialization();
 
 async function loadLiveKPIData() {
     try {
-        const res = await fetch('/api/live-kpis');
+        const res = await fetch('/api/live-kpis', { cache: 'no-store' });
         if (res.ok) {
             cachedKPIData = await res.json();
             const session = getFioriSession();
-            if (session && ROLE_KPI_CONFIGS[session.role]) {
-                renderRoleKPIs(session.role);
-            }
+            const role = (session && session.role) || 'Admin';
+            renderRoleKPIs(role);
         }
     } catch (err) {
         console.log('KPI load info:', err.message);
     }
 }
+setInterval(loadLiveKPIData, 30000);
+
