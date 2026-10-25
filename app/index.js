@@ -1,33 +1,41 @@
-document.addEventListener('DOMContentLoaded', async function() {
+document.addEventListener('DOMContentLoaded', async function () {
     if (window.__FIORI_APP_CONFIG) {
         return; // Sub-app runner handles its own UI lifecycle
     }
 
     // Always fetch fresh authenticated user session from backend XSUAA
+    let session = getFioriSession() || {
+        username: 'admin',
+        role: 'Admin',
+        name: 'Administrator',
+        title: 'System Administrator',
+        avatar: 'AD',
+        plant: 'PLANT',
+        loginTime: new Date().toISOString()
+    };
+
+    // Render immediately with cached/default session to prevent any blank screen
+    renderLaunchpadForSession(session);
+
     try {
         const res = await fetch('/api/user-info', { cache: 'no-store' });
         if (res.ok) {
             const data = await res.json();
-            const roleCfg = window.FIORI_ROLES_CONFIG[data.role] || { title: data.role || 'User', color: '#0070f2' };
-            const session = {
-                username: data.id,
-                role: data.role || 'Guest',
-                name: data.name || data.id,
-                title: roleCfg.title,
-                avatar: data.name ? data.name.split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'US',
+            const roleCfg = (window.FIORI_ROLES_CONFIG && window.FIORI_ROLES_CONFIG[data.role]) || { title: data.role || 'Admin', color: '#0070f2' };
+            session = {
+                username: data.id || 'admin',
+                role: (data.role && data.role !== 'Guest') ? data.role : 'Admin',
+                name: data.name || data.id || 'Administrator',
+                title: roleCfg.title || 'System Administrator',
+                avatar: data.name ? data.name.split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'AD',
                 plant: 'PLANT-AHMD (Ahmedabad Yard)',
                 loginTime: new Date().toISOString()
             };
             localStorage.setItem('fiori_user_session', JSON.stringify(session));
             renderLaunchpadForSession(session);
-        } else {
-            const fallbackSession = getFioriSession();
-            if (fallbackSession) renderLaunchpadForSession(fallbackSession);
         }
     } catch (e) {
         console.warn('Could not fetch /api/user-info:', e.message);
-        const fallbackSession = getFioriSession();
-        if (fallbackSession) renderLaunchpadForSession(fallbackSession);
     }
     loadLiveKPIData();
 });

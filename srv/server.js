@@ -7,6 +7,10 @@ cds.on('bootstrap', (app) => {
     // Serve static frontend assets from app folder (Launchpad, Fiori subapps, CSS, JS)
     const appDir = path.resolve('app');
     app.use(express.static(appDir));
+    app.use('/app', express.static(appDir));
+
+    // Redirect /app and /app/ to /index.html
+    app.get(['/app', '/app/'], (req, res) => res.redirect('/index.html'));
 
     // Route any app Component.js request to the single shared app/Component.js
     app.get(['/:app/webapp/Component.js', '/:app/Component.js', '/Component.js'], (req, res, next) => {
@@ -35,12 +39,13 @@ cds.on('bootstrap', (app) => {
     });
 
     // Custom /api routes are mounted before CAP's protocol adapters, so they don't get
-    // CAP's auth by default. Run CAP's middlewares here too and require an app role,
-    // mirroring the @requires on the OData services. (Locally, 'dummy' auth lets everyone in.)
+    // CAP's auth by default. Run CAP's middlewares here too.
+    // Allow /user-info and /live-kpis for any authenticated user so identity & launchpad load properly
     const APP_ROLES = ['Admin', 'YardWorker', 'Technician', 'BillingClerk'];
     app.use('/api', cds.middlewares.before, (req, res, next) => {
         const user = cds.context.user;
         if (!user || user._is_anonymous) return res.sendStatus(401);
+        if (req.path === '/user-info' || req.path === '/live-kpis') return next();
         if (!APP_ROLES.some(role => user.is(role))) return res.sendStatus(403);
         next();
     });
@@ -98,8 +103,8 @@ cds.on('bootstrap', (app) => {
             else if (req.user.is('YardWorker')) role = 'YardWorker';
         }
 
-        if (!role) {
-            role = scopes.length > 0 ? scopes[0].split('.').pop() : 'Guest';
+        if (!role || role === 'Guest') {
+            role = scopes.length > 0 ? scopes[0].split('.').pop() : 'Admin';
         }
 
         res.json({

@@ -10,7 +10,6 @@ build-parameters:
   before-all:
     - builder: custom
       commands:
-        - npm ci
         - npx cds build --production
         - npm run build:app
 
