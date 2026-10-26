@@ -81,18 +81,32 @@ cds.on('bootstrap', (app) => {
             }
         }
 
-        // Determine user identity
-        const userEmail = tokenData?.email 
-            || (tokenData?.user_name && tokenData.user_name.includes('@') ? tokenData.user_name : null) 
-            || req.user?.attr?.email 
-            || 'mendaparavasu8483@gmail.com';
+        // Extract user email from all possible token claims and request attributes
+        const emailFromToken = tokenData?.email 
+            || tokenData?.mail 
+            || (typeof tokenData?.user_name === 'string' && tokenData.user_name.includes('@') ? tokenData.user_name : null)
+            || (typeof tokenData?.user_id === 'string' && tokenData.user_id.includes('@') ? tokenData.user_id : null);
 
-        const userId = tokenData?.user_name || tokenData?.email || tokenData?.user_id || req.user?.id || userEmail;
-        const displayName = tokenData?.name || (tokenData?.given_name && tokenData?.family_name ? `${tokenData.given_name} ${tokenData.family_name}` : null) || userEmail;
+        const emailFromReqUser = (Array.isArray(req.user?.attr?.email) ? req.user.attr.email[0] : req.user?.attr?.email)
+            || (typeof req.user?.id === 'string' && req.user.id.includes('@') ? req.user.id : null);
+
+        const cdsUserEmail = cds.context?.user?.attr?.email
+            ? (Array.isArray(cds.context.user.attr.email) ? cds.context.user.attr.email[0] : cds.context.user.attr.email)
+            : (typeof cds.context?.user?.id === 'string' && cds.context.user.id.includes('@') ? cds.context.user.id : null);
+
+        const userEmail = emailFromToken 
+            || emailFromReqUser 
+            || cdsUserEmail 
+            || tokenData?.user_name 
+            || tokenData?.user_id 
+            || req.user?.id ;
+
+        const userId = tokenData?.user_name || tokenData?.user_id || req.user?.id || userEmail;
+        const displayName = userEmail; // Always show the logged-in mail ID for all roles
 
         // Extract scopes from decoded JWT
         const scopes = tokenData?.scope || [];
-        console.log(`[user-info] Token scopes for ${userId}:`, scopes);
+        console.log(`[user-info] Token scopes for ${userId} (${userEmail}):`, scopes);
 
         let role = null;
         const hasScope = (name) => scopes.some(s => s.toLowerCase().endsWith('.' + name.toLowerCase()) || s.toLowerCase() === name.toLowerCase());
