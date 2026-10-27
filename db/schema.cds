@@ -172,22 +172,10 @@ entity Equipment : cuid, managed {
                               on maintenance.equipment = $self;
     conditionLogs       : Association to many ConditionLogs
                               on conditionLogs.equipment = $self;
-    transfers           : Association to many EquipmentTransfers
-                              on transfers.equipment = $self;
     locationEvents      : Association to many LocationEvents
                               on locationEvents.equipment = $self;
     repairJobs          : Association to many RepairJobs
                               on repairJobs.equipment = $self;
-    statusHistory       : Association to many AssetStatusHistory
-                              on statusHistory.equipment = $self;
-};
-
-entity EquipmentTransfers : cuid, managed {
-    equipment    : Association to Equipment @mandatory;
-    fromLocation : Association to Locations;
-    toLocation   : Association to Locations @mandatory;
-    transferDate : DateTime                 @cds.on.insert: $now;
-    reason       : String(255);
 };
 
 entity LocationEvents : cuid, managed {
@@ -199,22 +187,13 @@ entity LocationEvents : cuid, managed {
     recordedBy : String(100);
 };
 
-entity AssetStatusHistory : cuid {
-    equipment : Association to Equipment @mandatory;
-    oldStatus : EquipmentStatus;
-    newStatus : EquipmentStatus;
-    changedAt : Timestamp                @cds.on.insert: $now;
-    changedBy : String(100)              @cds.on.insert: $user;
-    reason    : String(255);
-};
-
 /* ==========================================================================
    TRANSACTIONAL: RENTALS & CONTRACTS
    ========================================================================== */
 
 entity Rentals : cuid, managed {
     contractNo         : String(50)                   @mandatory                    @title : 'Contract Number';
-    customer           : Association to Customers     @mandatory                    @utitle: 'Customer / Client';
+    customer           : Association to Customers     @mandatory                    @title : 'Customer / Client';
     rentalDate         : Date                         @mandatory                    @title : 'Rental Start Date';
     expectedReturnDate : Date                         @mandatory                    @title : 'Expected Return Date';
     actualReturnDate   : Date                         @title: 'Actual Return Date'  @UI.Hidden;
@@ -222,8 +201,6 @@ entity Rentals : cuid, managed {
     totalRentalAmount  : Money                        @title: 'Total Contract Value ($)';
     items              : Composition of many RentalItems
                              on items.rental = $self;
-    statusHistory      : Association to many RentalStatusHistory
-                             on statusHistory.rental = $self;
     conditionLogs      : Association to many ConditionLogs
                              on conditionLogs.rental = $self;
 };
@@ -235,14 +212,6 @@ entity RentalItems : cuid, managed {
     startDate       : Date                         @title: 'Start Date';
     endDate         : Date                         @title: 'End Date';
     itemStatus      : ItemStatus default #Reserved @title: 'Item Status';
-};
-
-entity RentalStatusHistory : cuid {
-    rental    : Association to Rentals @mandatory;
-    oldStatus : RentalStatus;
-    newStatus : RentalStatus;
-    changedAt : Timestamp              @cds.on.insert: $now;
-    changedBy : String(100)            @cds.on.insert: $user;
 };
 
 /* ==========================================================================
@@ -338,7 +307,7 @@ entity RepairJobs : cuid, managed {
 };
 
 /* ==========================================================================
-   FINANCIAL: REPAIR BILLING & PRICING RULES
+   FINANCIAL: REPAIR BILLING
    ========================================================================== */
 
 entity RepairBills : cuid, managed {
@@ -366,29 +335,3 @@ entity RepairBills : cuid, managed {
     invoiceNo         : String(50)                   @title: 'Invoice Number';
 };
 
-entity PricingRules : cuid, managed {
-    damageType       : String(50)     @mandatory  @title: 'Damage Category';
-    severity         : Severity       @mandatory  @title: 'Severity Level';
-    baseCharge       : Money          @mandatory  @title: 'Base Diagnostic Fee ($)';
-    partsCharge      : Money          @title: 'Standard Parts ($)';
-    labourRate       : Decimal(10, 2) @title: 'Labour Rate ($/hr)';
-    paintingCharge   : Money          @title: 'Painting Surcharge ($)';
-    taxPercent       : Decimal(5, 2)  @title: 'Tax Percentage (%)';
-    autoApproveLimit : Money          @title: 'Auto-Approve Threshold ($)';
-};
-
-/* ==========================================================================
-   INTEGRATION & OUTBOX MONITORING
-   ========================================================================== */
-
-entity IntegrationMessages : cuid, managed {
-    messageType     : String(100) @mandatory; // e.g. Damage Billing Request
-    reference       : String(100) @mandatory; // e.g. RENT-10001
-    targetSystem    : String(50) default 'SAP HANA';
-    status          : String(20) default 'Pending'; // Success, Pending, Failed
-    billingDocument : String(50); // e.g. 9000123456
-    payload         : LargeString;
-    errorMessage    : String(500);
-    retryCount      : Integer default 0;
-    lastAttemptAt   : Timestamp;
-};

@@ -154,21 +154,3 @@ annotate RentalService.Equipment with {
     longitude           @UI.Hidden: true;
 };
 
-annotate RentalService.EquipmentTransfers with @(
-    UI.LineItem: [
-        { Value: transferDate, Label: 'Transfer Date' },
-        { Value: fromLocation.locationName, Label: 'From Location' },
-        { Value: toLocation.locationName, Label: 'To Location' },
-        { Value: reason, Label: 'Reason for Transfer' }
-    ]
-);
-
-annotate RentalService.AssetStatusHistory with @(
-    UI.LineItem: [
-        { Value: changedAt, Label: 'Timestamp' },
-        { Value: oldStatus, Label: 'Previous Status' },
-        { Value: newStatus, Label: 'New Status' },
-        { Value: changedBy, Label: 'Changed By' },
-        { Value: reason, Label: 'Audit Reason' }
-    ]
-);

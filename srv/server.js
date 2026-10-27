@@ -82,10 +82,9 @@ cds.on('bootstrap', (app) => {
         }
 
         // Determine user identity
-        const userEmail = tokenData?.email 
-            || (tokenData?.user_name && tokenData.user_name.includes('@') ? tokenData.user_name : null) 
-            || req.user?.attr?.email 
-            || 'mendaparavasu8483@gmail.com';
+        const userEmail = tokenData?.email
+            || (tokenData?.user_name && tokenData.user_name.includes('@') ? tokenData.user_name : null)
+            || req.user?.attr?.email
 
         const userId = tokenData?.user_name || tokenData?.email || tokenData?.user_id || req.user?.id || userEmail;
         const displayName = tokenData?.name || (tokenData?.given_name && tokenData?.family_name ? `${tokenData.given_name} ${tokenData.family_name}` : null) || userEmail;

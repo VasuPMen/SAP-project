@@ -95,7 +95,6 @@ annotate RentalService.Rentals with {
     actualReturnDate   @title: 'Actual Return Date'    @Common.Label: 'Actual Return Date' @UI.Hidden: true;
     rentalStatus       @title: 'Contract Status'       @Common.Label: 'Contract Status';
     totalRentalAmount  @title: 'Total Contract Value ($)' @Common.Label: 'Total Contract Value ($)';
-    statusHistory      @UI.Hidden: true;
     conditionLogs      @UI.Hidden: true;
 };
 
@@ -106,8 +105,6 @@ annotate RentalService.Customers with {
     phone         @mandatory @title: 'Phone / Mobile No'       @Common.Label: 'Phone / Mobile No' @Communication.IsPhoneNumber;
     address       @title: 'Office / Yard Address'              @Common.Label: 'Office / Yard Address';
 };
-
-annotate RentalService.RentalStatusHistory with @UI.Hidden: true;
 
 annotate RentalService.RentalItems with @(
     UI.HeaderInfo: {

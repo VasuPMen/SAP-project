@@ -84,25 +84,7 @@ service RentalService {
     @restrict: [
         { grant: ['READ'], to: ['Admin', 'Manager'] }
     ]
-    entity RentalStatusHistory as projection on my.RentalStatusHistory;
-
-    @readonly
-    @restrict: [
-        { grant: ['READ'], to: ['Admin', 'Manager'] }
-    ]
-    entity EquipmentTransfers as projection on my.EquipmentTransfers;
-
-    @readonly
-    @restrict: [
-        { grant: ['READ'], to: ['Admin', 'Manager'] }
-    ]
     entity LocationEvents as projection on my.LocationEvents;
-
-    @readonly
-    @restrict: [
-        { grant: ['READ'], to: ['Admin', 'Manager'] }
-    ]
-    entity AssetStatusHistory as projection on my.AssetStatusHistory;
 
     @readonly
     @restrict: [

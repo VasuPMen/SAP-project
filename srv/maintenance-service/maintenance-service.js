@@ -2,7 +2,7 @@ import cds from '@sap/cds';
 
 export default class MaintenanceService extends cds.ApplicationService {
     async init() {
-        const { MaintenanceRecords, RepairJobs, Equipment, DamageRecords, AssetStatusHistory } = this.entities;
+        const { MaintenanceRecords, RepairJobs, Equipment, DamageRecords } = this.entities;
 
         // Clean up blank or abandoned repair jobs drafts
         // Clean up blank or abandoned repair jobs drafts only if explicitly expired or never interacted with
@@ -115,16 +115,7 @@ export default class MaintenanceService extends cds.ApplicationService {
 
             if (equipmentId) {
                 if (status === 'Open' || status === 'InProgress') {
-                    const eq = await cds.db.run(SELECT.one.from(Equipment).where({ ID: equipmentId }));
                     await cds.db.run(UPDATE(Equipment).set({ currentStatus: 'InRepair' }).where({ ID: equipmentId }));
-                    await cds.db.run(
-                        INSERT.into(AssetStatusHistory).entries({
-                            equipment_ID: equipmentId,
-                            oldStatus: eq?.currentStatus || 'Damaged',
-                            newStatus: 'InRepair',
-                            reason: `Workshop Repair Job created (${data.technician || 'Technician'})`
-                        })
-                    );
                     if (data.damage_ID) {
                         await cds.db.run(UPDATE(DamageRecords).set({ damageStatus: 'InRepair' }).where({ ID: data.damage_ID }));
                     }
@@ -132,16 +123,7 @@ export default class MaintenanceService extends cds.ApplicationService {
                     if (data.damage_ID) {
                         await cds.db.run(UPDATE(DamageRecords).set({ damageStatus: 'Repaired' }).where({ ID: data.damage_ID }));
                     }
-                    const eq = await cds.db.run(SELECT.one.from(Equipment).where({ ID: equipmentId }));
                     await cds.db.run(UPDATE(Equipment).set({ currentStatus: 'Available', currentGrade: 'B' }).where({ ID: equipmentId }));
-                    await cds.db.run(
-                        INSERT.into(AssetStatusHistory).entries({
-                            equipment_ID: equipmentId,
-                            oldStatus: eq?.currentStatus || 'InRepair',
-                            newStatus: 'Available',
-                            reason: 'Workshop Repair Job completed; asset restored to Available'
-                        })
-                    );
                 }
             }
         });
@@ -168,14 +150,7 @@ export default class MaintenanceService extends cds.ApplicationService {
             await UPDATE(DamageRecords).set({ damageStatus: 'InRepair' }).where({ ID: damageId });
 
             if (equipmentId) {
-                const eq = await SELECT.one.from(Equipment).where({ ID: equipmentId });
                 await UPDATE(Equipment).set({ currentStatus: 'InRepair' }).where({ ID: equipmentId });
-                await INSERT.into(AssetStatusHistory).entries({
-                    equipment_ID: equipmentId,
-                    oldStatus: eq?.currentStatus,
-                    newStatus: 'InRepair',
-                    reason: `Repair job dispatched to ${technician || 'workshop'}`
-                });
             }
 
             return await SELECT.one.from(RepairJobs).where({ ID: jobId });
@@ -232,13 +207,6 @@ export default class MaintenanceService extends cds.ApplicationService {
                 currentStatus: 'Available',
                 currentGrade: 'B' // Reset condition grade after repair
             }).where({ ID: equipmentId });
-
-            await INSERT.into(AssetStatusHistory).entries({
-                equipment_ID: equipmentId,
-                oldStatus: eq.currentStatus,
-                newStatus: 'Available',
-                reason: reason || 'Released from workshop after repair and inspection'
-            });
 
             return await SELECT.one.from(Equipment).where({ ID: equipmentId });
         });

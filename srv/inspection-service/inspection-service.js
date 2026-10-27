@@ -2,7 +2,7 @@ import cds from '@sap/cds';
 
 export default class InspectionService extends cds.ApplicationService {
     async init() {
-        const { ConditionLogs, DamageRecords, Equipment, AssetStatusHistory } = this.entities;
+        const { ConditionLogs, DamageRecords, Equipment } = this.entities;
 
         // Clean up blank or abandoned inspection drafts
         this.before('READ', 'ConditionLogs', async (req) => {
@@ -325,16 +325,6 @@ export default class InspectionService extends cds.ApplicationService {
                     currentMeterReading: log.meterReading ?? eq?.currentMeterReading
                 }).where({ ID: log.equipment_ID })
             );
-
-            // Record status change in AssetStatusHistory
-            await cds.db.run(
-                INSERT.into(AssetStatusHistory).entries({
-                    equipment_ID: log.equipment_ID,
-                    oldStatus: eq?.currentStatus,
-                    newStatus: newEqStatus,
-                    reason: `${log.inspectionType} inspection completed (Grade: ${log.conditionGrade || 'A'}, Status: ${newEqStatus})`
-                })
-            );
         });
 
         // Action: Submit Inspection
@@ -369,13 +359,6 @@ export default class InspectionService extends cds.ApplicationService {
                     currentStatus: newEqStatus,
                     currentMeterReading: log.meterReading ?? eq?.currentMeterReading
                 }).where({ ID: log.equipment_ID });
-
-                await INSERT.into(AssetStatusHistory).entries({
-                    equipment_ID: log.equipment_ID,
-                    oldStatus: eq?.currentStatus,
-                    newStatus: newEqStatus,
-                    reason: `Inspection completed (Grade: ${log.conditionGrade}, Status: ${newEqStatus})`
-                });
             }
 
             return await SELECT.one.from(ConditionLogs).where({ ID: conditionLogId });

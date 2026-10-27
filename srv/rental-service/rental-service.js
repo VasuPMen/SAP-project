@@ -2,7 +2,7 @@ import cds from '@sap/cds';
 
 export default class RentalService extends cds.ApplicationService {
     async init() {
-        const { Customers, Locations, Rentals, RentalItems, RentalStatusHistory, Equipment, EquipmentTransfers, AssetStatusHistory } = this.entities;
+        const { Customers, Locations, Rentals, RentalItems, Equipment } = this.entities;
 
         this.before('READ', 'Equipment', async (req) => {
             // Only clean up on list queries, not when editing a specific draft by key
@@ -420,29 +420,11 @@ export default class RentalService extends cds.ApplicationService {
             // Update each allocated equipment asset to RentedOut
             for (const item of items) {
                 if (item.equipment_ID) {
-                    const eq = await cds.db.run(SELECT.one.from(Equipment).where({ ID: item.equipment_ID }));
                     await cds.db.run(
                         UPDATE(Equipment).set({ currentStatus: 'RentedOut' }).where({ ID: item.equipment_ID })
                     );
-                    await cds.db.run(
-                        INSERT.into(AssetStatusHistory).entries({
-                            equipment_ID: item.equipment_ID,
-                            oldStatus: eq?.currentStatus || 'Available',
-                            newStatus: 'RentedOut',
-                            reason: `Allocated under contract ${data.contractNo || rentalId}`
-                        })
-                    );
                 }
             }
-
-            // Record rental status history
-            await cds.db.run(
-                INSERT.into(RentalStatusHistory).entries({
-                    rental_ID: rentalId,
-                    oldStatus: 'Booked',
-                    newStatus: 'Active'
-                })
-            );
         });
 
         // Auto-fill item details (dates, rate, status) on item draft creation
@@ -574,25 +556,11 @@ export default class RentalService extends cds.ApplicationService {
             // Update rental status
             await UPDATE(Rentals).set({ rentalStatus: 'Active' }).where({ ID: rentalId });
 
-            // Record rental status history
-            await INSERT.into(RentalStatusHistory).entries({
-                rental_ID: rentalId,
-                oldStatus: rental.rentalStatus,
-                newStatus: 'Active'
-            });
-
             // Update each equipment to RentedOut
             for (const item of items) {
                 await UPDATE(RentalItems).set({ itemStatus: 'OutOnRent' }).where({ ID: item.ID });
                 if (item.equipment_ID) {
-                    const eq = await SELECT.one.from(Equipment).where({ ID: item.equipment_ID });
                     await UPDATE(Equipment).set({ currentStatus: 'RentedOut' }).where({ ID: item.equipment_ID });
-                    await INSERT.into(AssetStatusHistory).entries({
-                        equipment_ID: item.equipment_ID,
-                        oldStatus: eq?.currentStatus,
-                        newStatus: 'RentedOut',
-                        reason: `Checked out under rental contract ${rental.contractNo || rentalId}`
-                    });
                 }
             }
 
@@ -617,24 +585,11 @@ export default class RentalService extends cds.ApplicationService {
                 actualReturnDate: returnDate
             }).where({ ID: rentalId });
 
-            await INSERT.into(RentalStatusHistory).entries({
-                rental_ID: rentalId,
-                oldStatus: rental.rentalStatus,
-                newStatus: 'Returned'
-            });
-
             // Equipment is returned and now pending yard inspection
             for (const item of items) {
                 await UPDATE(RentalItems).set({ itemStatus: 'Returned' }).where({ ID: item.ID });
                 if (item.equipment_ID) {
-                    const eq = await SELECT.one.from(Equipment).where({ ID: item.equipment_ID });
                     await UPDATE(Equipment).set({ currentStatus: 'ReturnedPendingInspection' }).where({ ID: item.equipment_ID });
-                    await INSERT.into(AssetStatusHistory).entries({
-                        equipment_ID: item.equipment_ID,
-                        oldStatus: eq?.currentStatus,
-                        newStatus: 'ReturnedPendingInspection',
-                        reason: `Returned from rental contract ${rental.contractNo || rentalId}`
-                    });
                 }
             }
 
@@ -648,11 +603,6 @@ export default class RentalService extends cds.ApplicationService {
             if (!rental) return req.error(404, `Rental ${rentalId} not found`);
 
             await UPDATE(Rentals).set({ rentalStatus: 'Cancelled' }).where({ ID: rentalId });
-            await INSERT.into(RentalStatusHistory).entries({
-                rental_ID: rentalId,
-                oldStatus: rental.rentalStatus,
-                newStatus: 'Cancelled'
-            });
 
             // Free allocated equipment back to Available
             const items = await SELECT.from(RentalItems).where({ rental_ID: rentalId });
@@ -668,16 +618,9 @@ export default class RentalService extends cds.ApplicationService {
 
         // Action: Transfer Equipment between locations
         this.on('transferEquipment', async (req) => {
-            const { equipmentId, toLocationId, reason } = req.data;
+            const { equipmentId, toLocationId } = req.data;
             const eq = await SELECT.one.from(Equipment).where({ ID: equipmentId });
             if (!eq) return req.error(404, `Equipment ${equipmentId} not found`);
-
-            await INSERT.into(EquipmentTransfers).entries({
-                equipment_ID: equipmentId,
-                fromLocation_ID: eq.location_ID,
-                toLocation_ID: toLocationId,
-                reason: reason || 'Relocation transfer'
-            });
 
             await UPDATE(Equipment).set({
                 location_ID: toLocationId,
@@ -690,7 +633,7 @@ export default class RentalService extends cds.ApplicationService {
         // Action: Assign / Station Equipment to this Depot Location
         this.on('assignEquipment', 'Locations', async (req) => {
             const locationId = req.params[0]?.ID || req.params?.find(p => p.ID)?.ID;
-            const { equipmentId, reason } = req.data;
+            const { equipmentId } = req.data;
 
             if (!locationId) return req.error(400, 'Depot Location ID is missing');
             if (!equipmentId) return req.error(400, 'Please select an equipment asset to assign');
@@ -700,14 +643,6 @@ export default class RentalService extends cds.ApplicationService {
 
             const eq = await SELECT.one.from(Equipment).where({ ID: equipmentId });
             if (!eq) return req.error(404, 'Equipment not found');
-
-            // Record equipment transfer log
-            await INSERT.into(EquipmentTransfers).entries({
-                equipment_ID: equipmentId,
-                fromLocation_ID: eq.location_ID || null,
-                toLocation_ID: locationId,
-                reason: reason || `Assigned to ${loc.locationName}`
-            });
 
             // Update equipment's depot location
             await UPDATE(Equipment).set({

@@ -2,7 +2,7 @@ import cds from '@sap/cds';
 
 export default class BillingService extends cds.ApplicationService {
     async init() {
-        const { RepairBills, PricingRules, DamageRecords, Rentals, Customers, DamagePhotos, ConditionLogs } = this.entities;
+        const { RepairBills, DamageRecords, Rentals, Customers, DamagePhotos, ConditionLogs } = this.entities;
 
         // Automatically calculate totals on RepairBills manual entry or edit and validate customer-rental match
         this.before(['CREATE', 'UPDATE'], 'RepairBills', async (req) => {
@@ -99,17 +99,6 @@ export default class BillingService extends cds.ApplicationService {
                     console.warn('[BillingService] Pre-activation photo cleanup notice:', e.message);
                 }
             }
-        });
-
-        // Defaults on new PricingRules draft
-        this.before(['CREATE', 'NEW'], 'PricingRules.drafts', async (req) => {
-            if (!req.data.severity) req.data.severity = 'Medium';
-            if (!req.data.taxPercent) req.data.taxPercent = 18.00;
-            if (!req.data.baseCharge) req.data.baseCharge = 1000.00;
-            if (!req.data.labourRate) req.data.labourRate = 2500.00;
-            if (!req.data.partsCharge) req.data.partsCharge = 0.00;
-            if (!req.data.paintingCharge) req.data.paintingCharge = 0.00;
-            if (!req.data.autoApproveLimit) req.data.autoApproveLimit = 25000.00;
         });
 
         // Cascading Customer -> Rental Contract -> Equipment validation & auto-fill
@@ -237,14 +226,6 @@ export default class BillingService extends cds.ApplicationService {
                                 currentStatus: 'Damaged'
                             }).where({ ID: bill.equipment_ID })
                         );
-                        await cds.db.run(
-                            INSERT.into('RentalEquipmentTrackingApp.AssetStatusHistory').entries({
-                                equipment_ID: bill.equipment_ID,
-                                oldStatus: eq.currentStatus,
-                                newStatus: 'Damaged',
-                                reason: `Repair Bill ${bill.invoiceNo || bill.ID} generated for damage charges`
-                            })
-                        );
                         console.log(`[BillingService] ✅ Updated Equipment ${bill.equipment_ID} status to Damaged`);
                     }
                 } catch (err) {
@@ -253,7 +234,7 @@ export default class BillingService extends cds.ApplicationService {
             }
         });
 
-        // Action: Automated Pricing Engine - calculate charge based on PricingRules
+        // Action: Automated Pricing Engine - calculate charge based on damage severity
         this.on('calculateDamageCharge', async (req) => {
             const { damageId } = req.data;
             const damage = await SELECT.one.from(DamageRecords).where({ ID: damageId });
@@ -270,23 +251,15 @@ export default class BillingService extends cds.ApplicationService {
                 return req.error(400, 'Cannot generate bill: Missing associated Rental or Customer for this damage');
             }
 
-            // Find matching PricingRule
-            let rule = await SELECT.one.from(PricingRules).where({
-                damageType: damage.damageType,
-                severity: damage.severity
-            });
-
-            // Default fallback if specific rule not found
-            if (!rule) {
-                rule = {
-                    baseCharge: 150.00,
-                    partsCharge: 200.00,
-                    labourRate: 85.00,
-                    paintingCharge: 50.00,
-                    taxPercent: 18.00,
-                    autoApproveLimit: 500.00
-                };
-            }
+            // Standard pricing rule calculation
+            const rule = {
+                baseCharge: 150.00,
+                partsCharge: damage.severity === 'Critical' ? 400.00 : damage.severity === 'High' ? 250.00 : 150.00,
+                labourRate: 85.00,
+                paintingCharge: 50.00,
+                taxPercent: 18.00,
+                autoApproveLimit: 500.00
+            };
 
             const base = Number(rule.baseCharge || 0);
             const parts = Number(rule.partsCharge || 0);
@@ -411,18 +384,6 @@ export default class BillingService extends cds.ApplicationService {
                 billingStatus: 'Posted',
                 invoiceNo: invoiceNo
             }).where({ ID: billId });
-
-            // Create Outbox Integration Message for SAP S/4HANA
-            const rental = await SELECT.one.from(Rentals).where({ ID: bill.rental_ID });
-            await INSERT.into(IntegrationMessages).entries({
-                messageType: 'Damage Billing Request',
-                reference: rental ? rental.contractNo : billId,
-                targetSystem: 'SAP S/4HANA',
-                status: 'Success',
-                billingDocument: invoiceNo,
-                payload: JSON.stringify({ invoiceNo, billId, totalAmount: bill.totalAmount, date: new Date().toISOString() }),
-                lastAttemptAt: new Date().toISOString()
-            });
 
             return await SELECT.one.from(RepairBills).where({ ID: billId });
         });

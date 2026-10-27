@@ -72,22 +72,6 @@ service BillingService {
                 equipment.model         as model
         };
 
-    @odata.draft.enabled
-    @restrict: [
-        {
-            grant: ['READ'],
-            to   : [
-                'BillingClerk',
-                'Admin'
-            ]
-        },
-        {
-            grant: ['*'],
-            to   : ['Admin']
-        }
-    ]
-    entity PricingRules        as projection on my.PricingRules;
-
     @readonly
     @restrict: [{
         grant: ['READ'],
@@ -120,21 +104,6 @@ service BillingService {
         ]
     }]
     entity Customers           as projection on my.Customers;
-
-    @restrict: [
-        {
-            grant: ['READ'],
-            to   : [
-                'BillingClerk',
-                'Admin'
-            ]
-        },
-        {
-            grant: ['*'],
-            to   : ['Admin']
-        }
-    ]
-    entity IntegrationMessages as projection on my.IntegrationMessages;
 
     @readonly
     @restrict: [{
