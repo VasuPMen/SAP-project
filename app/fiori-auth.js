@@ -115,6 +115,9 @@ function initSubAppGuard(currentAppId, currentAppTitle) {
                 <span style="font-weight:700; color:#fff; letter-spacing:0.2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0;">${currentAppTitle || 'SAP Fiori Application'}</span>
             </div>
             <div style="display:flex; align-items:center; gap:0.5rem; flex-shrink:0;">
+                <span style="color:#d1e4f5; font-size:0.75rem; font-weight:600; white-space:nowrap; max-width:200px; overflow:hidden; text-overflow:ellipsis;" title="${session.email || session.name || ''}">
+                    ${session.email || session.name || ''}
+                </span>
                 <span style="background:${roleCfg ? roleCfg.color : '#0070f2'}; color:#fff; font-size:0.68rem; font-weight:700; padding:0.18rem 0.55rem; border-radius:10px; text-transform:uppercase; white-space:nowrap;">
                     ${session.role}
                 </span>

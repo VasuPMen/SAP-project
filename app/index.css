@@ -211,6 +211,7 @@ body.fiori-subapp-mode .sapFDynamicPageFooter {
     justify-content: center;
     gap: 2px;
     line-height: 1.1;
+    min-width: 0;
 }
 
 .user-name {
@@ -220,6 +221,9 @@ body.fiori-subapp-mode .sapFDynamicPageFooter {
     color: #ffffff;
     white-space: nowrap;
     letter-spacing: -0.01em;
+    max-width: 250px;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .user-role-tag {

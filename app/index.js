@@ -1,3 +1,20 @@
+function getAvatarInitials(emailOrName) {
+    if (!emailOrName) return 'US';
+    if (emailOrName.includes('@')) {
+        const localPart = emailOrName.split('@')[0];
+        const segments = localPart.split(/[._-]/).filter(Boolean);
+        if (segments.length >= 2) {
+            return (segments[0][0] + segments[1][0]).toUpperCase();
+        }
+        return localPart.substring(0, 2).toUpperCase();
+    }
+    const parts = emailOrName.split(' ').filter(Boolean);
+    if (parts.length >= 2) {
+        return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return emailOrName.substring(0, 2).toUpperCase();
+}
+
 document.addEventListener('DOMContentLoaded', async function () {
     if (window.__FIORI_APP_CONFIG) {
         return; // Sub-app runner handles its own UI lifecycle
@@ -8,12 +25,14 @@ document.addEventListener('DOMContentLoaded', async function () {
         if (res.ok) {
             const data = await res.json();
             const roleCfg = (window.FIORI_ROLES_CONFIG && window.FIORI_ROLES_CONFIG[data.role]) || { title: data.role || 'User', color: '#0070f2' };
+            const userMail = data.email || data.name || data.id || 'User';
             const session = {
-                username: data.id || 'user',
+                username: data.id || userMail,
+                email: userMail,
                 role: data.role || 'Guest',
-                name: data.name || data.id || 'User',
+                name: userMail, // Show email ID in header for all roles
                 title: roleCfg.title || 'User',
-                avatar: (data.name && !data.name.includes('@')) ? data.name.split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase() : (data.email ? data.email[0].toUpperCase() : (data.name ? data.name[0].toUpperCase() : 'M')),
+                avatar: getAvatarInitials(userMail),
                 loginTime: new Date().toISOString()
             };
             localStorage.setItem('fiori_user_session', JSON.stringify(session));
@@ -38,18 +57,20 @@ function renderLaunchpadForSession(session) {
 
     const roleCfg = (window.FIORI_ROLES_CONFIG && window.FIORI_ROLES_CONFIG[session.role]) || { title: session.role || 'User', color: '#0070f2' };
 
-    // Header info (avatar, full name, role pill)
+    // Header info (avatar, email ID, role pill)
     const capsuleEl = document.getElementById('shell-user-capsule');
     if (capsuleEl) {
         capsuleEl.style.opacity = '1';
     }
     const avatarEl = document.getElementById('shell-user-avatar');
     if (avatarEl) {
-        avatarEl.textContent = session.avatar || (session.role ? session.role.substring(0, 2).toUpperCase() : 'US');
+        avatarEl.textContent = session.avatar || getAvatarInitials(session.email || session.name || session.role);
     }
     const nameEl = document.getElementById('shell-user-name');
     if (nameEl) {
-        nameEl.textContent = session.name || session.username || 'User';
+        const displayMail = session.email || session.name || session.username || 'User';
+        nameEl.textContent = displayMail;
+        nameEl.title = displayMail;
     }
     const roleEl = document.getElementById('shell-user-role');
     if (roleEl) {
