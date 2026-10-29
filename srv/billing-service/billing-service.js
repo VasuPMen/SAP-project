@@ -1,8 +1,9 @@
 import cds from '@sap/cds';
+const { SELECT, INSERT, UPDATE, DELETE } = cds.ql;
 
 export default class BillingService extends cds.ApplicationService {
     async init() {
-        const { RepairBills, DamageRecords, Rentals, Customers, DamagePhotos, ConditionLogs } = this.entities;
+        const { RepairBills, DamageRecords, Rentals, Customers } = this.entities;
 
         // Automatically calculate totals on RepairBills manual entry or edit and validate customer-rental match
         this.before(['CREATE', 'UPDATE'], 'RepairBills', async (req) => {
@@ -212,9 +213,81 @@ export default class BillingService extends cds.ApplicationService {
                 req.data.totalAmount = Number((repair + tax).toFixed(2));
             }
         });
-
-        // Automatically set Equipment status to Damaged when an active Repair Bill is created
+        // Ensure every Repair Bill saved in "Damage Record" creates/updates a DamageRecord
+        // so it appears in "Damage Incident" in Workshop Repair Jobs
         this.after('SAVE', 'RepairBills', async (bill) => {
+            try {
+                if (bill?.ID) {
+                    // Fetch the fully committed active RepairBill from DB so all columns (damageType, area, etc.) are present
+                    const realBill = await cds.db.run(
+                        SELECT.one.from('RentalEquipmentTrackingApp.RepairBills').where({ ID: bill.ID })
+                    );
+                    if (realBill) {
+                        const damageType = realBill.damageType || realBill.damageDescription || 'General Damage';
+                        const area = realBill.area || 'General Equipment';
+                        const invoiceNo = realBill.invoiceNo || 'INV-Damage';
+                        const severity = realBill.severity || 'Medium';
+                        const estimate = Number(realBill.repairAmount || realBill.totalAmount || 0);
+                        const customerId = realBill.customer_ID || null;
+                        const logId = realBill.conditionLog_ID || null;
+
+                        let existingDamage = null;
+                        if (realBill.damage_ID) {
+                            existingDamage = await cds.db.run(
+                                SELECT.one.from('RentalEquipmentTrackingApp.DamageRecords').where({ ID: realBill.damage_ID })
+                            );
+                        }
+                        if (!existingDamage && invoiceNo) {
+                            existingDamage = await cds.db.run(
+                                SELECT.one.from('RentalEquipmentTrackingApp.DamageRecords').where({ description: invoiceNo })
+                            );
+                        }
+
+                        if (existingDamage) {
+                            await cds.db.run(
+                                UPDATE('RentalEquipmentTrackingApp.DamageRecords').set({
+                                    description: invoiceNo,
+                                    damageType: damageType,
+                                    area: area,
+                                    severity: severity,
+                                    repairEstimate: estimate,
+                                    liableParty_ID: customerId || existingDamage.liableParty_ID || null,
+                                    conditionLog_ID: logId || existingDamage.conditionLog_ID || null
+                                }).where({ ID: existingDamage.ID })
+                            );
+                            if (!realBill.damage_ID) {
+                                await cds.db.run(
+                                    UPDATE('RentalEquipmentTrackingApp.RepairBills').set({ damage_ID: existingDamage.ID }).where({ ID: realBill.ID })
+                                );
+                            }
+                            console.log(`[BillingService] ✅ Updated DamageRecord ${existingDamage.ID} for Repair Bill ${invoiceNo} (type="${damageType}", area="${area}")`);
+                        } else {
+                            const damageId = cds.utils.uuid();
+                            await cds.db.run(
+                                INSERT.into('RentalEquipmentTrackingApp.DamageRecords').entries({
+                                    ID: damageId,
+                                    description: invoiceNo,
+                                    damageType: damageType,
+                                    area: area,
+                                    severity: severity,
+                                    damageStatus: 'Reported',
+                                    repairEstimate: estimate,
+                                    customerLiable: true,
+                                    liableParty_ID: customerId,
+                                    conditionLog_ID: logId
+                                })
+                            );
+                            await cds.db.run(
+                                UPDATE('RentalEquipmentTrackingApp.RepairBills').set({ damage_ID: damageId }).where({ ID: realBill.ID })
+                            );
+                            console.log(`[BillingService] ✅ Created DamageRecord ${damageId} for Repair Bill ${invoiceNo} (type="${damageType}", area="${area}")`);
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error('[BillingService] Error syncing DamageRecord from RepairBill:', err.message);
+            }
+
             if (bill.equipment_ID && bill.billingStatus !== 'Posted' && bill.billingStatus !== 'Rejected') {
                 try {
                     const eq = await cds.db.run(

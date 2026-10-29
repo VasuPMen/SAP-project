@@ -1,6 +1,5 @@
 using { RentalService } from '../../srv/rental-service/rental-service';
 
-
 /* ==========================================================================
    8. LOCATIONS & YARDS - MASTER DATA (FR-004, FR-020)
    ========================================================================== */
@@ -83,5 +82,4 @@ annotate RentalService.Locations with {
     city         @mandatory @title: 'City'          @Common.Label: 'City';
     latitude     @mandatory @title: 'GPS Latitude'  @Common.Label: 'GPS Latitude';
     longitude    @mandatory @title: 'GPS Longitude' @Common.Label: 'GPS Longitude';
-    equipment    @readonly;
 };

@@ -28,21 +28,6 @@ type InspectionType    : String(15) enum {
     @title: 'Check-Out (Dispatch)' CheckOut;
 };
 
-type InspectorName     : String(100) enum {
-    @title: 'Ramesh Patel (Senior Yard Inspector)'
-    Ramesh_Patel = 'Ramesh Patel';
-    @title: 'Kavita Reddy (Rental Dispatcher)'
-    Kavita_Reddy = 'Kavita Reddy';
-    @title: 'Mike D''souza (Lead Workshop Technician)'
-    Mike_Dsouza = 'Mike D''souza';
-    @title: 'Vikram Mehta1 (System Administrator)'
-    Vikram_Mehta = 'Vikram Mehta';
-    @title: 'Sanjay Verma (Operations & Fleet Director)'
-    Sanjay_Verma = 'Sanjay Verma';
-    @title: 'Yard Worker (Yard Staff)'
-    Yard_Worker = 'Yard Worker';
-};
-
 type EvidenceType      : String(50) enum {
     @title: 'Return from Rent Photo' Return = 'Return';
     @title: 'Dispatch / Pre-Rental Photo' Dispatch = 'Dispatch';
@@ -85,6 +70,19 @@ type LocationType      : String(50) enum {
     Depot = 'Depot';
     @title: 'Workshop'
     Workshop = 'Workshop';
+};
+
+type MaintenanceType   : String(30) enum {
+    @title: 'Preventive Maintenance'
+    Preventive;
+    @title: 'Corrective Repair'
+    Corrective;
+    @title: 'Routine Safety Inspection'
+    Inspection;
+    @title: 'Instrument & Sensor Calibration'
+    Calibration;
+    @title: 'Major Overhaul / Workshop Job'
+    RepairJob;
 };
 
 type MaintenanceStatus : String(15) enum {
@@ -226,7 +224,7 @@ entity ConditionLogs : cuid, managed {
     conditionGrade   : ConditionGrade                     @mandatory  @title: 'Condition Grade';
     suggestedGrade   : ConditionGrade                     @title: 'Suggested Grade';
     inspectionStatus : String(20) default 'Draft'         @title: 'Review State';
-    inspector        : InspectorName default #Yard_Worker @title: 'Inspector Name';
+    inspector        : String(100)                        @title: 'Inspector Name';
     meterReading     : Decimal(10, 2)                     @title: 'Meter Reading (Hours)';
     checklistJson    : LargeString; // Structured inspection checklist items
     notes            : String(500)                        @title: 'Inspection Notes';
@@ -282,7 +280,7 @@ entity DamagePhotos : cuid {
 
 entity MaintenanceRecords : cuid, managed {
     equipment           : Association to Equipment           @mandatory  @title: 'Equipment Asset';
-    maintenanceType     : String(50)                         @mandatory  @title: 'Maintenance Type';
+    maintenanceType     : MaintenanceType default #Preventive @mandatory  @title: 'Maintenance Type';
     maintenanceDate     : Date                               @title: 'Maintenance Date';
     description         : String(500)                        @title: 'Scope of Work / Description';
     serviceProvider     : String(150)                        @title: 'Service Provider / Workshop';

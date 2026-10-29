@@ -102,12 +102,6 @@ service InspectionService {
             name : String(50);
     }
 
-    @readonly
-    entity Inspectors {
-        key code : String(100);
-            name : String(100);
-    }
-
     // Actions for Yard Worker / Inspector Workflow
     action submitInspection(conditionLogId: UUID)                            returns ConditionLogs;
     action lockInspection(conditionLogId: UUID)                              returns ConditionLogs;

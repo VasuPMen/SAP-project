@@ -447,20 +447,7 @@ window.openEvidencePhotoCaptureDialog = function(options = {}) {
     let currentImageData = null;
     let currentFileName = null;
     let currentSha256 = null;
-    let currentLat = null;
-    let currentLong = null;
     let liveMediaStream = null;
-
-    // Fetch GPS coordinates in background
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-            (pos) => {
-                currentLat = pos.coords.latitude;
-                currentLong = pos.coords.longitude;
-            },
-            () => { /* Geolocation optional */ }
-        );
-    }
 
     // Stop webcam tracks cleanly
     const stopLiveCamera = () => {
@@ -634,8 +621,6 @@ window.openEvidencePhotoCaptureDialog = function(options = {}) {
                 damage_ID: isDamage ? entityId : (options.damage_ID || null),
                 repairBill_ID: isRepairBill ? entityId : (options.repairBill_ID || null),
                 repairJob_ID: isRepairJob ? entityId : (options.repairJob_ID || null),
-                latitude: currentLat,
-                longitude: currentLong,
                 uploadedBy: (window.getFioriSession && window.getFioriSession()?.username) || 'Yard Staff'
             };
 
@@ -792,3 +777,38 @@ if (document.readyState === 'loading') {
     setupPhotoEvidenceTableObserver();
 }
 
+
+
+/**
+ * Align all header facets and fields in one single line (remove redundant "Object Information" title)
+ */
+function alignObjectPageHeader() {
+    try {
+        const candidates = document.querySelectorAll(
+            '.sapUxAPObjectPageHeaderContent *, [id*="fe::HeaderContent"] *, [id*="fe::EditableHeader"] *, [id*="fe::HeaderFacet"] *'
+        );
+        candidates.forEach(el => {
+            if (el.children.length === 0 && el.textContent && el.textContent.trim().toLowerCase() === 'object information') {
+                el.style.setProperty('display', 'none', 'important');
+                const parent = el.parentElement;
+                if (parent) {
+                    parent.style.setProperty('display', 'none', 'important');
+                    if (parent.parentElement && (parent.parentElement.classList.contains('sapUiFormContainerTitle') || parent.parentElement.tagName === 'HEADER')) {
+                        parent.parentElement.style.setProperty('display', 'none', 'important');
+                    }
+                }
+            }
+        });
+    } catch (e) {
+        // Safe fail
+    }
+}
+
+// Observe header DOM changes continuously
+if (typeof window !== 'undefined' && window.MutationObserver) {
+    const headerAlignObserver = new MutationObserver(() => {
+        alignObjectPageHeader();
+    });
+    headerAlignObserver.observe(document.documentElement, { childList: true, subtree: true });
+    alignObjectPageHeader();
+}

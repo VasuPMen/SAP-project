@@ -5,6 +5,10 @@
       "description": "Admin"
     },
     {
+      "name": "$XSAPPNAME.Manager",
+      "description": "Manager"
+    },
+    {
       "name": "$XSAPPNAME.YardWorker",
       "description": "YardWorker"
     },
@@ -15,10 +19,6 @@
     {
       "name": "$XSAPPNAME.BillingClerk",
       "description": "BillingClerk"
-    },
-    {
-      "name": "$XSAPPNAME.Manager",
-      "description": "Manager"
     }
   ],
   "attributes": [],

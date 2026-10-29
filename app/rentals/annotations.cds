@@ -92,7 +92,6 @@ annotate RentalService.Rentals with {
     };
     rentalDate         @title: 'Start Date'            @Common.Label: 'Start Date';
     expectedReturnDate @title: 'Expected Return Date'  @Common.Label: 'Expected Return Date';
-    actualReturnDate   @title: 'Actual Return Date'    @Common.Label: 'Actual Return Date' @UI.Hidden: true;
     rentalStatus       @title: 'Contract Status'       @Common.Label: 'Contract Status';
     totalRentalAmount  @title: 'Total Contract Value ($)' @Common.Label: 'Total Contract Value ($)';
     conditionLogs      @UI.Hidden: true;

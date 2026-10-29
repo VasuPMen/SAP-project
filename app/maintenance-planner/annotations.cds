@@ -70,9 +70,9 @@ annotate MaintenanceService.MaintenanceRecords with {
                         };
     maintenanceType     @title : 'Maintenance Type'
                         @Common.Label : 'Maintenance Type'
-                        @Common.ValueListWithFixedValues;
+                        @Common.ValueListWithFixedValues: true;
     status              @title: 'Maintenance Status'           @Common.Label: 'Maintenance Status'
-                        @Common.ValueListWithFixedValues;
+                        @Common.ValueListWithFixedValues: true;
     maintenanceDate     @title: 'Service Date'                 @Common.Label: 'Service Date';
     nextMaintenanceDate @title: 'Next Due Date'                @Common.Label: 'Next Due Date';
     serviceProvider     @title: 'Service Provider / Workshop'  @Common.Label: 'Service Provider / Workshop';

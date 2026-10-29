@@ -553,6 +553,19 @@ export default class RentalService extends cds.ApplicationService {
 
             const items = await SELECT.from(RentalItems).where({ rental_ID: rentalId });
 
+            // Ensure none of the allocated equipment is already RentedOut
+            for (const item of items) {
+                if (item.equipment_ID) {
+                    const eq = await SELECT.one.from(Equipment).where({ ID: item.equipment_ID });
+                    if (eq && eq.currentStatus === 'RentedOut') {
+                        return req.error(
+                            400,
+                            `Equipment "${eq.equipmentName || eq.equipmentNo}" is already Checked-Out / Rented-Out on another active contract. You cannot check out twice in a row.`
+                        );
+                    }
+                }
+            }
+
             // Update rental status
             await UPDATE(Rentals).set({ rentalStatus: 'Active' }).where({ ID: rentalId });
 

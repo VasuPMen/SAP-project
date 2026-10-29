@@ -90,7 +90,7 @@ annotate BillingService.RepairBills with @(
     },
     Common.SideEffects #CostCalculation: {
         SourceProperties: [ partsCost, labourCost, paintingCost, taxAmount ],
-        TargetProperties: [ 'repairAmount', 'taxAmount', 'totalAmount' ]
+        TargetProperties: [ 'repairAmount', 'totalAmount' ]
     },
     UI.FieldGroup #DamageParticulars: {
         Label: 'Damage Particulars',

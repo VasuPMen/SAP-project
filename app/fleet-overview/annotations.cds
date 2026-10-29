@@ -148,9 +148,5 @@ annotate RentalService.Equipment with {
     custodian           @title: 'Current Custodian'             @Common.Label: 'Current Custodian';
     purchaseDate        @title: 'Purchase Date'                 @Common.Label: 'Purchase Date';
     nextServiceDate     @title: 'Next Service Date'             @Common.Label: 'Next Service Date';
-    plant               @UI.Hidden: true;
-    barcode             @UI.Hidden: true;
-    latitude            @UI.Hidden: true;
-    longitude           @UI.Hidden: true;
 };
 

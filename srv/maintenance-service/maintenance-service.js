@@ -1,4 +1,5 @@
 import cds from '@sap/cds';
+const { SELECT, INSERT, UPDATE, DELETE } = cds.ql;
 
 export default class MaintenanceService extends cds.ApplicationService {
     async init() {
@@ -32,6 +33,70 @@ export default class MaintenanceService extends cds.ApplicationService {
         // Defaults on new RepairJobs draft
         this.before(['CREATE', 'NEW'], 'RepairJobs.drafts', async (req) => {
             if (!req.data.status) req.data.status = 'Open';
+        });
+        // Value help query for Damage Incident: ensure all damage records (including those created in Damage Record / RepairBills) are returned
+        this.before('READ', 'DamageRecords', async () => {
+            try {
+                // Ensure all RepairBills are synchronized into DamageRecords with their actual damageType and area
+                const bills = await cds.db.run(
+                    SELECT.from('RentalEquipmentTrackingApp.RepairBills')
+                );
+                for (const b of bills || []) {
+                    if (b.invoiceNo) {
+                        const existing = (b.damage_ID ? await cds.db.run(
+                            SELECT.one.from('RentalEquipmentTrackingApp.DamageRecords').where({ ID: b.damage_ID })
+                        ) : null) || await cds.db.run(
+                            SELECT.one.from('RentalEquipmentTrackingApp.DamageRecords').where({ description: b.invoiceNo })
+                        );
+
+                        const targetType = b.damageType || b.damageDescription || 'General Damage';
+                        const targetArea = b.area || 'General Equipment';
+                        const targetSeverity = b.severity || (existing ? existing.severity : 'Medium');
+                        const targetEstimate = Number(b.repairAmount || b.totalAmount || (existing ? existing.repairEstimate : 0));
+
+                        if (existing) {
+                            // Update DamageRecord with the actual classification and area from RepairBills
+                            if (existing.damageType !== targetType || existing.area !== targetArea || existing.severity !== targetSeverity) {
+                                await cds.db.run(
+                                    UPDATE('RentalEquipmentTrackingApp.DamageRecords').set({
+                                        damageType: targetType,
+                                        area: targetArea,
+                                        severity: targetSeverity,
+                                        repairEstimate: targetEstimate,
+                                        liableParty_ID: b.customer_ID || existing.liableParty_ID
+                                    }).where({ ID: existing.ID })
+                                );
+                            }
+                            if (!b.damage_ID) {
+                                await cds.db.run(
+                                    UPDATE('RentalEquipmentTrackingApp.RepairBills').set({ damage_ID: existing.ID }).where({ ID: b.ID })
+                                );
+                            }
+                        } else {
+                            const newDamageId = b.damage_ID || cds.utils.uuid();
+                            await cds.db.run(
+                                INSERT.into('RentalEquipmentTrackingApp.DamageRecords').entries({
+                                    ID: newDamageId,
+                                    description: b.invoiceNo,
+                                    damageType: targetType,
+                                    area: targetArea,
+                                    severity: targetSeverity,
+                                    damageStatus: 'Reported',
+                                    repairEstimate: targetEstimate,
+                                    customerLiable: true,
+                                    liableParty_ID: b.customer_ID || null,
+                                    conditionLog_ID: b.conditionLog_ID || null
+                                })
+                            );
+                            await cds.db.run(
+                                UPDATE('RentalEquipmentTrackingApp.RepairBills').set({ damage_ID: newDamageId }).where({ ID: b.ID })
+                            );
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error('[MaintenanceService] Error syncing DamageRecords:', e.message);
+            }
         });
 
         // Value help query for DamagedEquipment: ONLY return equipment requiring repair / damaged
@@ -88,6 +153,12 @@ export default class MaintenanceService extends cds.ApplicationService {
                         );
                         if (log?.equipment_ID) req.data.equipment_ID = log.equipment_ID;
                     }
+                    if (!req.data.equipment_ID) {
+                        const bill = await cds.db.run(
+                            SELECT.one.from('RentalEquipmentTrackingApp.RepairBills').where({ damage_ID: req.data.damage_ID })
+                        );
+                        if (bill?.equipment_ID) req.data.equipment_ID = bill.equipment_ID;
+                    }
                     if (damage.repairEstimate && !req.data.actualCost) {
                         req.data.actualCost = Number(damage.repairEstimate);
                     }
@@ -106,9 +177,13 @@ export default class MaintenanceService extends cds.ApplicationService {
                 if (damage?.conditionLog_ID) {
                     const log = await cds.db.run(SELECT.one.from('RentalEquipmentTrackingApp.ConditionLogs').where({ ID: damage.conditionLog_ID }));
                     equipmentId = log?.equipment_ID;
-                    if (equipmentId) {
-                        await cds.db.run(UPDATE('RentalEquipmentTrackingApp.RepairJobs').set({ equipment_ID: equipmentId }).where({ ID: data.ID }));
-                    }
+                }
+                if (!equipmentId) {
+                    const bill = await cds.db.run(SELECT.one.from('RentalEquipmentTrackingApp.RepairBills').where({ damage_ID: data.damage_ID }));
+                    equipmentId = bill?.equipment_ID;
+                }
+                if (equipmentId) {
+                    await cds.db.run(UPDATE('RentalEquipmentTrackingApp.RepairJobs').set({ equipment_ID: equipmentId }).where({ ID: data.ID }));
                 }
             }
             const status = data.status || 'Open';
@@ -213,4 +288,4 @@ export default class MaintenanceService extends cds.ApplicationService {
 
         await super.init();
     }
-}
+};

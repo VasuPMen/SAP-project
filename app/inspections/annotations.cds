@@ -122,15 +122,7 @@ annotate InspectionService.ConditionLogs with {
     conditionGrade   @title: 'Condition Grade'       @Common.Label: 'Condition Grade' @Common.ValueListWithFixedValues: true;
     suggestedGrade   @title: 'Suggested Grade'       @Common.Label: 'Suggested Grade';
     inspectionStatus @title: 'Review State'          @Common.Label: 'Review State';
-    inspector        @title: 'Inspector Name'        @Common.Label: 'Inspector Name'
-                     @Common.ValueListWithFixedValues: true
-                     @Common.ValueList: {
-                         CollectionPath: 'Inspectors',
-                         Parameters: [
-                             { $Type: 'Common.ValueListParameterInOut', LocalDataProperty: inspector, ValueListProperty: 'code' },
-                             { $Type: 'Common.ValueListParameterDisplayOnly', ValueListProperty: 'name' }
-                         ]
-                     };
+    inspector        @title: 'Inspector Name'        @Common.Label: 'Inspector Name';
     meterReading     @title: 'Meter Reading (Hours)' @Common.Label: 'Meter Reading (Hours)';
     notes            @title: 'Inspection Notes'      @Common.Label: 'Inspection Notes';
     customerAck      @title: 'Customer Acknowledged' @Common.Label: 'Customer Acknowledged';
@@ -243,8 +235,6 @@ annotate InspectionService.DamagePhotos with @(
         { Value: fileName, Label: 'Photo Filename' },
         { Value: photoType, Label: 'Evidence Type' },
         { Value: sha256, Label: 'SHA-256 Tamper Hash' },
-        { Value: latitude, Label: 'GPS Lat' },
-        { Value: longitude, Label: 'GPS Long' },
         { Value: uploadedAt, Label: 'Captured On' },
         { Value: uploadedBy, Label: 'Captured By' }
     ]
